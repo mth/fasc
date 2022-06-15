@@ -1,0 +1,44 @@
+sysconfig is tool for configuring linux, mainly debian systems
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+It consists of binary for appling the configuration changes,
+customizable configuration files given as input, rules and template files.
+
+So there are 3 types of inputs to sysconfig:
+
+  * system configuration files (ini format)
+  * sysconfig rule files     (custom format)
+  * sysconfig template files (custom format)
+
+The rules contain sysconfig commands that apply conditionally by the configuration.
+Rules may run commands, modify (ini style) configuration files, create directories
+and change file modes/ownership, copy files and inject template files where
+"holes" can be replaced by sysconfig parameters.
+
+Template file is normal file where %expression can be used for
+placeholders. The expression can be either word (variable name)
+or parenthized expression (arg1 operator args...) or (variable).
+
+Rule file has shell like commands. Additionally tree structured blocks
+can be given as argument using colon and syntactic whitespace.
+
+option run-sway:
+  template run-sway /etc/systemd/run-sway.service
+  enable run-sway.service
+
+option short-service-timeouts:
+  configure "/etc/systemd/system.conf":
+    Manager:
+      DefaultTimeoutStartSec 10s
+      DefaultTimeoutStopSec 5s
+      DefaultStartLimitIntervalSec 9s
+  configure /etc/systemd/user.conf:
+    Manager:
+      DefaultTimeoutStartSec 10s
+      DefaultTimeoutStopSec 5s
+      DefaultStartLimitIntervalSec 9s
+
+Double quotes can be used around strings.
+Template expressions are also allowed in the rule file
+(and are interpreted on-the-fly, not before parsing the rule file).
+
