@@ -12,8 +12,6 @@ proc parseRule(src: string, start: var int): seq[string] =
     while start < src.len and not (src[start] in Newlines):
         var word: string
         start = start + src.parseUntil(word, Whitespace, start)
-        if word == "":
-            break
         result.add word
         start = start + src.skipWhile({' ', '\t', '\v', '\f'}, start)
 
