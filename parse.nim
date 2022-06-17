@@ -34,7 +34,6 @@ func parseRule(src: string, rule: var Rule, pos: var int): bool =
     if word != "":
         rule.param.add word[0..^2]
         return true
-    return false
 
 func parseRules(src: string, baseIndent: int, pos: var int): seq[Rule] =
     var indent = -1
