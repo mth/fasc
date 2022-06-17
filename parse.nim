@@ -14,23 +14,28 @@ const Space = {'\t', ' '}
 func isEOL(src: string; pos: int): bool =
     pos >= src.len or src[pos] in NewLines
 
+func parseString(src: string, pos: var int): string =
+    pos.inc
+    pos.inc src.parseUntil(result, {'"'}, pos)
+    if pos >= src.len:
+        raise newException(ParseError, "Unclosed string")
+    pos.inc
+
 func parseRule(src: string, rule: var Rule, pos: var int): bool =
     var word = ""
     while not src.isEOL pos:
-        var parsedWord: string
-        #while pos >= src.len && src[pos] == '"':
-        #    pos.inc
-        #    pos.inc src.parseUntil(parsedWord, {'"'}, pos)
-        #    if pos >= src.len:
-        #        raise newException(ParseError, "Unclosed string")
-        #    pos.inc
-        pos.inc src.parseUntil(parsedWord, Whitespace, pos)
-        let sp = src.skipWhile(Whitespace - Newlines, pos)
-        pos.inc sp
-        word.add parsedWord
-        if sp != 0 and not src.isEOL(pos) or not parsedWord.endsWith ':':
-            rule.param.add word
-            word = ""
+        if src[pos] == '"':
+            rule.param.add src.parseString(pos)
+            pos.inc src.skipWhile(Whitespace - Newlines, pos)
+        else:
+            var parsedWord: string
+            pos.inc src.parseUntil(parsedWord, Whitespace, pos)
+            let sp = src.skipWhile(Whitespace - Newlines, pos)
+            pos.inc sp
+            word.add parsedWord
+            if sp != 0 and not src.isEOL(pos) or not parsedWord.endsWith ':':
+                rule.param.add word
+                word = ""
     if word != "":
         rule.param.add word[0..^2]
         return true
