@@ -21,11 +21,6 @@ type Rule = object
   param: seq[Expr]
   children: seq[Rule]
 
-const Space = {'\t', ' '}
-
-func isEOL(src: string, pos: int): bool =
-  pos >= src.len or src[pos] in NewLines
-
 func parseString(src: string, pos: var int): Expr
 
 func parseExpr(src: string, pos: var int): Expr =
@@ -66,48 +61,33 @@ func parseString(src: string, pos: var int): Expr =
     raise newException(ParseError, "Unclosed string")
   pos.inc
 
-func parseRule(src: string, rule: var Rule, pos: var int): bool =
-  var word = ""
-  while not src.isEOL pos:
-    if src[pos] == '"':
-      rule.param.add src.parseString(pos)
-      pos.inc src.skipWhile(Whitespace - Newlines, pos)
-    else:
-      var parsedWord: string
-      pos.inc src.parseUntil(parsedWord, Whitespace, pos)
-      let sp = src.skipWhile(Whitespace - Newlines, pos)
-      pos.inc sp
-      word.add parsedWord
-      if sp != 0 and not src.isEOL(pos) or not parsedWord.endsWith ':':
-        rule.param.add Expr(kind: xString, str: word)
-        word = ""
-  if word != "":
-    rule.param.add Expr(kind: xString, str: word[0..^2])
-    return true
-
-func parseRules(src: string, baseIndent: int, pos: var int): seq[Rule] =
-  var indent = -1
+proc parseRules(src: string, pos: var int): seq[Rule] =
   while true:
-    let oldIndent = indent
-    indent = 0
-    while pos < src.len and src[pos] in Whitespace:
-      pos.inc src.skipWhile(Whitespace - Space, pos)
-      indent = src.skipWhile(Space, pos)
-      pos.inc indent
-    if pos >= src.len or indent <= baseIndent:
-      pos.dec indent
+    pos.inc src.skipWhitespace pos
+    if pos >= src.len or src[pos] == '}':
       return
-    if oldIndent >= 0 and indent != oldIndent:
-      raise newException(ParseError, "Inconsistent indent")
     var rule = Rule()
-    if src.parseRule(rule, pos):
-      rule.children = src.parseRules(indent, pos)
-      if rule.children.len == 0:
-        raise newException(ParseError, "Missing child block")
+    while not (pos >= src.len or src[pos] in NewLines):
+      if src[pos] == '"':
+        rule.param.add src.parseString(pos)
+      elif src[pos] == '{':
+        pos.inc
+        rule.children = src.parseRules pos
+        if pos >= src.len:
+          raise newException(ParseError, "Missing closing '}'")
+        pos.inc
+        break
+      else:
+        var word: string
+        pos.inc src.parseUntil(word, Whitespace, pos)
+        rule.param.add Expr(kind: xString, str: word)
+      pos.inc src.skipWhile(Whitespace - Newlines, pos)
     result.add rule
 
 let src = readFile("test.rule")
 var start = 0
-let rules = src.parseRules(-1, start)
+let rules = src.parseRules start
+if start < src.len:
+  raise newException(ParseError, "Unexpected '}'")
 for rule in rules:
   echo rule
