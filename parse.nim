@@ -71,6 +71,8 @@ proc parseRules(src: string, pos: var int): seq[Rule] =
       if src[pos] == '"':
         rule.param.add src.parseString(pos)
       elif src[pos] == '{':
+        if rule.param.len == 0:
+          raise newException(ParseError, "Unexpected '{'")
         pos.inc
         rule.children = src.parseRules pos
         if pos >= src.len:
