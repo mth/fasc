@@ -3,9 +3,13 @@ import std/[strutils, parseutils]
 # https://nim-lang.org/docs/strutils.html
 # https://nim-lang.org/docs/parseutils.html
 
+type rule = object
+    param: seq[string]
+    children: seq[rule]
+
 const Space = {'\t', ' '}
 
-proc parseRule(src: string, start: var int): seq[string] =
+proc parseRule(src: string, start: var int): rule =
     var indent = 0
     while start < src.len and src[start] in Whitespace:
         start.inc src.skipWhile(Whitespace - Space, start)
@@ -14,7 +18,7 @@ proc parseRule(src: string, start: var int): seq[string] =
     while start < src.len and not (src[start] in Newlines):
         var word: string
         start.inc src.parseUntil(word, Whitespace, start)
-        result.add word
+        result.param.add word
         start.inc src.skipWhile(Whitespace - Newlines, start)
 
 let src = readFile("test.rule")
