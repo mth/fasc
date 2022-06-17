@@ -82,6 +82,9 @@ proc parseRules(src: string, pos: var int): seq[Rule] =
             raise newException(ParseError, "Missing closing '}'")
           pos.inc
           break
+        of '#':
+          pos.inc src.skipUntil(Newlines, pos)
+          break
         else:
           var word: string
           pos.inc src.parseUntil(word, Whitespace, pos)
