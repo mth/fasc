@@ -90,7 +90,8 @@ proc parseRules(src: string, pos: var int): seq[Rule] =
           pos.inc src.parseUntil(word, Whitespace, pos)
           rule.param.add Expr(kind: xString, str: word)
       pos.inc src.skipWhile(Whitespace - Newlines, pos)
-    result.add rule
+    if rule.param.len != 0:
+      result.add rule
 
 let src = readFile("test.rule")
 var start = 0
