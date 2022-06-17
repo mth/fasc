@@ -28,6 +28,9 @@ func isEOL(src: string, pos: int): bool =
 
 func parseString(src: string, pos: var int): Expr
 
+func parseExpr(src: string, pos: var int): Expr =
+    Expr(kind: xVar, name: "") # TODO
+
 func parseTemplate(src: string, endCh: set[char], pos: var int): Expr =
     let embedCh = endCh + {'%'}
     var parts: seq[Expr]
@@ -42,7 +45,7 @@ func parseTemplate(src: string, endCh: set[char], pos: var int): Expr =
             break
         pos.inc # skip %
         if src[pos] == '(':
-            continue # TODO
+            parts.add src.parseExpr(pos)
         else:
             let identLen = src.parseIdent(str, pos)
             if identLen > 0:
