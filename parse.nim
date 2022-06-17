@@ -68,21 +68,24 @@ proc parseRules(src: string, pos: var int): seq[Rule] =
       return
     var rule = Rule()
     while not (pos >= src.len or src[pos] in NewLines):
-      if src[pos] == '"':
-        rule.param.add src.parseString(pos)
-      elif src[pos] == '{':
-        if rule.param.len == 0:
-          raise newException(ParseError, "Unexpected '{'")
-        pos.inc
-        rule.children = src.parseRules pos
-        if pos >= src.len:
-          raise newException(ParseError, "Missing closing '}'")
-        pos.inc
-        break
-      else:
-        var word: string
-        pos.inc src.parseUntil(word, Whitespace, pos)
-        rule.param.add Expr(kind: xString, str: word)
+      case src[pos]:
+        of '"':
+          rule.param.add src.parseString(pos)
+        of '%':
+          rule.param.add src.parseExpr(pos)
+        of '{':
+          if rule.param.len == 0:
+            raise newException(ParseError, "Unexpected '{'")
+          pos.inc
+          rule.children = src.parseRules pos
+          if pos >= src.len:
+            raise newException(ParseError, "Missing closing '}'")
+          pos.inc
+          break
+        else:
+          var word: string
+          pos.inc src.parseUntil(word, Whitespace, pos)
+          rule.param.add Expr(kind: xString, str: word)
       pos.inc src.skipWhile(Whitespace - Newlines, pos)
     result.add rule
 
