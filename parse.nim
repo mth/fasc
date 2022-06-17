@@ -5,6 +5,18 @@ import std/[strutils, parseutils]
 
 type ParseError* = object of ValueError
 
+type ExprKind = enum eString, eVar, eOp, eConcat
+
+type Expr = object
+    case kind: ExprKind
+    of eString: str: string
+    of eVar: name: string
+    of eOp:
+      op: string
+      left: ref Expr
+      right: seq[Expr]
+    of eConcat: parts: seq[Expr]
+
 type Rule = object
     param: seq[string]
     children: seq[Rule]
@@ -20,6 +32,9 @@ func parseString(src: string, pos: var int): string =
     if pos >= src.len:
         raise newException(ParseError, "Unclosed string")
     pos.inc
+
+func parseTemplate(src: string, pos: var int): Expr =
+    Expr(kind: eConcat, parts: @[])
 
 func parseRule(src: string, rule: var Rule, pos: var int): bool =
     var word = ""
