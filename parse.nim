@@ -11,37 +11,48 @@ type Rule = object
 
 const Space = {'\t', ' '}
 
-func isEOL(src: string; start: int): bool =
-    start >= src.len or src[start] in NewLines
+func isEOL(src: string; pos: int): bool =
+    pos >= src.len or src[pos] in NewLines
 
-func parseRules(src: string, baseIndent: int, start: var int): seq[Rule] =
+func parseRule(src: string, rule: var Rule, pos: var int): bool =
+    var word = ""
+    while not src.isEOL pos:
+        var parsedWord: string
+        #while pos >= src.len && src[pos] == '"':
+        #    pos.inc
+        #    pos.inc src.parseUntil(parsedWord, {'"'}, pos)
+        #    if pos >= src.len:
+        #        raise newException(ParseError, "Unclosed string")
+        #    pos.inc
+        pos.inc src.parseUntil(parsedWord, Whitespace, pos)
+        let sp = src.skipWhile(Whitespace - Newlines, pos)
+        pos.inc sp
+        word.add parsedWord
+        if sp != 0 and not src.isEOL(pos) or not parsedWord.endsWith ':':
+            rule.param.add word
+            word = ""
+    if word != "":
+        rule.param.add word[0..^2]
+        return true
+    return false
+
+func parseRules(src: string, baseIndent: int, pos: var int): seq[Rule] =
     var indent = -1
     while true:
         let oldIndent = indent
         indent = 0
-        while start < src.len and src[start] in Whitespace:
-            start.inc src.skipWhile(Whitespace - Space, start)
-            indent = src.skipWhile(Space, start)
-            start.inc indent
-        if start >= src.len or indent <= baseIndent:
-            start.dec indent
+        while pos < src.len and src[pos] in Whitespace:
+            pos.inc src.skipWhile(Whitespace - Space, pos)
+            indent = src.skipWhile(Space, pos)
+            pos.inc indent
+        if pos >= src.len or indent <= baseIndent:
+            pos.dec indent
             return
         if oldIndent >= 0 and indent != oldIndent:
             raise newException(ParseError, "Inconsistent indent")
         var rule = Rule()
-        var word = ""
-        while not src.isEOL start:
-            var parsedWord: string
-            start.inc src.parseUntil(parsedWord, Whitespace, start)
-            let sp = src.skipWhile(Whitespace - Newlines, start)
-            start.inc sp
-            word.add parsedWord
-            if sp != 0 and not src.isEOL(start) or not parsedWord.endsWith ':':
-                rule.param.add word
-                word = ""
-        if word != "":
-            rule.param.add word[0..^2]
-            rule.children = src.parseRules(indent, start)
+        if src.parseRule(rule, pos):
+            rule.children = src.parseRules(indent, pos)
             if rule.children.len == 0:
                 raise newException(ParseError, "Missing child block")
         result.add rule
