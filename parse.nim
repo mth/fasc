@@ -11,7 +11,7 @@ type Rule = object
 
 const Space = {'\t', ' '}
 
-func isEOL(src: string; pos: int): bool =
+func isEOL(src: string, pos: int): bool =
     pos >= src.len or src[pos] in NewLines
 
 func parseString(src: string, pos: var int): string =
