@@ -20,9 +20,9 @@ type Rule = object
   param: seq[Expr]
   children: seq[Rule]
 
-func parseString(src: string, pos: var int): Expr
+proc parseString(src: string, pos: var int): Expr
 
-func parseExpr(src: string, pos: var int): Expr =
+proc parseExpr(src: string, pos: var int): Expr =
   case src[pos]:
     of '"':
       return src.parseString(pos)
@@ -49,12 +49,12 @@ func parseExpr(src: string, pos: var int): Expr =
       result.args.delete 1
     else:
       var word: string
-      pos.inc src.parseIdent(word, pos)
+      pos.inc src.parseUntil(word, Whitespace + {'"', '(', ')', '#', '{', '}'}, pos)
       if word == "":
         raise newException(ParseError, "Syntax error")
       return Expr(kind: xVar, name: word)
 
-func parseTemplate(src: string, endCh: set[char], pos: var int): Expr =
+proc parseTemplate(src: string, endCh: set[char], pos: var int): Expr =
   let embedCh = endCh + {'%'}
   var parts: seq[Expr]
   while pos < src.len:
@@ -62,7 +62,7 @@ func parseTemplate(src: string, endCh: set[char], pos: var int): Expr =
     pos.inc src.parseUntil(str, embedCh, pos)
     if str != "":
       parts.add Expr(kind: xString, str: str)
-    if pos >= src.len or str[pos] in endCh:
+    if pos >= src.len or src[pos] in endCh:
       if pos + 1 < src.len and src[pos + 1] == '"':
         parts.add Expr(kind: xString, str: "\"")
       break
@@ -80,9 +80,9 @@ func parseTemplate(src: string, endCh: set[char], pos: var int): Expr =
           pos.inc
   if parts.len == 0:
     return Expr(kind: xString, str: "")
-  return Expr(kind: xConcat, parts: @[])
+  return Expr(kind: xConcat, parts: parts)
 
-func parseString(src: string, pos: var int): Expr =
+proc parseString(src: string, pos: var int): Expr =
   pos.inc
   result = src.parseTemplate({'"'}, pos)
   if pos >= src.len:
