@@ -13,8 +13,7 @@ type Expr = object
   of xVar: name: string
   of xOp:
     op: string
-    left: ref Expr
-    right: seq[Expr]
+    args: seq[Expr]
   of xConcat: parts: seq[Expr]
 
 type Rule = object
@@ -24,7 +23,36 @@ type Rule = object
 func parseString(src: string, pos: var int): Expr
 
 func parseExpr(src: string, pos: var int): Expr =
-  Expr(kind: xVar, name: "") # TODO
+  case src[pos]:
+    of '"':
+      return src.parseString(pos)
+    of '(':
+      pos.inc
+      var param: seq[Expr]
+      pos.inc src.skipWhitespace(pos)
+      while pos < src.len and src[pos] != ')':
+        if src[pos] == '#':
+          pos.inc src.skipUntil(NewLines, pos)
+        else:
+          param.add src.parseExpr(pos)
+          if param.len == 2 and param[1].kind != xVar:
+            raise newException(ParseError, "Operator expected")
+        pos.inc src.skipWhitespace(pos)
+      if pos >= src.len:
+        raise newException(ParseError, "Unclosed ')'")
+      pos.inc
+      if param.len == 0:
+        return Expr(kind: xConcat, parts: @[]) # empty?
+      if param.len == 1:
+        return param[0]
+      result = Expr(kind: xOp, op: param[1].name, args: param)
+      result.args.delete 1
+    else:
+      var word: string
+      pos.inc src.parseIdent(word, pos)
+      if word == "":
+        raise newException(ParseError, "Syntax error")
+      return Expr(kind: xVar, name: word)
 
 func parseTemplate(src: string, endCh: set[char], pos: var int): Expr =
   let embedCh = endCh + {'%'}
@@ -72,6 +100,7 @@ proc parseRules(src: string, pos: var int): seq[Rule] =
         of '"':
           rule.param.add src.parseString(pos)
         of '%':
+          pos.inc
           rule.param.add src.parseExpr(pos)
         of '{':
           if rule.param.len == 0:
