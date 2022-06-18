@@ -97,8 +97,6 @@ proc parseRules(src: string, pos: var int): seq[Rule] =
     var rule = Rule()
     while not (pos >= src.len or src[pos] in NewLines):
       case src[pos]:
-        of '"':
-          rule.param.add src.parseString(pos)
         of '%':
           pos.inc
           rule.param.add src.parseExpr(pos)
@@ -115,9 +113,7 @@ proc parseRules(src: string, pos: var int): seq[Rule] =
           pos.inc src.skipUntil(Newlines, pos)
           break
         else:
-          var word: string
-          pos.inc src.parseUntil(word, Whitespace, pos)
-          rule.param.add Expr(kind: xString, str: word)
+          rule.param.add src.parseExpr(pos)
       pos.inc src.skipWhile(Whitespace - Newlines, pos)
     if rule.param.len != 0:
       result.add rule
