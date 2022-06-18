@@ -118,10 +118,8 @@ proc parseRules(src: string, pos: var int): seq[Rule] =
     if rule.param.len != 0:
       result.add rule
 
-let src = readFile("test.rule")
-var start = 0
-let rules = src.parseRules start
-if start < src.len:
-  raise newException(ParseError, "Unexpected '}'")
-for rule in rules:
-  echo rule
+proc parseRules*(src: string): seq[Rule] =
+  var start = 0
+  result = src.parseRules start
+  if start < src.len:
+    raise newException(ParseError, "Unexpected '}'")
