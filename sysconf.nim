@@ -42,14 +42,18 @@ proc wpa_supplicant(device: string) =
   discard tryRemoveFile(conf_link)
   createSymlink("wpa_supplicant.conf", conf_link)
 
-proc wlan(device: string) =
+proc wlanDevice(device: string) =
   network("wlan", "Name=wlp*", "DHCP=yes", "IPv6PrivacyExtensions=true")
   wpa_supplicant(device)
   packagesToInstall.add "wpa_supplicant"
   enableAndStart("systemd-networkd.service", fmt"wpa_supplicant@{device}.service")
 
-proc autoWLAN() =
-  wlan("wlp2s0") # TODO
+proc wlan() =
+  for (kind, path) in walkDir("/sys/class/net"):
+    let net = extractFilename(path)
+    if net.startsWith("wlp"):
+      wlanDevice(net)
+    return
 
 proc runCmd(command: string, args: varargs[string]) =
   let process = startProcess(command, "", args, nil, {poParentStreams, poUsePath})
@@ -105,7 +109,7 @@ proc sway() =
   packagesToInstall.add("sway")
 
 let tasks = {
-  "wlan": ("Configure WLAN client with DHCP", autoWLAN),
+  "wlan": ("Configure WLAN client with DHCP", wlan),
   "sway": ("Configure sway desktop startup", sway)
 }.toTable
 
