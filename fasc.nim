@@ -113,6 +113,11 @@ let tasks = {
   "sway": ("Configure sway desktop startup", sway)
 }.toTable
 
+if paramCount() == 0:
+  echo "FAst System Configurator."
+  echo "fasc (wlan|sway)"
+  quit()
+
 if not (paramStr(1) in tasks):
   echo "Unknown task: ", paramStr(1)
 else:
