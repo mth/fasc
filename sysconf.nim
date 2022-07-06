@@ -35,13 +35,15 @@ proc wpa_supplicant(device: string) =
     #"bgscan=\"simple:60:-70:900\"",
     "p2p_disabled=1"
   ]
-  writeFile("/etc/wpa_supplicant/wpa_supplicant.conf", conf)
+  let defaultConfName = "/etc/wpa_supplicant/wpa_supplicant.conf"
+  if not defaultConfName.fileExists:
+    writeFile(defaultConfName, conf)
   let conf_link = fmt"/etc/wpa_supplicant/wpa_supplicant-{device}.conf"
   discard tryRemoveFile(conf_link)
   createSymlink("wpa_supplicant.conf", conf_link)
 
 proc wlan(device: string) =
-  network("wlan", "Name=wlp*", "DHCP=yes")
+  network("wlan", "Name=wlp*", "DHCP=yes", "IPv6PrivacyExtensions=true")
   wpa_supplicant(device)
   packagesToInstall.add "wpa_supplicant"
   enableAndStart("systemd-networkd.service", fmt"wpa_supplicant@{device}.service")
