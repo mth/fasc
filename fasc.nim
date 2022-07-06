@@ -1,17 +1,5 @@
-import std/[parsecfg, posix, sequtils, strformat, strutils, tables, os, osproc]
-
-var packagesToInstall: seq[string]
-var enableUnits: seq[string]
-var startUnits: seq[string]
-var systemdReload: bool
-
-proc enableAndStart(units: varargs[string]) =
-  for unit in units:
-    enableUnits.add unit
-    startUnits.add unit
-
-proc writeFile(filename: string, content: openarray[string]) =
-  writeFile(filename, content.join("\n"))
+import std/[parsecfg, posix, strformat, strutils, tables, os]
+import cmdqueue
 
 proc network(unit, match: string, options: varargs[string]) =
   var net = @[
@@ -54,13 +42,6 @@ proc wlan() =
     if net.startsWith("wlp"):
       wlanDevice(net)
     return
-
-proc runCmd(command: string, args: varargs[string]) =
-  let process = startProcess(command, "", args, nil, {poParentStreams, poUsePath})
-  let exitCode = process.waitForExit
-  if exitCode != 0:
-    echo fmt"Executing {command} with {args} failed with exit code {exitCode}"
-    quit 1
 
 proc runWayland(compositor, user: string) =
   let pw = user.getpwnam
@@ -122,12 +103,4 @@ if not (paramStr(1) in tasks):
   echo "Unknown task: ", paramStr(1)
 else:
   tasks[paramStr(1)][1]()
-if packagesToInstall.len > 0:
-  runCmd("apt-get", @["install", "-y", "--no-install-recommends"] &
-         packagesToInstall.deduplicate)
-if systemdReload:
-  runCmd("systemctl", "daemon-reload")
-if enableUnits.len > 0:
-  runCmd("systemctl", "enable" & enableUnits.deduplicate)
-if startUnits.len > 0:
-  runCmd("systemctl", "start" & startUnits.deduplicate)
+runQueuedCommands()
