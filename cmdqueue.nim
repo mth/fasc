@@ -11,7 +11,7 @@ proc enableAndStart*(units: varargs[string]) =
     startUnits.add unit
 
 proc writeFile*(filename: string, content: openarray[string]) =
-  let (dir, name, ext) = filename.splitFile
+  let (dir, _, _) = filename.splitFile
   createDir dir
   writeFile(filename, content.join("\n"))
 
