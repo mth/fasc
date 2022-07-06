@@ -40,7 +40,7 @@ proc runWayland(compositor, user: string) =
     "UtmpMode=user",
     "Environment=GDK_BACKEND=wayland QT_QPA_PLATFORM=wayland-egl XDG_SESSION_TYPE=wayland MOZ_WEBRENDER=1 LANG=et_EE.utf8",
     "",
-    "[Install",
+    "[Install]",
     "WantedBy=graphical.target",
     ""
   ]

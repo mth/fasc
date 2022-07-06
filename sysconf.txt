@@ -1,0 +1,66 @@
+Configuration tasks.
+
+packages | sources.list, apt.conf, preferences
+         | marking libs etc as automatically installed
+         | removing unneeded packages
+         | adding useful packages - some default package lists
+         | systemd-cron
+         | firmware
+net | systemd-networkd | wlan
+                       | eth
+                       | bridge
+		       | vlan
+    | resolv.conf, dnsmasq
+    | wvdial
+    | nftables
+    | simple static lan configuration using ifupdown?
+grub boot delay
+zram
+zswap
+sysctl | ipv6 tempaddr
+       | fq_codel, westwood
+       | dmesg
+       | vm
+       | forwarding
+idcard
+hdparm
+automatic fsck
+unattended-upgrades (and automatic apt-cache updating)
+admin user
+locales
+pam optimization
+alsa
+cvpn
+rsyslog, journal
+systemd | timeouts
+        | logind - suspend timeouts, sessions
+        | timesyncd
+initramfs
+nspawn
+fstab | nfs, usb vfat, tmp
+sudoers
+sshd
+cpufreq, fancontrol
+systemd hardening
+hosts
+modules
+java, gradle
+sandboxed zoom
+scripts? screen wrapper, apt-why, apt-upgrade
+
+User configuration tasks
+  /etc/groups
+  run-wayland, sway
+  vim
+  firefox
+    ff2mpv
+
+profiles
+ | desktop
+ | java
+ | laptop
+ | server?
+
+-----
+Alpine setup?
+
