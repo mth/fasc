@@ -1,5 +1,20 @@
 import std/[parsecfg, posix, strformat, strutils, tables, os, osproc]
 
+proc network(unit, match: string, options: varargs[string]) =
+  var net = @[
+    "[Match]",
+    match,
+    "",
+    "[Link]",
+    "RequiredForOnline=no",
+
+    "[Network]"
+  ]
+  echo (net & @options & @[""]).join("\n")
+
+proc wlan() =
+  network("wlan", "Name=wlp*", "DHCP=yes")
+
 proc runCmd(command: string, args: varargs[string]) =
   let process = startProcess(command, "", args, nil, {poParentStreams, poUsePath})
   let exitCode = process.waitForExit
@@ -22,7 +37,7 @@ proc runWayland(compositor, user: string) =
     "",
     "[Service]",
     fmt"ExecStartPre=/usr/bin/install -m 700 -o {user} -g {user} -d /tmp/.{user}-cache",
-    "ExecStart=/usr/bin/ssh-agent ${compositor}",
+    "ExecStart=/usr/bin/ssh-agent " & compositor,
     "KillMode=control-group",
     "Restart=no",
     "StandardInput=tty-fail",
@@ -32,8 +47,8 @@ proc runWayland(compositor, user: string) =
     "TTReset=yes",
     "TTYVHangup=yes",
     "TTYVTDisallocate=yes",
-    "WorkingDirectory={home}",
-    fmt"User={user}",
+    "WorkingDirectory=" & home,
+    "User=" & user,
     fmt"Group={groupId}",
     "PAMName=login",
     "UtmpIdentifier=tty7",
@@ -51,6 +66,7 @@ proc sway() =
   runCmd("apt", "install", "sway", "openssh-client", "qtwayland5")
 
 let tasks = {
+  "wlan": ("Configure WLAN client with DHCP", wlan),
   "sway": ("Configure sway desktop startup", sway)
 }.toTable
 
