@@ -114,7 +114,8 @@ if not (paramStr(1) in tasks):
 else:
   tasks[paramStr(1)][1]()
 if packagesToInstall.len > 0:
-  runCmd("apt-get", "install" & packagesToInstall.deduplicate)
+  runCmd("apt-get", @["install", "-y", "--no-install-recommends"] &
+         packagesToInstall.deduplicate)
 if systemdReload:
   runCmd("systemctl", "daemon-reload")
 if enableUnits.len > 0:
