@@ -51,7 +51,7 @@ proc wlanDevice(device: string) =
 proc wlan() =
   for (kind, path) in walkDir("/sys/class/net"):
     let net = extractFilename(path)
-    if net.startsWith("wlp") and not net.endsWith("-p2p"):
+    if net.startsWith("wlp"):
       wlanDevice(net)
     return
 
