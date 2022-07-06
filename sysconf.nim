@@ -1,4 +1,17 @@
-import std/[parsecfg, posix, strformat, strutils, tables, os, osproc]
+import std/[parsecfg, posix, sequtils, strformat, strutils, tables, os, osproc]
+
+var packagesToInstall: seq[string]
+var enableUnits: seq[string]
+var startUnits: seq[string]
+var systemdReload: bool
+
+proc enableAndStart(units: varargs[string]) =
+  for unit in units:
+    enableUnits.add unit
+    startUnits.add unit
+
+proc writeFile(filename: string, content: openarray[string]) =
+  writeFile(filename, content.join("\n"))
 
 proc network(unit, match: string, options: varargs[string]) =
   var net = @[
@@ -10,10 +23,31 @@ proc network(unit, match: string, options: varargs[string]) =
 
     "[Network]"
   ]
-  echo (net & @options & @[""]).join("\n")
+  writeFile(fmt"/etc/systemd/network/{unit}.network", net & @options & @[""])
 
-proc wlan() =
+proc wpa_supplicant(device: string) =
+  let conf = [
+    "ctrl_interface=DIR=/run/wpa_supplicant GROUP=netdev",
+    "update_config=1",
+    "dtim_period=4",
+    "beacon_int=200",
+    "ignore_old_scan_res=1",
+    #"bgscan=\"simple:60:-70:900\"",
+    "p2p_disabled=1"
+  ]
+  writeFile("/etc/wpa_supplicant/wpa_supplicant.conf", conf)
+  let conf_link = fmt"/etc/wpa_supplicant/wpa_supplicant-{device}.conf"
+  discard tryRemoveFile(conf_link)
+  createSymlink("wpa_supplicant.conf", conf_link)
+
+proc wlan(device: string) =
   network("wlan", "Name=wlp*", "DHCP=yes")
+  wpa_supplicant(device)
+  packagesToInstall.add "wpa_supplicant"
+  enableAndStart("systemd-networkd.service", fmt"wpa_supplicant@{device}.service")
+
+proc autoWLAN() =
+  wlan("wlp2s0") # TODO
 
 proc runCmd(command: string, args: varargs[string]) =
   let process = startProcess(command, "", args, nil, {poParentStreams, poUsePath})
@@ -59,14 +93,17 @@ proc runWayland(compositor, user: string) =
     "WantedBy=graphical.target",
     ""
   ]
-  echo service.join("\n")
+  writeFile("/etc/systemd/system/run-wayland.service", service)
+  runCmd("systemctl", "enable", "run-wayland.service")
+  systemdReload = true
+  packagesToInstall.add(["openssh-client", "qtwayland5"])
 
 proc sway() =
   runWayland("sway", "mzz")
-  runCmd("apt", "install", "sway", "openssh-client", "qtwayland5")
+  packagesToInstall.add("sway")
 
 let tasks = {
-  "wlan": ("Configure WLAN client with DHCP", wlan),
+  "wlan": ("Configure WLAN client with DHCP", autoWLAN),
   "sway": ("Configure sway desktop startup", sway)
 }.toTable
 
@@ -74,3 +111,11 @@ if not (paramStr(1) in tasks):
   echo "Unknown task: ", paramStr(1)
 else:
   tasks[paramStr(1)][1]()
+if packagesToInstall.len > 0:
+  runCmd("apt-get", "install" & packagesToInstall.deduplicate)
+if systemdReload:
+  runCmd("systemctl", "daemon-reload")
+if enableUnits.len > 0:
+  runCmd("systemctl", "enable" & enableUnits.deduplicate)
+if startUnits.len > 0:
+  runCmd("systemctl", "start" & startUnits.deduplicate)
