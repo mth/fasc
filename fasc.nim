@@ -32,17 +32,22 @@ proc wpa_supplicant(device: string) =
   createSymlink("wpa_supplicant.conf", conf_link)
 
 proc wlanDevice(device: string) =
+  echo fmt"Configuring WLAN device {device} for DHCP"
   network("wlan", "Name=wlp*", "DHCP=yes", "IPv6PrivacyExtensions=true")
   wpa_supplicant(device)
   packagesToInstall.add "wpa_supplicant"
   enableAndStart("systemd-networkd.service", fmt"wpa_supplicant@{device}.service")
 
 proc wlan() =
+  var devices: seq[string]
   for (kind, path) in walkDir("/sys/class/net"):
     let net = extractFilename(path)
     if net.startsWith("wlp"):
       wlanDevice(net)
-    return
+      return
+    devices.add net
+  let deviceList = devices.join ", "
+  echo fmt"No wlp* WLAN device found (existing devices: {deviceList})"
 
 let tasks = {
   "wlan": ("Configure WLAN client with DHCP", wlan),
