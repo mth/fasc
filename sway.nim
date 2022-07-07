@@ -1,4 +1,4 @@
-import std/[strformat, posix]
+import std/strformat
 import cmdqueue
 
 const user_config = [
