@@ -264,6 +264,22 @@ bindsym $mod+r mode "resize"
 """)
 ]
 
+const xkb_uml = """
+partial alphanumeric_keys
+xkb_symbols "basic" {
+    include "us(dvorak)"
+    name[Group1]= "Deadkeys umlaut (Dvorak)";
+
+    key <CAPS>  { [ dead_diaeresis, dead_tilde, dead_caron, dead_grave ] };
+    #key <FK12>  { [ Next, Next ] }; 
+    #key <PRSC>  { [ Prior, Prior ] };
+
+    include "level3(ralt_switch)"
+    include "kpdl(comma)"
+    include "eurosign(4)"
+};
+"""
+
 proc runWayland(compositor, user: string) =
   let pw = user.getpwnam
   if pw == nil:
