@@ -325,4 +325,4 @@ proc runWayland(compositor, user: string) =
 
 proc swayUnit*() =
   runWayland("sway", "mzz")
-  packagesToInstall.add("sway")
+  packagesToInstall.add("sway", "foot", "evince", "firefox-esr", "gammastep", "grim")
