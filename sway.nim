@@ -321,7 +321,7 @@ proc runWayland(compositor, user: string) =
   packagesToInstall.add(["openssh-client", "qtwayland5"])
   systemdReload = true
   runCmd("usermod", "-G",
-    "adm,audio,cdrom,input,kvm,video,systemd-journal,render", user)
+    "adm,audio,cdrom,input,kvm,video,render,systemd-journal", user)
 
 proc swayUnit*() =
   runWayland("sway", "mzz")
