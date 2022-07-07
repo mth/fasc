@@ -280,8 +280,7 @@ xkb_symbols "basic" {
 };
 """
 
-proc runWayland(compositor, user: string) =
-  let info = user.userInfo
+proc runWayland(compositor, user: string, info: UserInfo) =
   let gid = info.gid
   var service = [
     "[Unit]",
@@ -324,7 +323,12 @@ proc runWayland(compositor, user: string) =
   runCmd("usermod", "-G",
     "adm,audio,cdrom,input,kvm,video,render,systemd-journal", user)
 
-proc swayUnit*() =
+proc swayUnit*(user: string) =
+  let info = user.userInfo
+  for (file, conf) in user_config:
+    writeAsUser(info, file, conf)
+  for (file, conf) in sway_config:
+    writeAsUser(info, joinPath(".config/sway", file), conf)
   runWayland("sway", "mzz")
   packagesToInstall.add(["sway", "swayidle", "foot", "evince",
                          "firefox-esr", "gammastep", "grim"])
