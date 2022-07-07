@@ -1,4 +1,6 @@
-import std/[sequtils, strformat, strutils, os, osproc]
+import std/[sequtils, strformat, strutils, os, osproc, posix]
+
+tuple UserInfo = tuple[string, int, int]
 
 var packagesToInstall*: seq[string]
 var enableUnits*: seq[string]
@@ -32,3 +34,10 @@ proc runQueuedCommands*() =
     runCmd("systemctl", "enable" & enableUnits.deduplicate)
   if startUnits.len > 0:
     runCmd("systemctl", "start" & startUnits.deduplicate)
+
+proc userInfo*(user: string) =
+  let pw = user.getpwnam
+  if pw == nil:
+    echo fmt"Unknown user {user}"
+    quit 1
+  return ($pw.pw_dir, pw.pw_uid, pw.pw_gid)

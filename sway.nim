@@ -281,12 +281,7 @@ xkb_symbols "basic" {
 """
 
 proc runWayland(compositor, user: string) =
-  let pw = user.getpwnam
-  if pw == nil:
-    echo fmt"Unknown user {user}"
-    quit 1
-  let groupId = pw.pw_gid
-  let home = $pw.pw_dir
+  (home, userId, groupId) = user.userInfo
   var service = [
     "[Unit]",
     "Description=Runs wayland desktop",
@@ -325,6 +320,9 @@ proc runWayland(compositor, user: string) =
   enableUnits.add "run-wayland.service"
   packagesToInstall.add(["openssh-client", "qtwayland5"])
   systemdReload = true
+  runCmd("usermod", "-G",
+    "adw,audio,cdrom,input,netdev,kvm,video,plugdev,systemd-journal,render",
+    user)
 
 proc swayUnit*() =
   runWayland("sway", "mzz")
