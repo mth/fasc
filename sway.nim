@@ -281,7 +281,8 @@ xkb_symbols "basic" {
 """
 
 proc runWayland(compositor, user: string) =
-  let (home, userId, groupId) = user.userInfo
+  let info = user.userInfo
+  let gid = info.gid
   var service = [
     "[Unit]",
     "Description=Runs wayland desktop",
@@ -289,7 +290,7 @@ proc runWayland(compositor, user: string) =
     "After=systemd-user-sessions.service plymouth-quit-wait.service usb-gadget.target",
     "",
     "[Service]",
-    fmt"ExecStartPre=/usr/bin/install -m 700 -o {user} -g {user} -d /tmp/.{user}-cache",
+    fmt"ExecStartPre=/usr/bin/install -m 700 -o {user} -g {gid} -d /tmp/.{user}-cache",
     "ExecStart=/usr/bin/ssh-agent " & compositor,
     "KillMode=control-group",
     "Restart=no",
@@ -300,9 +301,9 @@ proc runWayland(compositor, user: string) =
     "TTReset=yes",
     "TTYVHangup=yes",
     "TTYVTDisallocate=yes",
-    "WorkingDirectory=" & home,
+    "WorkingDirectory=" & info.home,
     "User=" & user,
-    fmt"Group={groupId}",
+    fmt"Group={info.gid}",
     "PAMName=login",
     "UtmpIdentifier=tty7",
     "UtmpMode=user",

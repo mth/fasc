@@ -1,5 +1,7 @@
 import std/[sequtils, strformat, strutils, os, osproc, posix]
 
+type UserInfo* = tuple[home: string, uid: Uid, gid: Gid]
+
 var packagesToInstall*: seq[string]
 var enableUnits*: seq[string]
 var startUnits*: seq[string]
@@ -13,7 +15,23 @@ proc enableAndStart*(units: varargs[string]) =
 proc writeFile*(filename: string, content: openarray[string]) =
   let (dir, _, _) = filename.splitFile
   createDir dir
-  writeFile(filename, content.join("\n"))
+  filename.writeFile content.join("\n")
+
+proc setPermissions(fullPath: string, user: UserInfo, permissions: int) =
+  if chown(fullPath, user.uid, user.gid) == -1:
+    echo fmt"chown({fullPath}) failed: {strerror(errno)}"
+  if chmod(fullPath, 0o755) == -1:
+    echo fmt"chmod({fullPath}) failed: {strerror(errno)}"
+
+proc writeAsUser(user: UserInfo, filename, content: string,
+                 permissions: int = 0o644) =
+  for part in filename.parentDirs(fromRoot = true, inclusive = false):
+    let absolute = user.home.joinPath part
+    if not absolute.existsOrCreateDir:
+      setPermissions(absolute, user, 0o755)
+  let absolute = user.home.joinPath filename
+  absolute.writeFile content
+  setPermissions(absolute, user, permissions)
 
 proc runCmd*(command: string, args: varargs[string]) =
   let process = startProcess(command, "", args, nil, {poParentStreams, poUsePath})
@@ -33,9 +51,9 @@ proc runQueuedCommands*() =
   if startUnits.len > 0:
     runCmd("systemctl", "start" & startUnits.deduplicate)
 
-proc userInfo*(user: string): (string, Uid, Gid) =
+proc userInfo*(user: string): UserInfo =
   let pw = user.getpwnam
   if pw == nil:
     echo fmt"Unknown user {user}"
     quit 1
-  return ($pw.pw_dir, pw.pw_uid, pw.pw_gid)
+  return (home: $pw.pw_dir, uid: pw.pw_uid, gid: pw.pw_gid)
