@@ -318,11 +318,12 @@ proc runWayland(compositor, user: string) =
   ]
   writeFile("/etc/systemd/system/run-wayland.service", service)
   enableUnits.add "run-wayland.service"
-  packagesToInstall.add(["openssh-client", "qtwayland5"])
+  packagesToInstall.add(["openssh-client", "qtwayland5", "xwayland"])
   systemdReload = true
   runCmd("usermod", "-G",
     "adm,audio,cdrom,input,kvm,video,render,systemd-journal", user)
 
 proc swayUnit*() =
   runWayland("sway", "mzz")
-  packagesToInstall.add("sway", "foot", "evince", "firefox-esr", "gammastep", "grim")
+  packagesToInstall.add("sway", "swayidle", "foot", "evince",
+                        "firefox-esr", "gammastep", "grim")
