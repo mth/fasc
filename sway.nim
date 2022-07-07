@@ -281,7 +281,7 @@ xkb_symbols "basic" {
 """
 
 proc runWayland(compositor, user: string) =
-  (home, userId, groupId) = user.userInfo
+  let (home, userId, groupId) = user.userInfo
   var service = [
     "[Unit]",
     "Description=Runs wayland desktop",
