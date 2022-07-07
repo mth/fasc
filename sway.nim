@@ -1,4 +1,4 @@
-import std/strformat
+import std/[strformat, os]
 import cmdqueue
 
 const user_config = [
@@ -323,12 +323,13 @@ proc runWayland(compositor, user: string, info: UserInfo) =
   runCmd("usermod", "-G",
     "adm,audio,cdrom,input,kvm,video,render,systemd-journal", user)
 
-proc swayUnit*(user: string) =
+proc swayUnit*() =
+  let user = "mzz" # TODO
   let info = user.userInfo
   for (file, conf) in user_config:
     writeAsUser(info, file, conf)
   for (file, conf) in sway_config:
     writeAsUser(info, joinPath(".config/sway", file), conf)
-  runWayland("sway", "mzz")
+  runWayland("sway", "mzz", info)
   packagesToInstall.add(["sway", "swayidle", "foot", "evince",
                          "firefox-esr", "gammastep", "grim"])

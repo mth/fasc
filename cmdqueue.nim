@@ -23,8 +23,8 @@ proc setPermissions(fullPath: string, user: UserInfo, permissions: int) =
   if chmod(fullPath, 0o755) == -1:
     echo fmt"chmod({fullPath}) failed: {strerror(errno)}"
 
-proc writeAsUser(user: UserInfo, filename, content: string,
-                 permissions: int = 0o644) =
+proc writeAsUser*(user: UserInfo, filename, content: string,
+                  permissions: int = 0o644) =
   for part in filename.parentDirs(fromRoot = true, inclusive = false):
     let absolute = user.home.joinPath part
     if not absolute.existsOrCreateDir:
