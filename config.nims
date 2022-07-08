@@ -11,3 +11,12 @@ when defined(musl):
   switch("gcc.exe", muslGCC)
   switch("gcc.linkerexe", muslGCC)
   switch("passL", "-static")
+
+when defined(tcc):
+  let tcc = findExe("tcc")
+  if tcc == "":
+    error("tcc not found in the PATH")
+  switch("d", "release")
+  switch("opt", "size")
+  switch("gcc.exe", tcc)
+  switch("gcc.linkerexe", tcc)
