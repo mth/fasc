@@ -1,4 +1,4 @@
-import std/[strformat, strutils, terminal, os]
+import std/[parseutils, streams, strformat, strutils, terminal, os, osproc]
 import cmdqueue
 
 proc network(unit, match: string, options: varargs[string]) =
@@ -54,4 +54,15 @@ proc wifiNet*(args: Strs) =
     quit 1
   let ssid = args[0]
   let pass = readPasswordFromStdin fmt"{ssid} pasaword: "
-  echo pass
+  let process = startProcess("wpa_passphrase", args = [ssid])
+  let input = process.inputStream
+  input.writeLine pass
+  input.flush
+  let output = process.outputStream
+  var netConf: Strs
+  var line: string
+  while output.readLine line:
+    let notWs = line.skipWhitespace
+    if notWs < line.len and line[notWs] == '#':
+      netConf.add line
+  echo netConf.join("\n")
