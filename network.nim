@@ -63,7 +63,7 @@ proc wifiNet*(args: Strs) =
   var line: string
   while output.readLine line:
     let notWs = line.skipWhitespace
-    if notWs < line.len and line[notWs] == '#':
+    if notWs < line.len and line[notWs] != '#':
       netConf.add line
   let exitCode = process.waitForExit
   if exitCode != 0:
