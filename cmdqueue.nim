@@ -1,10 +1,11 @@
 import std/[sequtils, strformat, strutils, os, osproc, posix]
 
+type Strs* = seq[string]
 type UserInfo* = tuple[home: string, uid: Uid, gid: Gid]
 
-var packagesToInstall*: seq[string]
-var enableUnits*: seq[string]
-var startUnits*: seq[string]
+var packagesToInstall*: Strs
+var enableUnits*: Strs
+var startUnits*: Strs
 var systemdReload*: bool
 
 proc enableAndStart*(units: varargs[string]) =

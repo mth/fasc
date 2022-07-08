@@ -323,7 +323,7 @@ proc runWayland(compositor, user: string, info: UserInfo) =
   runCmd("usermod", "-G",
     "adm,audio,cdrom,input,kvm,video,render,systemd-journal", user)
 
-proc swayUnit*() =
+proc swayUnit*(args: Strs) =
   let user = "mzz" # TODO
   let info = user.userInfo
   for (file, conf) in user_config:
