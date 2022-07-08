@@ -5,6 +5,7 @@ import sway
 
 let tasks = {
   "wlan": ("Configure WLAN client with DHCP", wlan),
+  "wifinet": ("Add WLAN network", wifiNet),
   "sway": ("Configure sway desktop startup", swayUnit)
 }.toTable
 

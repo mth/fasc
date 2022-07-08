@@ -1,4 +1,4 @@
-import std/[strformat, strutils, tables, os]
+import std/[strformat, strutils, terminal, os]
 import cmdqueue
 
 proc network(unit, match: string, options: varargs[string]) =
@@ -47,3 +47,11 @@ proc wlan*(args: Strs) =
     devices.add net
   let deviceList = devices.join ", "
   echo fmt"No wlp* WLAN device found (existing devices: {deviceList})"
+
+proc wifiNet*(args: Strs) =
+  if args.len != 1:
+    echo "Expected fasc wifinet <ssid>"
+    quit 1
+  let ssid = args[0]
+  let pass = readPasswordFromStdin fmt"{ssid} pasaword: "
+  echo pass
