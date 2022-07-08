@@ -1,4 +1,4 @@
-import std/[strutils, tables, os]
+import std/[tables, os]
 import cmdqueue
 import network
 import sway

@@ -54,19 +54,20 @@ proc wifiNet*(args: Strs) =
     quit 1
   let ssid = args[0]
   let pass = readPasswordFromStdin fmt"{ssid} pasaword: "
-  let process = startProcess("wpa_passphrase", args = [ssid])
+  let process = startProcess("wpa_passphrase", args = [ssid],
+                             options = {poStdErrToStdOut, poUsePath})
   let input = process.inputStream
   input.writeLine pass
   input.flush
   let output = process.outputStream
-  var netConf: Strs
-  var line: string
+  var netConf, line: string
   while output.readLine line:
     let notWs = line.skipWhitespace
     if notWs < line.len and line[notWs] != '#':
       netConf.add line
+      netConf.add "\n"
   let exitCode = process.waitForExit
   if exitCode != 0:
     echo fmt"wpa_passphrase exit code {exitCode}, output:"
-    echo netConf.join("\n")
+    echo netConf
     quit 1
