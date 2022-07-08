@@ -65,4 +65,8 @@ proc wifiNet*(args: Strs) =
     let notWs = line.skipWhitespace
     if notWs < line.len and line[notWs] == '#':
       netConf.add line
-  echo netConf.join("\n")
+  let exitCode = process.waitForExit
+  if exitCode != 0:
+    echo fmt"wpa_passphrase exit code {exitCode}, output:"
+    echo netConf.join("\n")
+    quit 1
