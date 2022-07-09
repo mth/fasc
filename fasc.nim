@@ -11,7 +11,7 @@ let tasks = {
 
 if paramCount() == 0:
   echo "FAst System Configurator."
-  echo("fasc (" & tasks.keys.toSeq.join("|") & ")")
+  echo("fasc " & tasks.keys.toSeq.join("|"))
   quit()
 
 if not (paramStr(1) in tasks):
