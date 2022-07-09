@@ -329,7 +329,7 @@ proc swayUnit*(args: Strs) =
   for (file, conf) in user_config:
     writeAsUser(info, file, conf)
   for (file, conf) in sway_config:
-    writeAsUser(info, joinPath(".config/sway", file), conf)
+    writeAsUser(info, ".config/sway" / file, conf)
   runWayland("sway", "mzz", info)
   packagesToInstall.add(["sway", "swayidle", "foot", "evince",
                          "firefox-esr", "gammastep", "grim"])

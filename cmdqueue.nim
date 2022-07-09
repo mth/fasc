@@ -13,10 +13,17 @@ proc enableAndStart*(units: varargs[string]) =
     enableUnits.add unit
     startUnits.add unit
 
-proc writeFile*(filename: string, content: openarray[string]) =
+proc writeFileIfNotExists*(filename, content: string; force: bool) =
+  if not force and filename.fileExists:
+    echo fmt"Retaining existing {filename}"
+  else:
+    echo fmt"Created {filename}"
+    filename.writeFile content
+
+proc writeFile*(filename: string, content: openarray[string], force = false) =
   let (dir, _, _) = filename.splitFile
   createDir dir
-  filename.writeFile content.join("\n")
+  writeFileIfNotExists(filename, content.join("\n"), force)
 
 proc setPermissions(fullPath: string, user: UserInfo, permissions: int) =
   if chown(fullPath, user.uid, user.gid) == -1:
@@ -25,13 +32,14 @@ proc setPermissions(fullPath: string, user: UserInfo, permissions: int) =
     echo fmt"chmod({fullPath}) failed: {strerror(errno)}"
 
 proc writeAsUser*(user: UserInfo, filename, content: string,
-                  permissions: int = 0o644) =
+                  permissions: int = 0o644, force = false) =
   for part in filename.parentDirs(fromRoot = true, inclusive = false):
-    let absolute = user.home.joinPath part
+    var absolute = user.home / part
+    absolute.removeSuffix '/'
     if not absolute.existsOrCreateDir:
       setPermissions(absolute, user, 0o755)
-  let absolute = user.home.joinPath filename
-  absolute.writeFile content
+  let absolute = user.home / filename
+  writeFileIfNotExists(absolute, content, force)
   setPermissions(absolute, user, permissions)
 
 proc runCmd*(command: string, args: varargs[string]) =
