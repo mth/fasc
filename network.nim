@@ -56,9 +56,10 @@ proc stopWireless(): seq[string] =
   for iface in findInterfaces():
     if iface.isWireless and iface.isInterfaceUp:
       result.add iface
-  let services = result.map supplicantService
-  echo("Stopping wireless services: " & services.join(", "))
-  runCmd("systemctl", "stop" & services)
+  if result.len > 0:
+    let services = result.map supplicantService
+    echo("Stopping wireless services: " & services.join(", "))
+    runCmd("systemctl", "stop" & services)
 
 proc wlan*(args: Strs) =
   var devices: Strs
