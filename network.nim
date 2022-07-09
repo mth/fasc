@@ -30,18 +30,36 @@ proc wpa_supplicant(device: string) =
   discard tryRemoveFile(conf_link)
   createSymlink("wpa_supplicant.conf", conf_link)
 
+func supplicantService(iface: string): string =
+  fmt"wpa_supplicant@{iface}.service"
+
 proc wlanDevice(device: string) =
   echo fmt"Configuring WLAN device {device} for DHCP"
   network("wlan", "Name=wlp*", "DHCP=yes", "IPv6PrivacyExtensions=true")
   wpa_supplicant(device)
   packagesToInstall.add "wpa_supplicant"
-  enableAndStart("systemd-networkd.service", fmt"wpa_supplicant@{device}.service")
+  enableAndStart("systemd-networkd.service", device.supplicantService)
+
+iterator findInterfaces(): string =
+  for kind, path in walkDir("/sys/class/net"):
+    yield extractFilename(path)
+
+func isWireless(iface: string): bool =
+  iface.startsWith("wlp")
+
+proc isInterfaceUp(iface: string): bool =
+  readFile(fmt"/sys/class/net/{iface}/operstate") == "up"
+
+proc stopWireless(): seq[string] =
+  for iface in findInterfaces():
+    if iface.isWireless and iface.isInterfaceUp:
+      runCmd("systemctl", "stop", iface.supplicantService)
+    result.add iface
 
 proc wlan*(args: Strs) =
   var devices: Strs
-  for (kind, path) in walkDir("/sys/class/net"):
-    let net = extractFilename(path)
-    if net.startsWith("wlp"):
+  for net in findInterfaces():
+    if net.isWireless:
       wlanDevice(net)
       return
     devices.add net
