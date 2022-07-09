@@ -1,4 +1,4 @@
-import std/[sequtils, strformat, strutils, os, osproc, posix]
+import std/[sequtils, streams, strformat, strutils, os, osproc, posix]
 
 type Strs* = seq[string]
 type UserInfo* = tuple[home: string, uid: Uid, gid: Gid]
@@ -49,6 +49,21 @@ proc runCmd*(command: string, args: varargs[string]) =
     echo fmt"Executing {command} with {args} failed with exit code {exitCode}"
     quit 1
 
+proc outputOfCommand*(command, inputString: string;
+                      args: varargs[string]): (seq[string], int) =
+  let process = startProcess(command, args = args,
+                             options = {poStdErrToStdOut, poUsePath})
+  if inputString.len > 0:
+    let input = process.inputStream
+    input.write inputString
+    input.flush
+  var line: string
+  var outputLines: seq[string]
+  let output = process.outputStream
+  while output.readLine line:
+    outputLines.add line
+  return (outputLines, process.waitForExit)
+
 proc runQueuedCommands*() =
   if packagesToInstall.len > 0:
     runCmd("apt-get", @["install", "-y", "--no-install-recommends"] &
@@ -57,11 +72,11 @@ proc runQueuedCommands*() =
     runCmd("systemctl", "daemon-reload")
   if enableUnits.len > 0:
     let units = enableUnits.deduplicate
-    echo("Enabling services: " & units.join(", "))
+    echo("Enabling services: ", units.join(", "))
     runCmd("systemctl", "enable" & units)
   if startUnits.len > 0:
     let units = startUnits.deduplicate
-    echo("Starting services: " & units.join(", "))
+    echo("Starting services: ", units.join(", "))
     runCmd("systemctl", "start" & units)
 
 proc userInfo*(user: string): UserInfo =

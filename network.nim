@@ -1,4 +1,4 @@
-import std/[parseutils, sequtils, streams, strformat, strutils, os, osproc]
+import std/[parseutils, sequtils, strformat, strutils, os]
 import cmdqueue
 
 proc network(unit, match: string, options: varargs[string]) =
@@ -58,7 +58,7 @@ proc stopWireless(): seq[string] =
       result.add iface
   if result.len > 0:
     let services = result.map supplicantService
-    echo("Stopping wireless services: " & services.join(", "))
+    echo("Stopping wireless services: ", services.join(", "))
     runCmd("systemctl", "stop" & services)
 
 proc wlan*(args: Strs) =
@@ -78,24 +78,17 @@ proc wifiNet*(args: Strs) =
   let ssid = args[0]
   stderr.write fmt"{ssid} pasaword: "
   let pass = stdin.readLine
-  let process = startProcess("wpa_passphrase", args = [ssid],
-                             options = {poStdErrToStdOut, poUsePath})
-  let input = process.inputStream
-  input.writeLine pass
-  input.flush
-  let output = process.outputStream
+  let (output, exitCode) = outputOfCommand("wpa_passphrase", pass & '\n', ssid)
+  if exitCode != 0:
+    echo("wpa_passphrase exit code ", exitCode, " output: ")
+    echo output.join("\n")
+    quit 1
   var netConf = "\n"
-  var line: string
-  while output.readLine line:
+  for line in output:
     let notWs = line.skipWhitespace
     if notWs < line.len and line[notWs] != '#':
       netConf.add line
       netConf.add "\n"
-  let exitCode = process.waitForExit
-  if exitCode != 0:
-    echo fmt"wpa_passphrase exit code {exitCode}, output:"
-    echo netConf
-    quit 1
   ensureSupplicantConf()
   # kill wpa_supplicant instances before configuration modification
   let stoppedInterfaces = stopWireless()
