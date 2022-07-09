@@ -1,4 +1,4 @@
-import std/[parseutils, streams, strformat, strutils, terminal, os, osproc]
+import std/[parseutils, sequtils, streams, strformat, strutils, terminal, os, osproc]
 import cmdqueue
 
 proc network(unit, match: string, options: varargs[string]) =
@@ -11,10 +11,12 @@ proc network(unit, match: string, options: varargs[string]) =
 
     "[Network]"
   ]
-  writeFile(fmt"/etc/systemd/network/{unit}.network", net & @options & @[""])
+  writeFile(fmt"/etc/systemd/network/{unit}.network", net & @options & @[""], true)
 
-proc wpa_supplicant(device: string) =
-  let conf = [
+const wpa_supplicant_conf = "/etc/wpa_supplicant/wpa_supplicant.conf"
+
+proc ensureSupplicantConf() =
+  writeFile(wpa_supplicant_conf, [
     "ctrl_interface=DIR=/run/wpa_supplicant GROUP=netdev",
     "update_config=1",
     "dtim_period=4",
@@ -22,10 +24,10 @@ proc wpa_supplicant(device: string) =
     "ignore_old_scan_res=1",
     #"bgscan=\"simple:60:-70:900\"",
     "p2p_disabled=1"
-  ]
-  let defaultConfName = "/etc/wpa_supplicant/wpa_supplicant.conf"
-  if not defaultConfName.fileExists:
-    writeFile(defaultConfName, conf)
+  ])
+
+proc wpa_supplicant(device: string) =
+  ensureSupplicantConf()
   let conf_link = fmt"/etc/wpa_supplicant/wpa_supplicant-{device}.conf"
   discard tryRemoveFile(conf_link)
   createSymlink("wpa_supplicant.conf", conf_link)
@@ -53,8 +55,10 @@ proc isInterfaceUp(iface: string): bool =
 proc stopWireless(): seq[string] =
   for iface in findInterfaces():
     if iface.isWireless and iface.isInterfaceUp:
-      runCmd("systemctl", "stop", iface.supplicantService)
-    result.add iface
+      result.add iface
+  let services = result.map supplicantService
+  echo("Stopping wireless services: " & services.join(", "))
+  runCmd("systemctl", "stop" & services)
 
 proc wlan*(args: Strs) =
   var devices: Strs
@@ -89,3 +93,10 @@ proc wifiNet*(args: Strs) =
     echo fmt"wpa_passphrase exit code {exitCode}, output:"
     echo netConf
     quit 1
+  ensureSupplicantConf()
+  # kill wpa_supplicant instances before configuration modification
+  let stoppedInterfaces = stopWireless()
+  let file = open(wpa_supplicant_conf, fmAppend)
+  file.write netConf
+  file.close
+  startUnits.add(stoppedInterfaces.map supplicantService)

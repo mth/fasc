@@ -56,9 +56,13 @@ proc runQueuedCommands*() =
   if systemdReload:
     runCmd("systemctl", "daemon-reload")
   if enableUnits.len > 0:
-    runCmd("systemctl", "enable" & enableUnits.deduplicate)
+    let units = enableUnits.deduplicate
+    echo("Enabling services: " & units.join(", "))
+    runCmd("systemctl", "enable" & units)
   if startUnits.len > 0:
-    runCmd("systemctl", "start" & startUnits.deduplicate)
+    let units = startUnits.deduplicate
+    echo("Starting services: " & units.join(", "))
+    runCmd("systemctl", "start" & units)
 
 proc userInfo*(user: string): UserInfo =
   let pw = user.getpwnam
