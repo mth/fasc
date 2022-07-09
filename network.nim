@@ -1,4 +1,4 @@
-import std/[parseutils, sequtils, streams, strformat, strutils, terminal, os, osproc]
+import std/[parseutils, sequtils, streams, strformat, strutils, os, osproc]
 import cmdqueue
 
 proc network(unit, match: string, options: varargs[string]) =
@@ -75,7 +75,8 @@ proc wifiNet*(args: Strs) =
     echo "Expected fasc wifinet <ssid>"
     quit 1
   let ssid = args[0]
-  let pass = readPasswordFromStdin fmt"{ssid} pasaword: "
+  stderr.write fmt"{ssid} pasaword: "
+  let pass = stdin.readLine
   let process = startProcess("wpa_passphrase", args = [ssid],
                              options = {poStdErrToStdOut, poUsePath})
   let input = process.inputStream
