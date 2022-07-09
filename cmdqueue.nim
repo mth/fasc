@@ -50,7 +50,7 @@ proc runCmd*(command: string, args: varargs[string]) =
     quit 1
 
 proc outputOfCommand*(inputString, command: string;
-                      args: varargs[string]): (seq[string], int) =
+                      args: varargs[string]): seq[string] =
   let process = startProcess(command, args = args,
                              options = {poStdErrToStdOut, poUsePath})
   if inputString.len > 0:
@@ -58,11 +58,14 @@ proc outputOfCommand*(inputString, command: string;
     input.write inputString
     input.flush
   var line: string
-  var outputLines: seq[string]
   let output = process.outputStream
   while output.readLine line:
-    outputLines.add line
-  return (outputLines, process.waitForExit)
+    result.add line
+  let exitCode = process.waitForExit
+  if exitCode != 0:
+    echo(command, " exit code ", exitCode, " output: ")
+    echo result.join("\n")
+    quit 1
 
 proc runQueuedCommands*() =
   if packagesToInstall.len > 0:
