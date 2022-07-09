@@ -8,10 +8,10 @@ proc network(unit, match: string, options: varargs[string]) =
     "",
     "[Link]",
     "RequiredForOnline=no",
-
+    "",
     "[Network]"
   ]
-  writeFile(fmt"/etc/systemd/network/{unit}.network", net & @options & @[""], true)
+  writeFile(fmt"/etc/systemd/network/{unit}.network", net & @options & "", true)
 
 const wpa_supplicant_conf = "/etc/wpa_supplicant/wpa_supplicant.conf"
 
