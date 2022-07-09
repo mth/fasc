@@ -102,4 +102,5 @@ proc wifiNet*(args: Strs) =
   let file = open(wpa_supplicant_conf, fmAppend)
   file.write netConf
   file.close
+  echo fmt"Added {ssid} network into {wpa_supplicant_conf}"
   startUnits.add(stoppedInterfaces.map supplicantService)
