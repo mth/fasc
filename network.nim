@@ -39,7 +39,7 @@ proc wlanDevice(device: string) =
   echo fmt"Configuring WLAN device {device} for DHCP"
   network("wlan", "Name=wlp*", "DHCP=yes", "IPv6PrivacyExtensions=true")
   wpa_supplicant(device)
-  packagesToInstall.add "wpa_supplicant"
+  packagesToInstall.add "wpasupplicant"
   enableAndStart("systemd-networkd.service", device.supplicantService)
 
 iterator findInterfaces(): string =
