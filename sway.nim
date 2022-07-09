@@ -326,6 +326,7 @@ proc runWayland(compositor, user: string, info: UserInfo) =
 proc swayUnit*(args: Strs) =
   let user = "mzz" # TODO
   let info = user.userInfo
+  writeFile("/usr/share/X11/xkb/symbols/uml", @[xkb_uml])
   for (file, conf) in user_config:
     writeAsUser(info, file, conf)
   for (file, conf) in sway_config:
