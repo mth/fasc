@@ -83,7 +83,8 @@ proc wifiNet*(args: Strs) =
   input.writeLine pass
   input.flush
   let output = process.outputStream
-  var netConf, line: string
+  var netConf = "\n"
+  var line: string
   while output.readLine line:
     let notWs = line.skipWhitespace
     if notWs < line.len and line[notWs] != '#':
