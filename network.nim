@@ -78,7 +78,7 @@ proc wifiNet*(args: Strs) =
   let ssid = args[0]
   stderr.write fmt"{ssid} pasaword: "
   let pass = stdin.readLine
-  let (output, exitCode) = outputOfCommand("wpa_passphrase", pass & '\n', ssid)
+  let (output, exitCode) = outputOfCommand(pass & '\n', "wpa_passphrase", ssid)
   if exitCode != 0:
     echo("wpa_passphrase exit code ", exitCode, " output: ")
     echo output.join("\n")

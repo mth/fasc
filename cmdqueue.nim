@@ -49,7 +49,7 @@ proc runCmd*(command: string, args: varargs[string]) =
     echo fmt"Executing {command} with {args} failed with exit code {exitCode}"
     quit 1
 
-proc outputOfCommand*(command, inputString: string;
+proc outputOfCommand*(inputString, command: string;
                       args: varargs[string]): (seq[string], int) =
   let process = startProcess(command, args = args,
                              options = {poStdErrToStdOut, poUsePath})
