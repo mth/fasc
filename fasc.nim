@@ -1,12 +1,11 @@
 import std/[os, sequtils, strutils, tables]
-import cmdqueue
-import network
-import sway
+import cmdqueue, network, sway, apt
 
 let tasks = {
   "wlan": ("Configure WLAN client with DHCP", wlan),
   "wifinet": ("Add WLAN network", wifiNet),
-  "sway": ("Configure sway desktop startup", swayUnit)
+  "sway": ("Configure sway desktop startup", swayUnit),
+  "apt": ("Configure APT defaults", configureAPT)
 }.toTable
 
 if paramCount() == 0:
