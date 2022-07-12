@@ -3,8 +3,8 @@ import std/[strformat, os]
 
 const default_apt_conf = """
 Acquire::Languages "none";
-APT::Get::AutomaticRemove true;
 APT::ExtractTemplates::TempDir "/dev/shm";
+APT::Get::AutomaticRemove true;
 aptitude::AutoClean-After-Update true;
 aptitude::Delete-Unused true;
 """;
