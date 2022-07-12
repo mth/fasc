@@ -24,8 +24,9 @@ proc aptConf() =
 proc mandbUpdate() =
   let autoUpdate = "/var/lib/man-db/auto-update"
   if fileExists(autoUpdate):
-    echo outputOfCommand("debconf-set-selections",
-          "debconf man-db/auto-update select false\n")
+    echo outputOfCommand(
+          "debconf man-db/auto-update select false\n",
+          "debconf-set-selections")
     removeFile(autoUpdate)
     echo("Deleted ", autoUpdate)
   else:
