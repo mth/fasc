@@ -1,4 +1,5 @@
 import std/[sequtils, sets, strutils, tables]
+import cmdqueue
 
 type Package = ref object
   name: string
@@ -85,8 +86,8 @@ func autoRemoveSet(packages: Table[string, Package]): HashSet[string] =
       traceRecommends(p, packages, recommended)
   result.excl recommended
 
-proc prunePackages(addPackages: openarray[string],
-                   removePackages: openarray[string]) =
+proc prunePackages*(addPackages: openarray[string],
+                    removePackages: openarray[string]) =
   let packageMap = readStatus()
   let initialDead = packageMap.autoRemoveSet
   let defaultAuto = toHashSet ["libs", "oldlibs", "perl", "python"]
@@ -133,19 +134,15 @@ proc prunePackages(addPackages: openarray[string],
   for reduntant in reduntantSetAuto:
     setAuto.excl reduntant
 
-  echo(" apt-mark manual ", retain.join(" "))
-  echo(" apt-mark auto ", setAuto.toSeq.join(" "))
-  echo(" apt-get install ", addPackageSet.toSeq.join(" "))
-  echo(" apt-get purge ", explicitRemove.join(" "))
+  if retain.len != 0:
+    runCmd("apt-mark", "manual" & retain)
+  if setAuto.len != 0:
+    runCmd("apt-mark", "auto" & setAuto.toSeq)
+  if addPackageSet.len != 0:
+    runCmd("apt-get", @["install", "-y", "--no-install-recommends"] &
+                      addPackageSet.toSeq)
+  if explicitRemove.len != 0:
+    runCmd("apt-get", "purge" & explicitRemove)
   if nowDead.len != 0:
-    echo " apt-get autoremove --purge"
+    runCmd("apt-get", "autoremove", "--purge")
 
-proc defaultPrune() =
-  let remove = ["avahi-autoipd", "debian-faq", "discover", "doc-debian",
-        "ifupdown", "installation-report", "isc-dhcp-client", "isc-dhcp-common",
-        "liblockfile-bin", "nano", "netcat-traditional", "reportbug",
-        "task-english", "task-laptop", "tasksel", "tasksel-data",
-        "telnet", "vim-tiny", "vim-common"]
-  prunePackages(["elvis-tiny", "netcat-openbsd"], remove)
-
-defaultPrune()

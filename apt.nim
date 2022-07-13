@@ -1,4 +1,4 @@
-import cmdqueue
+import cmdqueue, aptcleaner
 import std/[strformat, os]
 
 const default_apt_conf = """
@@ -32,9 +32,19 @@ proc mandbUpdate() =
   else:
     echo("Not found ", autoUpdate)
 
+# XXX removing ifupdown should be network modules job
+proc defaultPrune() =
+  let remove = ["avahi-autoipd", "debian-faq", "discover", "doc-debian",
+        "ifupdown", "installation-report", "isc-dhcp-client", "isc-dhcp-common",
+        "liblockfile-bin", "nano", "netcat-traditional", "reportbug",
+        "task-english", "task-laptop", "tasksel", "tasksel-data",
+        "telnet", "vim-tiny", "vim-common"]
+  prunePackages(["elvis-tiny", "netcat-openbsd"], remove)
+
 proc configureAPT*(args: Strs) =
   aptConf()
   preferences("o=Ubuntu", -1)
   if "unstable" notin args:
     preferences("o=Debian,a=unstable", -1)
   mandbUpdate()
+  defaultPrune()
