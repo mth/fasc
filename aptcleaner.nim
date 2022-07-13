@@ -145,4 +145,3 @@ proc prunePackages*(addPackages: openarray[string],
     runCmd("apt-get", "purge" & explicitRemove)
   if nowDead.len != 0:
     runCmd("apt-get", "autoremove", "--purge")
-
