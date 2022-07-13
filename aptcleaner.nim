@@ -110,6 +110,7 @@ proc prunePackages(addPackages: openarray[string],
         package.autoInstall = true
         setAuto.incl package.name
 
+  # Rescue earlier automatically installed packages, that are not libraries
   var nowDead = packageMap.autoRemoveSet
   nowDead.excl initialDead
   var retain: seq[string]
@@ -119,7 +120,6 @@ proc prunePackages(addPackages: openarray[string],
         (package.required or package.section notin defaultAuto):
       retain.add name
       package.autoInstall = false
-  echo(" now dead: ", nowDead.toSeq.join(" "))
 
   # Should remove explicitly all important packages, that would be marked auto
   # and can be removed without removing non-auto/essential/required packages.
