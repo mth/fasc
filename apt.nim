@@ -24,6 +24,7 @@ proc aptConf() =
 proc mandbUpdate() =
   let autoUpdate = "/var/lib/man-db/auto-update"
   if fileExists(autoUpdate):
+    echo "Disabling man-db/auto-update..."
     echo outputOfCommand(
           "debconf man-db/auto-update select false\n",
           "debconf-set-selections")

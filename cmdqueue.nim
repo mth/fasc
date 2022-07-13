@@ -48,6 +48,7 @@ proc runCmd*(command: string, args: varargs[string]) =
   if exitCode != 0:
     echo fmt"Executing {command} with {args} failed with exit code {exitCode}"
     quit 1
+  process.close
 
 proc outputOfCommand*(inputString, command: string;
                       args: varargs[string]): seq[string] =
@@ -57,6 +58,7 @@ proc outputOfCommand*(inputString, command: string;
     let input = process.inputStream
     input.write inputString
     input.flush
+    input.close
   var line: string
   let output = process.outputStream
   while output.readLine line:
@@ -66,6 +68,7 @@ proc outputOfCommand*(inputString, command: string;
     echo(command, " exit code ", exitCode, " output: ")
     echo result.join("\n")
     quit 1
+  process.close
 
 proc runQueuedCommands*() =
   if packagesToInstall.len > 0:
