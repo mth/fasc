@@ -1,4 +1,4 @@
-import std/[sequtils, strutils, tables]
+import std/[sequtils, sets, strutils, tables]
 
 type Package = ref object
   name: string
@@ -32,7 +32,6 @@ func addDepends(deps: var seq[seq[string]], str: string) =
     deps.add str.split(" | ").mapIt(it.split(", ").mapIt(it.split(' ', 1)[0]))
 
 proc readStatus(): Table[string, Package] =
-  result = initTable[string, Package]()
   for fields in packageFields("pak/status"):
     let name = fields.getOrDefault("Package")
     if name != "" and fields.getOrDefault("Status").endsWith(" ok installed"):
@@ -61,10 +60,20 @@ proc readStatus(): Table[string, Package] =
     if package != nil and fields.getOrDefault("Auto-Installed") == "1":
       package.autoInstall = true
 
+func wouldBeRemoved(package: Package): bool =
+  return package.autoInstall and package.dependedBy.allIt(it.wouldBeRemoved)
+
+func autoRemoveSet(packages: Table[string, Package]): HashSet[string] =
+  for p in packages.values:
+    if p.wouldBeRemoved:
+      result.incl p.name
 
 proc prunePackages(retainPackages: openarray[string],
                    addPackages: openarray[string],
                    removePackages: openarray[string]) =
+  let packageMap = readStatus()
+  let initialDead = packageMap.autoRemoveSet
+
   # Maybe retain should be deduced automatically?
   # Basically first deduce packages that would get now autoremoved.
   # Then deduce packages that get autoremoved after the changes.
@@ -77,7 +86,7 @@ proc prunePackages(retainPackages: openarray[string],
   # and can be removed without removing non-auto/essential/required packages.
   # Finally, should do autoremove, if there are any autoremovable packages
   # left that can be removed.
-  echo "Do something"
+  echo "Do something", initialDead
 
 proc defaultPrune() =
   let remove = ["debian-faq", "discover", "doc-debian", "ifupdown",
