@@ -92,6 +92,7 @@ proc prunePackages(addPackages: openarray[string],
   let defaultAuto = toHashSet ["libs", "oldlibs", "perl", "python"]
   let protect = toHashSet ["libc6", "perl", "python3"]
 
+  # Should mark all removePackages and non-required libraries as auto
   var addPackageSet = addPackages.toHashSet
   var setAuto = removePackages.toHashSet
   var reduntantSetAuto: seq[string]
@@ -120,6 +121,8 @@ proc prunePackages(addPackages: openarray[string],
       package.autoInstall = false
   echo(" now dead: ", nowDead.toSeq.join(" "))
 
+  # Should remove explicitly all important packages, that would be marked auto
+  # and can be removed without removing non-auto/essential/required packages.
   var explicitRemove: seq[string]
   for name in setAuto.toSeq:
     let package = packageMap[name]
@@ -134,6 +137,8 @@ proc prunePackages(addPackages: openarray[string],
   echo(" apt-mark auto ", setAuto.toSeq.join(" "))
   echo(" apt-get install ", addPackageSet.toSeq.join(" "))
   echo(" apt-get purge ", explicitRemove.join(" "))
+  if nowDead.len != 0:
+    echo " apt-get autoremove --purge"
 
 proc defaultPrune() =
   let remove = ["avahi-autoipd", "debian-faq", "discover", "doc-debian",
