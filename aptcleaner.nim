@@ -62,16 +62,31 @@ proc readStatus(): Table[string, Package] =
       package.autoInstall = true
 
 
-proc prunePackages(remove: openarray[string]) =
+proc prunePackages(retainPackages: openarray[string],
+                   addPackages: openarray[string],
+                   removePackages: openarray[string]) =
+  # Maybe retain should be deduced automatically?
+  # Basically first deduce packages that would get now autoremoved.
+  # Then deduce packages that get autoremoved after the changes.
+  # And if any of those are not in libs, python, perl or removePackages,
+  # then mark them manual.
+  #
+  # Should mark all non-required libraries as auto.
+  # Should mark all to be remove packages as auto.
+  # Should remove explicitly all important packages, that would be marked auto
+  # and can be removed without removing non-auto/essential/required packages.
+  # Finally, should do autoremove, if there are any autoremovable packages
+  # left that can be removed.
   echo "Do something"
 
 proc defaultPrune() =
-  # add manual: bluetooth, ispell, iw, shared-mime-info
-  prunePackages(["debian-faq", "discover", "doc-debian", "ifupdown",
-                 "installation-report", "isc-dhcp-client", "isc-dhcp-common",
-                 "liblockfile-bin", "netcat-traditional", "python3-reportbug",
-                 "reportbug", "task-english", "task-laptop", "tasksel",
-                 "tasksel-data", "telnet", "vim-tiny", "vim-common"])
+  let remove = ["debian-faq", "discover", "doc-debian", "ifupdown",
+        "installation-report", "isc-dhcp-client", "isc-dhcp-common",
+        "liblockfile-bin", "nano", "netcat-traditional",
+        "python3-reportbug", "reportbug", "task-english", "task-laptop",
+        "tasksel", "tasksel-data", "telnet", "vim-tiny", "vim-common"]
+  prunePackages(["bluetooth", "ispell", "iw", "shared-mime-info"],
+                ["elvis-tiny", "netcat-openbsd"], remove)
 
 var packages = readStatus()
 for p in packages.values:
