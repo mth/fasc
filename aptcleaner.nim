@@ -34,7 +34,7 @@ func addDepends(deps: var seq[seq[string]], str: string) =
     deps.add str.split(" | ").mapIt(it.split(", ").mapIt(it.split(' ', 1)[0]))
 
 proc readStatus(): Table[string, Package] =
-  for fields in packageFields("pak/initial/status"):
+  for fields in packageFields("/var/lib/dpkg/status"):
     let name = fields.getOrDefault("Package")
     if name != "" and fields.getOrDefault("Status").endsWith(" ok installed"):
       let priority = fields.getOrDefault("Priority")
@@ -58,7 +58,7 @@ proc readStatus(): Table[string, Package] =
             deps.add dep
         for dep in deps:
           dep.dependedBy.add pkg
-  for fields in packageFields("pak/initial/extended_states"):
+  for fields in packageFields("/var/lib/apt/extended_states"):
     let package = result.getOrDefault(fields.getOrDefault("Package"))
     if package != nil and fields.getOrDefault("Auto-Installed") == "1":
       package.autoInstall = true
