@@ -89,7 +89,8 @@ proc prunePackages(addPackages: openarray[string],
                    removePackages: openarray[string]) =
   let packageMap = readStatus()
   let initialDead = packageMap.autoRemoveSet
-  let defaultAuto = toHashSet ["libs", "oldlibs", "python", "perl"]
+  let defaultAuto = toHashSet ["libs", "oldlibs", "perl", "python"]
+  let protect = toHashSet ["libc6", "perl", "python3"]
 
   var addPackageSet = addPackages.toHashSet
   var setAuto = removePackages.toHashSet
@@ -104,7 +105,7 @@ proc prunePackages(addPackages: openarray[string],
         reduntantSetAuto.add package.name
       elif package.name in setAuto:
         package.autoInstall = true
-      elif package.section in defaultAuto and package.name != "libc6":
+      elif package.section in defaultAuto and package.name notin protect:
         package.autoInstall = true
         setAuto.incl package.name
 
