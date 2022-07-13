@@ -135,19 +135,6 @@ proc prunePackages(addPackages: openarray[string],
   echo(" apt-get install ", addPackageSet.toSeq.join(" "))
   echo(" apt-get purge ", explicitRemove.join(" "))
 
-  # Maybe retain should be deduced automatically?
-  # Basically first deduce packages that would get now autoremoved.
-  # Then deduce packages that get autoremoved after the changes.
-  # And if any of those are not in libs, python, perl or removePackages,
-  # then mark them manual.
-  #
-  # Should mark all non-required libraries as auto.
-  # Should mark all to be remove packages as auto.
-  # Should remove explicitly all important packages, that would be marked auto
-  # and can be removed without removing non-auto/essential/required packages.
-  # Finally, should do autoremove, if there are any autoremovable packages
-  # left that can be removed.
-
 proc defaultPrune() =
   let remove = ["avahi-autoipd", "debian-faq", "discover", "doc-debian",
         "ifupdown", "installation-report", "isc-dhcp-client", "isc-dhcp-common",
@@ -158,18 +145,3 @@ proc defaultPrune() =
                 ["elvis-tiny", "netcat-openbsd"], remove)
 
 defaultPrune()
-
-#var packages = readStatus()
-#for p in packages.values:
-#  var param = @[p.name]
-#  if p.autoInstall:
-#    param.add " auto"
-#  if p.required:
-#    param.add " required"
-#  elif p.important:
-#    param.add " important"
-#  echo param.join
-#  if p.depends.len != 0:
-#    echo("  depends: ", p.depends.join(", "))
-#  if p.dependedBy.len != 0:
-#    echo("  depended by: ", p.dependedBy.mapIt(it.name).join(", "))
