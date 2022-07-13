@@ -1,5 +1,5 @@
 import cmdqueue, aptcleaner
-import std/[strformat, os]
+import std/[strformat, strutils, os]
 
 const default_apt_conf = """
 Acquire::Languages "none";
@@ -10,7 +10,8 @@ aptitude::Delete-Unused true;
 """;
 
 proc preferences(release: string, priority: int) =
-  writeFile(fmt"/etc/apt/preferences.d/{release}-priority", [
+  let name = release.rsplit('=', 1)[^1]
+  writeFile(fmt"/etc/apt/preferences.d/{name}-priority", [
      "Package: *",
      "Pin: release " & release,
      fmt"Pin-Priority: {priority}"

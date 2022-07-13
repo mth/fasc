@@ -126,8 +126,10 @@ proc prunePackages*(addPackages: openarray[string],
   # and can be removed without removing non-auto/essential/required packages.
   var explicitRemove: seq[string]
   for name in setAuto.toSeq:
-    let package = packageMap[name]
-    if package.important and package.wouldBeRemoved:
+    let package = packageMap.getOrDefault(name)
+    if package == nil:
+      setAuto.excl name
+    elif package.important and package.wouldBeRemoved:
       explicitRemove.add name
       setAuto.excl name
 
