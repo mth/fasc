@@ -1,4 +1,4 @@
-import std/[strformat, strutils, os]
+import std/[sequtils, strformat, strutils, os]
 import cmdqueue
 
 const user_config = [
@@ -342,6 +342,11 @@ proc configureSway(info: UserInfo) =
         $readFile(device / "id/product").strip.parseHexInt,
         readFile(device / "name").strip.replace(' ', '_')
       ].join(":")
+  if mouseNames.len > 1:
+    let touchpads =
+      mouseNames.filterIt (it.toLowerAscii.find("touchpad") >= 0)
+    if touchpads.len != 0:
+      mouseNames = touchpads
   echo("Mice: ", mouseNames)
 
 proc swayConf*(args: Strs) =
