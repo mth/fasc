@@ -5,6 +5,7 @@ let tasks = {
   "wlan": ("Configure WLAN client with DHCP", wlan),
   "wifinet": ("Add WLAN network", wifiNet),
   "sway": ("Configure sway desktop startup", swayUnit),
+  "swaycfg": ("Configure sway compositor", swayConf),
   "apt": ("Configure APT defaults", configureAPT)
 }.toTable
 

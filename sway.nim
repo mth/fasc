@@ -1,4 +1,4 @@
-import std/[strformat, os]
+import std/[strformat, strutils, os]
 import cmdqueue
 
 const user_config = [
@@ -157,13 +157,7 @@ floating_modifier $mod normal
 bindsym $mod+Shift+c reload
 bindsym $mod+Shift+e exec swaynag -t warning -m 'You pressed the exit shortcut. Do you really want to exit sway? This will end your Wayland session.' -b 'Yes, exit sway' 'swaymsg exit'
 
-# Move your focus around
-bindsym $mod+$left focus left
-bindsym $mod+$down focus down
-bindsym $mod+$up focus up
-bindsym $mod+$right focus right
-
-# or use $mod+[up|down|left|right]
+# Move your focus around using $mod+[up|down|left|right]
 bindsym $mod+Left focus left
 bindsym $mod+Down focus down
 bindsym $mod+Up focus up
@@ -264,6 +258,15 @@ bindsym $mod+r mode "resize"
 """)
 ]
 
+const sway_input_config = """
+input "1267:12402:ELAN0630:00_04F3:3072_Touchpad" {
+    dwt disabled
+    tap enabled
+    tap_button_map lmr
+    # natural_scroll enabled
+    middle_emulation enabled
+}"""
+
 const xkb_uml = """
 partial alphanumeric_keys
 xkb_symbols "basic" {
@@ -323,14 +326,34 @@ proc runWayland(compositor, user: string, info: UserInfo) =
   runCmd("usermod", "-G",
     "adm,audio,cdrom,input,kvm,video,render,systemd-journal", user)
 
-proc swayUnit*(args: Strs) =
-  let user = "mzz" # TODO
-  let info = user.userInfo
-  writeFile("/usr/share/X11/xkb/symbols/uml", @[xkb_uml])
+proc configureSway(info: UserInfo) =
+  echo "TERE"
   for (file, conf) in user_config:
     writeAsUser(info, file, conf)
   for (file, conf) in sway_config:
     writeAsUser(info, ".config/sway" / file, conf)
+  echo "Searching for mouse-like devices"
+  var mouseNames: seq[string]
+  for kind, path in walkDir("/sys/class/input"):
+    if path.extractFilename.startsWith("mouse"):
+      let device = path / "device"
+      mouseNames.add [
+        $readFile(device / "id/vendor").strip.parseHexInt,
+        $readFile(device / "id/product").strip.parseHexInt,
+        readFile(device / "name").strip.replace(' ', '_')
+      ].join(":")
+  echo("Mice: ", mouseNames)
+
+proc swayConf*(args: Strs) =
+  let user = "mzz" # TODO
+  echo "swayConf called."
+  configureSway user.userInfo
+
+proc swayUnit*(args: Strs) =
+  let user = "mzz" # TODO
+  let info = user.userInfo
+  writeFile("/usr/share/X11/xkb/symbols/uml", @[xkb_uml])
+  configureSway info
   runWayland("sway", "mzz", info)
   packagesToInstall.add(["sway", "swayidle", "foot", "evince",
                          "firefox-esr", "gammastep", "grim"])
