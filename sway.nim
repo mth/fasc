@@ -300,7 +300,7 @@ proc runWayland(compositor, user: string, info: UserInfo) =
     "StandardOutput=tty",
     "StandardError=journal",
     "TTYPath=/dev/tty7",
-    "TTReset=yes",
+    "TTYReset=yes",
     "TTYVHangup=yes",
     "TTYVTDisallocate=yes",
     "WorkingDirectory=" & info.home,
@@ -343,5 +343,6 @@ proc swayUnit*(args: Strs) =
   writeFile("/usr/share/X11/xkb/symbols/uml", @[xkb_uml])
   configureSway info
   runWayland("sway", "mzz", info)
+  # install terminus and the missing debian configuration
   packagesToInstall.add(["sway", "swayidle", "foot", "evince",
                          "firefox-esr", "gammastep", "grim"])
