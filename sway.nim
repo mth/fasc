@@ -1,4 +1,4 @@
-import std/[sequtils, strformat, strutils, os]
+import std/[strformat, os]
 import cmdqueue
 
 const user_config = [
@@ -134,6 +134,14 @@ bar {
     inactive_workspace #111133 #111133 #dddddd
   }
 }
+"""), ("touchpad", """
+input type:touchpad {
+    dwt disabled
+    tap enabled
+    tap_button_map lmr
+    # natural_scroll enabled
+    middle_emulation enabled
+}
 """), ("windows", """
 for_window [app_id="firefox"] {
   move container to workspace $firefox_workspace
@@ -259,15 +267,6 @@ bindsym $mod+r mode "resize"
 """)
 ]
 
-const touchpad_config = """" {
-    dwt disabled
-    tap enabled
-    tap_button_map lmr
-    # natural_scroll enabled
-    middle_emulation enabled
-}
-"""
-
 const xkb_uml = """
 partial alphanumeric_keys
 xkb_symbols "basic" {
@@ -327,28 +326,9 @@ proc runWayland(compositor, user: string, info: UserInfo) =
   runCmd("usermod", "-G",
     "adm,audio,cdrom,input,kvm,video,render,systemd-journal", user)
 
-proc findMice(): seq[array[3, string]] =
-  for kind, path in walkDir("/sys/class/input"):
-    if path.extractFilename.startsWith("mouse"):
-      let device = path / "device"
-      result.add [
-        $readFile(device / "id/vendor").strip.parseHexInt,
-        $readFile(device / "id/product").strip.parseHexInt,
-        readFile(device / "name").strip.replace(' ', '_')
-      ]
-  if result.len > 1:
-    let pads = result.filterIt (it[2].toLowerAscii.find("touchpad") >= 0)
-    if pads.len != 0:
-      result = pads
-
 proc configureSway(info: UserInfo) =
-  let mice = findMice()
   for (file, conf) in user_config:
     writeAsUser(info, file, conf)
-  var padConfigs = ""
-  for pad in mice:
-    padConfigs &= "input \"" & pad.join(":") & touchpad_config
-  writeAsUser(info, ".config/sway/touchpad", padConfigs)
   for (file, conf) in sway_config:
     writeAsUser(info, ".config/sway" / file, conf)
 
