@@ -283,6 +283,33 @@ xkb_symbols "basic" {
 };
 """
 
+const font_auto_hinting = """
+<?xml version="1.0"?>
+<!DOCTYPE fontconfig SYSTEM "fonts.dtd">
+<fontconfig>
+ <match target="font" >
+  <edit mode="assign" name="hinting" >
+   <bool>true</bool>
+  </edit>
+ </match>
+ <match target="font" >
+  <edit mode="assign" name="autohinting" >
+   <bool>true</bool>
+  </edit>
+ </match>
+ <match target="font" >
+  <edit mode="assign" name="hintstyle" >
+   <const>hintmedium</const>
+  </edit>
+ </match>
+ <match target="font">
+  <edit mode="assign" name="rgba">
+   <const>rgb</const>
+  </edit>
+ </match>
+</fontconfig>
+"""
+
 proc runWayland(compositor, user: string, info: UserInfo) =
   let gid = info.gid
   var service = [
@@ -320,6 +347,7 @@ proc runWayland(compositor, user: string, info: UserInfo) =
     ""
   ]
   writeFile("/etc/systemd/system/run-wayland.service", service)
+  writeFile("/etc/fonts/conf.d/10-autohinting.conf", [font_auto_hinting])
   enableUnits.add "run-wayland.service"
   packagesToInstall.add(["openssh-client", "qtwayland5", "xwayland"])
   systemdReload = true
