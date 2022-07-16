@@ -374,6 +374,5 @@ proc swayUnit*(args: Strs) =
   configureSway info
   runWayland("sway", "mzz", info)
   addFirefoxESR()
-  packagesToInstall.add(["sway", "swayidle", "foot", "evince",
-                         "firefox-esr", "gammastep", "grim",
-                         "mpv", "fonts-terminus-otb"])
+  packagesToInstall.add(["sway", "swayidle", "foot", "evince", "gammastep",
+                          "grim", "mpv", "yt-dlp", "fonts-terminus-otb"])
