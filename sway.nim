@@ -320,6 +320,7 @@ proc runWayland(compositor, user: string, info: UserInfo) =
     "",
     "[Service]",
     fmt"ExecStartPre=/usr/bin/install -m 700 -o {user} -g {gid} -d /tmp/.{user}-cache",
+    fmt"ExecStartPre=/usr/bin/install -m 700 -o {user} -g {gid} -d /tmp/downloads",
     "ExecStart=/usr/bin/ssh-agent " & compositor,
     "KillMode=control-group",
     "Restart=no",

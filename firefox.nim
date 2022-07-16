@@ -60,7 +60,7 @@ const ff2mpv_host = """{
 }"""
 
 func pref(key, value: string): string =
-  fmt"""pref("{key}", "{(value.escape)}");"""
+  fmt"""pref("{key}", {(value.escape)});"""
 
 func pref(key: string, value: int): string =
   fmt"""pref("{key}", {value});"""
