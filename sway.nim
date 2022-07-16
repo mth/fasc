@@ -373,6 +373,12 @@ proc swayUnit*(args: Strs) =
   writeFile("/usr/share/X11/xkb/symbols/uml", @[xkb_uml])
   configureSway info
   runWayland("sway", "mzz", info)
+  let ytdlAlias = "/usr/local/bin/youtube-dl"
+  if not ytdlAlias.fileExists:
+    try:
+      createSymlink("/usr/bin/yt-dlp", ytdlAlias)
+    except:
+      echo("Cannot link /usr/bin/yt-dlp to ", ytdlAlias)
   addFirefoxESR()
   packagesToInstall.add(["sway", "swayidle", "foot", "evince", "gammastep",
                           "grim", "mpv", "yt-dlp", "fonts-terminus-otb"])
