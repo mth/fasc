@@ -11,7 +11,7 @@ include "%L"
 <dead_circumflex> <)>: "⁾"
 <dead_diaeresis> <m>: "µ"
 """), (".config/foot/foot.ini", """
-font=Terminus:size=14,Monospace:size=12
+font=Terminus:size=12,Monospace:size=12
 title=Terminal
 word-delimiters=,│`|\"'()[]{}<>
 
@@ -343,7 +343,6 @@ proc swayUnit*(args: Strs) =
   writeFile("/usr/share/X11/xkb/symbols/uml", @[xkb_uml])
   configureSway info
   runWayland("sway", "mzz", info)
-  # TODO install terminus and the missing debian configuration
-  # TODO install mpv
   packagesToInstall.add(["sway", "swayidle", "foot", "evince",
-                         "firefox-esr", "gammastep", "grim"])
+                         "firefox-esr", "gammastep", "grim",
+                         "mpv", "fonts-terminus-otb"])
