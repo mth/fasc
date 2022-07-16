@@ -1,5 +1,5 @@
 import std/[strformat, os]
-import cmdqueue
+import cmdqueue, firefox
 
 const user_config = [
   (".XCompose", """
@@ -354,11 +354,12 @@ proc runWayland(compositor, user: string, info: UserInfo) =
   runCmd("usermod", "-G",
     "adm,audio,cdrom,input,kvm,video,render,systemd-journal", user)
 
-proc configureSway(info: UserInfo) =
+proc configureSway(user: UserInfo) =
   for (file, conf) in user_config:
-    writeAsUser(info, file, conf)
+    writeAsUser(user, file, conf)
   for (file, conf) in sway_config:
-    writeAsUser(info, ".config/sway" / file, conf)
+    writeAsUser(user, ".config/sway" / file, conf)
+  user.firefoxConfig
 
 proc swayConf*(args: Strs) =
   let user = "mzz" # TODO
@@ -371,6 +372,7 @@ proc swayUnit*(args: Strs) =
   writeFile("/usr/share/X11/xkb/symbols/uml", @[xkb_uml])
   configureSway info
   runWayland("sway", "mzz", info)
+  addFirefoxESR()
   packagesToInstall.add(["sway", "swayidle", "foot", "evince",
                          "firefox-esr", "gammastep", "grim",
                          "mpv", "fonts-terminus-otb"])
