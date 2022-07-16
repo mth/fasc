@@ -343,6 +343,7 @@ proc swayUnit*(args: Strs) =
   writeFile("/usr/share/X11/xkb/symbols/uml", @[xkb_uml])
   configureSway info
   runWayland("sway", "mzz", info)
-  # install terminus and the missing debian configuration
+  # TODO install terminus and the missing debian configuration
+  # TODO install mpv
   packagesToInstall.add(["sway", "swayidle", "foot", "evince",
                          "firefox-esr", "gammastep", "grim"])
