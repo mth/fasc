@@ -89,7 +89,7 @@ proc addFirefoxESR*() =
     pref("browser.formfill.enable", false),
     pref("browser.newtabpage.enhanced", false),
     pref("browser.privatebrowsing.autostart", true),
-    pref("browser.proton.enabled", false),
+    #pref("browser.proton.enabled", false),
     #pref("browser.safebrowsing.malware.enabled", false),
     #pref("browser.safebrowsing.phishing.enabled", false),
     pref("browser.search.suggest.enabled", false),
