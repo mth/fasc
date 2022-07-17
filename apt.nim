@@ -35,6 +35,7 @@ proc mandbUpdate() =
     echo("Not found ", autoUpdate)
 
 # XXX removing ifupdown should be network modules job
+# XXX something should install rlwrap
 proc defaultPrune() =
   let remove = ["avahi-autoipd", "debian-faq", "discover", "doc-debian",
         "ifupdown", "installation-report", "isc-dhcp-client", "isc-dhcp-common",

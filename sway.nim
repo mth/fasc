@@ -79,7 +79,7 @@ hide_edge_borders --i3 smart
 # hide_edge_borders --i3 both
 # workspace_layout tabbed
 
-bindsym $mod+o exec exec /home/mzz/bin/firefox
+bindsym $mod+o exec exec ~/.config/sway/firefox.sh --vdesk=$firefox_workspace
 bindsym $mod+g exec /usr/games/xmahjongg
 bindsym $mod+l exec swaylock -f -c 000000
 bindsym $mod+s exec GRIM_DEFAULT_DIR=/tmp/downloads exec grim
@@ -381,4 +381,4 @@ proc swayUnit*(args: Strs) =
       echo("Cannot link /usr/bin/yt-dlp to ", ytdlAlias)
   addFirefoxESR()
   packagesToInstall.add(["sway", "swayidle", "foot", "evince", "gammastep",
-                          "grim", "mpv", "yt-dlp", "fonts-terminus-otb"])
+                         "grim", "mpv", "yt-dlp", "fonts-terminus-otb"])
