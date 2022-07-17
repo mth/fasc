@@ -78,6 +78,7 @@ func pref(key: string, value: int): string =
 func pref(key: string, value: bool): string =
   fmt"""pref("{key}", {value});"""
 
+# TODO need to add settings to keep the tab/urlbar narrower
 proc addFirefoxESR*() =
   writeFile("/etc/firefox-esr/optimize.js", [
     pref("browser.aboutConfig.showWarning", false),
