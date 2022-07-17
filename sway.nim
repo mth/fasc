@@ -113,7 +113,7 @@ bar {
   position bottom
   mode overlay
 
-  status_command exec /usr/local/bin/sys-status
+  status_command exec perl ~/.config/sway/status.pl
 
   colors {
     statusline #ffff00
@@ -126,7 +126,7 @@ bar {
   position bottom
   mode hide
 
-  status_command exec /usr/local/bin/sys-status
+  status_command exec perl ~/.config/sway/status.pl
 
   colors {
     statusline #ffff00
@@ -264,8 +264,46 @@ mode "resize" {
     bindsym Escape mode "default"
 }
 bindsym $mod+r mode "resize"
-""")
-]
+"""), ("status.pl", """
+use utf8;
+use open qw( :std :encoding(UTF-8) );
+
+sub read_file {
+  if (open(my $h, '<', $_[0])) {<$h>}
+}
+
+$| = 1;
+
+for (;;) {
+  my @status;
+  if (opendir(my $netdir, '/sys/class/net')) {
+    for (readdir $netdir) {
+      next unless /^wl/ and open my $h, '-|', '/sbin/iw', $_, 'link';
+      my $iw = join("\n", <$h>);
+      my $dbm = $iw =~ /signal: (-\d++) ? dBm/ ? "$1dBm " : undef;
+      my $rx = $iw =~ /rx bitrate: (\d++)/ ? $1 : undef;
+      my $tx = $iw =~ /tx bitrate: (\d++)/ ? "/$1" : undef;
+      push @status, "📶$dbm" . ($rx and "$rx${tx}Mb/s") if $dbm or $rx;
+    }
+    closedir $netdir;
+  }
+  if (opendir(my $pwdir, '/sys/class/power_supply')) {
+    for (grep /^BAT/, readdir $pwdir) {
+      my $dir = "/sys/class/power_supply/$_";
+      my $now  = read_file("$dir/energy_now");
+      my $full = read_file("$dir/energy_full");
+      local $_ = read_file("$dir/status");
+      push @status, (/^Charging/ ? '⌁' : /^Discharging/ ? '↯' : 'B:')
+          . ($now and $full and int(($now * 100 + 49) / $full) . '%');
+    }
+    closedir $pwdir;
+  }
+  my ($sec, $min, $hour, $mday) = localtime;
+  push @status, sprintf("🗓%d. %02d:%02d \n",$mday, $hour, $min);
+  print join('  ', @status);
+  sleep 10;
+}
+""")]
 
 const xkb_uml = """
 partial alphanumeric_keys
