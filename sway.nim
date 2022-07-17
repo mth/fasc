@@ -113,7 +113,7 @@ bar {
   position bottom
   mode overlay
 
-  status_command exec perl ~/.config/sway/status.pl
+  status_command exec bash ~/.config/sway/status.sh
 
   colors {
     statusline #ffff00
@@ -126,7 +126,7 @@ bar {
   position bottom
   mode hide
 
-  status_command exec perl ~/.config/sway/status.pl
+  status_command exec bash ~/.config/sway/status.sh
 
   colors {
     statusline #ffff00
@@ -264,45 +264,41 @@ mode "resize" {
     bindsym Escape mode "default"
 }
 bindsym $mod+r mode "resize"
-"""), ("status.pl", """
-use utf8;
-use open qw(:std :encoding(UTF-8));
+"""), ("status.sh", """
+exec 5<> <(:)
+while true; do
+	for net in /sys/class/net/wl*; do
+		/sbin/iw dev "${net##*/}" link | {
+			while read iw; do
+				parts=($iw)
+				case "${iw%%:*}" in
+				signal) signal=${parts[1]};;
+				rx\ bitrate) rx=${parts[2]};;
+				tx\ bitrate) tx=${parts[2]};;
+				esac
+			done
+			if [ -n "$signal$rx" ]; then
+				[ -n "$signal" ] && echo -n "📶${signal}dBm " || echo -n 📶
+				[ -n "$rx" ] && echo -n "${rx%.*}/${tx%.*}Mb/s  " || echo -n "  "
+			fi
+		}
+	done
 
-sub read_file {
-  if (open(my $h, '<', $_[0])) {<$h>}
-}
+	for bat in /sys/class/power_supply/BAT*; do
+		read stat < "$bat/status"
+		case "$stat" in
+		Charging) echo -n ⌁;;
+		Discharging) echo -n ↯;;
+		*) echo -n B:
+		esac
+		read bat_now < "$bat/energy_now"
+		read bat_full < "$bat/energy_full"
+		echo -n "$((($bat_now * 100 + 49) / $bat_full))%  "
+	done
 
-$| = 1;
-
-for (;;) {
-  my @status;
-  if (opendir(my $netdir, '/sys/class/net')) {
-    for (readdir $netdir) {
-      next unless /^wl/ and open my $h, '-|', '/sbin/iw', $_, 'link';
-      my $iw = join("\n", <$h>);
-      my $dbm = $iw =~ /signal: (-\d++) ? dBm/ ? "$1dBm " : undef;
-      my $rx = $iw =~ /rx bitrate: (\d++)/ ? $1 : undef;
-      my $tx = $iw =~ /tx bitrate: (\d++)/ ? "/$1" : undef;
-      push @status, "📶$dbm" . ($rx and "$rx${tx}Mb/s") if $dbm or $rx;
-    }
-    closedir $netdir;
-  }
-  if (opendir(my $pwdir, '/sys/class/power_supply')) {
-    for (grep /^BAT/, readdir $pwdir) {
-      my $dir = "/sys/class/power_supply/$_";
-      my $now  = read_file("$dir/energy_now");
-      my $full = read_file("$dir/energy_full");
-      local $_ = read_file("$dir/status");
-      push @status, (/^Charging/ ? '⌁' : /^Discharging/ ? '↯' : 'B:')
-          . ($now and $full and int(($now * 100 + 49) / $full) . '%');
-    }
-    closedir $pwdir;
-  }
-  my ($sec, $min, $hour, $mday) = localtime;
-  push @status, sprintf("🗓%d. %02d:%02d \n",$mday, $hour, $min);
-  print join('  ', @status);
-  sleep 10;
-}
+	printf "🗓%(%e. %H:%M)T\n"
+	read -t 10 <&5
+done
 """)]
 
 const xkb_uml = """
