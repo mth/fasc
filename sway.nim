@@ -266,7 +266,7 @@ mode "resize" {
 bindsym $mod+r mode "resize"
 """), ("status.pl", """
 use utf8;
-use open qw( :std :encoding(UTF-8) );
+use open qw(:std :encoding(UTF-8));
 
 sub read_file {
   if (open(my $h, '<', $_[0])) {<$h>}
