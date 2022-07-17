@@ -4,10 +4,10 @@ import cmdqueue
 const run_firefox_script = """
 #!/bin/sh
 
-[ "${1%%=*}" != "--vdesk" ] || { FXVDESK="${1#*=}; shift;}
+[ "${1%%=*}" != "--vdesk" ] || { FXVDESK="${1#*=}"; shift;}
 MOZ_WEBRENDER=1
 export MOZ_WEBRENDER
-[ -n "$FXVDESK" ] && swaymsg -t get_tree | grep -q '"app_id": "firefox"' || exec /usr/bin/firefox-esr "$@"
+[ -n "$FXVDESK" ] && swaymsg -t get_tree | grep -q '"app_id": "firefox-esr"' || exec /usr/bin/firefox-esr "$@"
 swaymsg workspace "$FXVDESK"
 """
 
@@ -133,4 +133,4 @@ proc firefoxConfig*(user: UserInfo) =
                 ff2mpv_host.replace("HOME", user.home),
                 permissions = 0o755, force = true)
     writeAsUser(user, ".config/sway/firefox.sh", run_firefox_script,
-                permissions = 0o755)
+                permissions = 0o755, force = true)
