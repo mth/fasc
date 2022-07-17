@@ -380,5 +380,7 @@ proc swayUnit*(args: Strs) =
     except:
       echo("Cannot link /usr/bin/yt-dlp to ", ytdlAlias)
   addFirefoxESR()
+  # fonts-dejavu? fonts-liberation? fonts-freefont-ttf?
   packagesToInstall.add(["sway", "swayidle", "foot", "evince", "gammastep",
-                         "grim", "mpv", "yt-dlp", "fonts-terminus-otb"])
+                         "grim", "mpv", "yt-dlp", "fonts-terminus-otb",
+                         "fonts-unifont"])
