@@ -267,7 +267,7 @@ bindsym $mod+r mode "resize"
 """), ("status.sh", """
 exec 5<> <(:)
 while true; do
-	for net in /sys/class/net/wl*; do
+	OUT="`for net in /sys/class/net/wl*; do
 		/sbin/iw dev "${net##*/}" link | {
 			while read iw; do
 				parts=($iw)
@@ -278,25 +278,26 @@ while true; do
 				esac
 			done
 			if [ -n "$signal$rx" ]; then
-				[ -n "$signal" ] && echo -n "📶${signal}dBm " || echo -n 📶
-				[ -n "$rx" ] && echo -n "${rx%.*}/${tx%.*}Mb/s  " || echo -n "  "
+				echo -n " 📶"
+				[ -z "$signal" ] || echo -n "${signal}dBm "
+				[ -z "$rx" ] || echo -n "${rx%.*}/${tx%.*}Mb/s "
 			fi
 		}
-	done
+	done`"
 
 	for bat in /sys/class/power_supply/BAT*; do
 		read stat < "$bat/status"
 		case "$stat" in
-		Charging) echo -n ⌁;;
-		Discharging) echo -n ↯;;
-		*) echo -n B:
+		Charging) OUT="$OUT ⌁";;
+		Discharging) OUT="$OUT ↯";;
+		*) OUT="$OUT B:"
 		esac
 		read bat_now < "$bat/energy_now"
 		read bat_full < "$bat/energy_full"
-		echo -n "$((($bat_now * 100 + 49) / $bat_full))%  "
+		OUT="$OUT$((($bat_now * 100 + 49) / $bat_full))% "
 	done
 
-	printf "🗓%(%e. %H:%M)T\n"
+	printf "%s 🗓%(%e. %H:%M)T\n" "$OUT"
 	read -t 10 <&5
 done
 """)]
