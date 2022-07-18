@@ -1,5 +1,5 @@
 import std/[parseutils, sequtils, strformat, strutils, os]
-import cmdqueue
+import utils
 
 proc network(unit, match: string, options: varargs[string]) =
   var net = @[

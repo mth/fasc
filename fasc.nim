@@ -1,5 +1,5 @@
 import std/[os, sequtils, strutils, tables]
-import cmdqueue, network, sway, apt
+import utils, network, sway, apt
 
 let tasks = {
   "wlan": ("Configure WLAN client with DHCP", wlan),

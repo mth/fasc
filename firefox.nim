@@ -1,5 +1,5 @@
 import std/[strformat, strutils]
-import cmdqueue
+import utils
 
 const run_firefox_script = """
 #!/bin/sh

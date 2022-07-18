@@ -1,5 +1,5 @@
 import std/[sequtils, sets, strutils, tables]
-import cmdqueue
+import utils
 
 type Package = ref object
   name: string

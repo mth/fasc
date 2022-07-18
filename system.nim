@@ -1,5 +1,5 @@
 import std/[sequtils, strformat]
-import cmdqueue
+import utils
   
 const sys_psu = "/sys/class/power_supply"
 

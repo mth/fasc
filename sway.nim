@@ -1,5 +1,5 @@
 import std/[strformat, os]
-import cmdqueue, firefox
+import utils, firefox
 
 const user_config = [
   (".XCompose", """
