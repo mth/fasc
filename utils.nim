@@ -113,7 +113,7 @@ proc modifyProperties*(filename: string,
       nameEnd.dec
     let name = line[notSpace..nameEnd]
     if name in updateMap:
-      assign.inc line.skipWhitespace (assign + 1)
+      assign.inc line.skipWhitespace(assign + 1)
       let value = line[assign+1..^1].strip(leading=false)
       let updated = updateMap[name](value)
       updateMap.del name
