@@ -20,7 +20,7 @@ proc writeFileIfNotExists*(filename, content: string; force: bool) =
     echo fmt"Created {filename}"
     filename.writeFile content
 
-proc listDir*(path): seq[string] =
+proc listDir*(path: string): seq[string] =
   for kind, subdir in walkDir(path):
     result.add subdir
 

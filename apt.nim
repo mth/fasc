@@ -35,14 +35,13 @@ proc mandbUpdate() =
     echo("Not found ", autoUpdate)
 
 # XXX removing ifupdown should be network modules job
-# XXX something should install rlwrap
-proc defaultPrune(additionalPackages: seq[string]) =
+proc defaultPrune() =
   let remove = ["avahi-autoipd", "debian-faq", "discover", "doc-debian",
         "ifupdown", "installation-report", "isc-dhcp-client", "isc-dhcp-common",
         "liblockfile-bin", "nano", "netcat-traditional", "reportbug",
         "task-english", "task-laptop", "tasksel", "tasksel-data",
         "telnet", "vim-tiny", "vim-common"]
-  prunePackages(["elvis-tiny", "netcat-openbsd"] & additionalPackages, remove)
+  prunePackages(["elvis-tiny", "netcat-openbsd"], remove)
 
 proc configureAPT*(args: Strs) =
   aptConf()
@@ -51,5 +50,6 @@ proc configureAPT*(args: Strs) =
     preferences("o=Debian,a=unstable", -1)
   mandbUpdate()
 
+# XXX something should install rlwrap
 proc installDevel*(args: Strs) =
   packagesToInstall.add ["build-essential", "pinfo", "strace"]
