@@ -419,5 +419,5 @@ proc swayUnit*(args: Strs) =
   packagesToInstall.add ["sway", "swayidle", "foot", "evince", "gammastep",
                          "grim", "mpv", "yt-dlp", "fonts-terminus-otb",
                          "fonts-unifont"]
-  if dirNotEmpty("/sys/class/backlight"):
+  if listDir("/sys/class/backlight").len != 0:
     packagesToInstall.add ["brightnessctl", "brightness-udev"]
