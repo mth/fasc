@@ -1,4 +1,5 @@
-import std/[sequtils, streams, strformat, strutils, tables, os, osproc, posix]
+import std/[sequtils, streams, parseutils, strformat, strutils,
+            tables, os, osproc, posix]
 
 type Strs* = seq[string]
 type UserInfo* = tuple[home: string, uid: Uid, gid: Gid]
@@ -98,4 +99,32 @@ proc userInfo*(user: string): UserInfo =
 
 proc modifyProperties*(filename: string,
                        update: Table[string, proc(old: string): string]) =
-  echo "WTF"
+  var updatedConf: seq[string]
+  var updateMap = update
+  var modified = false
+  for line in lines(filename):
+    updatedConf.add line
+    let notSpace = line.skipWhitespace
+    if notSpace >= line.len or line[notSpace] == '#':
+      continue
+    var assign = line.skipUntil('=', notSpace)
+    var nameEnd = assign - 1
+    while line[nameEnd] in Whitespace:
+      nameEnd.dec
+    let name = line[notSpace..nameEnd]
+    if name in updateMap:
+      assign.inc line.skipWhitespace (assign + 1)
+      let value = line[assign+1..^1].strip(leading=false)
+      let updated = updateMap[name](value)
+      updateMap.del name
+      if updated != value:
+        updatedConf[^1] = line[0..<notSpace] &
+          name & line[nameEnd+1..assign] & value
+        modified = true
+  for key, updater in updateMap:
+    let value = updater("")
+    if value.len != 0:
+      updatedConf.add(key & '=' & value)
+      modified = true
+  if modified:
+    writeFile(filename, updatedConf.join("\n") & '\n')
