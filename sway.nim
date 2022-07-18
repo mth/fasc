@@ -83,8 +83,8 @@ bindsym $mod+o exec exec ~/.config/sway/firefox.sh --vdesk=$firefox_workspace
 bindsym $mod+g exec /usr/games/xmahjongg
 bindsym $mod+l exec swaylock -f -c 000000
 bindsym $mod+s exec GRIM_DEFAULT_DIR=/tmp/downloads exec grim
-bindsym XF86MonBrightnessUp exec /usr/local/bin/backlight 5 4
-bindsym XF86MonBrightnessDown exec /usr/local/bin/backlight 4 5
+bindsym XF86MonBrightnessUp exec brightnessctl -q s +2%
+bindsym XF86MonBrightnessDown exec brightnessctl -q -n100 s 2%-
 
 exec exec foot -s
 exec exec gammastep -m wayland
@@ -418,4 +418,4 @@ proc swayUnit*(args: Strs) =
   # fonts-dejavu? fonts-liberation? fonts-freefont-ttf?
   packagesToInstall.add(["sway", "swayidle", "foot", "evince", "gammastep",
                          "grim", "mpv", "yt-dlp", "fonts-terminus-otb",
-                         "fonts-unifont"])
+                         "fonts-unifont", "brightnessctl", "brightness-udev"])
