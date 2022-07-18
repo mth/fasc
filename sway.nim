@@ -416,6 +416,8 @@ proc swayUnit*(args: Strs) =
       echo("Cannot link /usr/bin/yt-dlp to ", ytdlAlias)
   addFirefoxESR()
   # fonts-dejavu? fonts-liberation? fonts-freefont-ttf?
-  packagesToInstall.add(["sway", "swayidle", "foot", "evince", "gammastep",
+  packagesToInstall.add ["sway", "swayidle", "foot", "evince", "gammastep",
                          "grim", "mpv", "yt-dlp", "fonts-terminus-otb",
-                         "fonts-unifont", "brightnessctl", "brightness-udev"])
+                         "fonts-unifont"]
+  if dirNotEmpty("/sys/class/backlight"):
+    packagesToInstall.add ["brightnessctl", "brightness-udev"]

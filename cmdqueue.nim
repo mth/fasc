@@ -20,6 +20,10 @@ proc writeFileIfNotExists*(filename, content: string; force: bool) =
     echo fmt"Created {filename}"
     filename.writeFile content
 
+proc dirNotEmpty*(path: string): bool =
+  for kind, path in walkDir(path):
+    return true
+
 proc writeFile*(filename: string, content: openarray[string], force = false) =
   let (dir, _, _) = filename.splitFile
   createDir dir
