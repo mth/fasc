@@ -49,6 +49,7 @@ proc configureAPT*(args: Strs) =
   if "unstable" notin args:
     preferences("o=Debian,a=unstable", -1)
   mandbUpdate()
+  defaultPrune()
 
 # XXX something should install rlwrap
 proc installDevel*(args: Strs) =

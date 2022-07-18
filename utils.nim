@@ -1,4 +1,4 @@
-import std/[sequtils, streams, strformat, strutils, os, osproc, posix]
+import std/[sequtils, streams, strformat, strutils, tables, os, osproc, posix]
 
 type Strs* = seq[string]
 type UserInfo* = tuple[home: string, uid: Uid, gid: Gid]
@@ -95,3 +95,7 @@ proc userInfo*(user: string): UserInfo =
     echo fmt"Unknown user {user}"
     quit 1
   return (home: $pw.pw_dir, uid: pw.pw_uid, gid: pw.pw_gid)
+
+proc modifyProperties*(filename: string,
+                       update: Table[string, proc(old: string): string]) =
+  echo "WTF"
