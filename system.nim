@@ -1,10 +1,10 @@
-import std/[sequtils, strformat]
+import std/[sequtils, strutils, os]
 import utils
   
 const sys_psu = "/sys/class/power_supply"
 
-proc sysctls() =
-  var conf = [
+proc sysctls*(args: seq[string]) =
+  var conf = @[
     "kernel.dmesg_restrict=0",
     "kernel.sched_autogroup_enabled=1",
 
@@ -24,7 +24,7 @@ proc sysctls() =
     "net.ipv6.conf.all.use_tempaddr=2",
     "net.ipv6.conf.default.use_tempaddr=2",
     "net.ipv6.conf.lo.use_tempaddr=-1",
-  ])
+  ]
   if sys_psu.listDir.anyIt(readFile(it / "type").strip == "Battery"):
     conf.add "kernel.nmi_watchdog=0"
     conf.add "vm.dirty_writeback_centisecs=1500"

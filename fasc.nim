@@ -1,12 +1,13 @@
 import std/[os, sequtils, strutils, tables]
-import utils, network, sway, apt
+import utils, network, sway, apt, system
 
 let tasks = {
   "wlan": ("Configure WLAN client with DHCP", wlan),
   "wifinet": ("Add WLAN network", wifiNet),
   "sway": ("Configure sway desktop startup", swayUnit),
   "swaycfg": ("Configure sway compositor", swayConf),
-  "apt": ("Configure APT defaults", configureAPT)
+  "apt": ("Configure APT defaults", configureAPT),
+  "sysctl": ("Configure sysctl parameters", sysctls),
 }.toTable
 
 if paramCount() == 0:
