@@ -1,6 +1,6 @@
 from macros import error
 
-switch("mm", "arc")
+# switch("mm", "arc")
 
 when defined(musl):
   let muslGCC = findExe("musl-gcc")
