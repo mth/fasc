@@ -51,6 +51,9 @@ proc configureAPT*(args: Strs) =
   mandbUpdate()
   defaultPrune()
 
-# XXX something should install rlwrap
+proc installDestopPackages() =
+  packagesToInstall.add ["pinfo", "strace", "lsof", "rlwrap"]
+
 proc installDevel*(args: Strs) =
-  packagesToInstall.add ["build-essential", "pinfo", "strace"]
+  installDesktopPackages()
+  packagesToInstall.add "build-essential"
