@@ -138,7 +138,7 @@ proc modifyProperties*(filename: string, update: varargs[(string, string)],
   for (key, value) in update:
     let value = value
     capture value:
-      updateMap[key] = proc(old: string): string =
-        return if not onlyEmpty or old.len == 0: value
-               else: old
+      updateMap[key] = old =>
+        (if not onlyEmpty or old.len == 0: value
+         else: old)
   modifyProperties(filename, updateMap)
