@@ -37,7 +37,7 @@ proc systemdSleep(sleepTime: string) =
   var sleepTime = "30min"
   if hasBattery():
     sleepTime = "10min"
-  modifyProperties("/etc/systemd/login.conf",
+  modifyProperties("/etc/systemd/logind.conf",
     [("IdleAction", "suspend"), ("IdleActionSec", sleepTime)])
   modifyProperties("/etc/systemd/sleep.conf",
     [("AllowSuspendThenHibernate", "no")])
