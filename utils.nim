@@ -117,16 +117,13 @@ proc modifyProperties*(filename: string,
       let value = line[assign+1..^1].strip(leading=false)
       let updated = updateMap[name](value)
       updateMap.del name
-      echo("old=", value, " new=", updated)
       if updated != value:
         updatedConf[^1] = line[0..<notSpace] &
           name & line[nameEnd+1..assign] & updated
-        echo("Updated ", updatedConf[^1])
         modified = true
   for key, updater in updateMap:
     let value = updater("")
     if value.len != 0:
-      echo("Adding value ", key, '=', value)
       updatedConf.add(key & '=' & value)
       modified = true
   if modified:
