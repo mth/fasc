@@ -1,5 +1,5 @@
 import std/[sequtils, streams, parseutils, strformat, strutils,
-            tables, os, osproc, posix]
+            tables, os, osproc, posix, sugar]
 
 type Strs* = seq[string]
 type UserInfo* = tuple[home: string, uid: Uid, gid: Gid]
@@ -131,3 +131,14 @@ proc modifyProperties*(filename: string,
       modified = true
   if modified:
     writeFile(filename, updatedConf.join("\n") & '\n')
+
+proc modifyProperties*(filename: string, update: varargs[(string, string)],
+                       onlyEmpty = true) =
+  var updateMap: Table[string, proc(old: string): string]
+  for (key, value) in update:
+    let value = value
+    capture value:
+      updateMap[key] = proc(old: string): string =
+        return if not onlyEmpty or old.len == 0: value
+               else: old
+  modifyProperties(filename, updateMap)

@@ -3,6 +3,9 @@ import utils
   
 const sys_psu = "/sys/class/power_supply"
 
+proc hasBattery(): bool =
+  sys_psu.listDir.anyIt(readFile(it / "type").strip == "Battery")
+
 proc sysctls*(args: seq[string]) =
   var conf = @[
     "kernel.dmesg_restrict=0",
@@ -25,8 +28,16 @@ proc sysctls*(args: seq[string]) =
     "net.ipv6.conf.default.use_tempaddr=2",
     "net.ipv6.conf.lo.use_tempaddr=-1",
   ]
-  if sys_psu.listDir.anyIt(readFile(it / "type").strip == "Battery"):
+  if hasBattery():
     conf.add "kernel.nmi_watchdog=0"
     conf.add "vm.dirty_writeback_centisecs=1500"
   writeFile("/etc/sysctl.d/00-local.conf", conf)
 
+proc systemdSleep*() =
+  var sleepTime = "30min"
+  if hasBattery():
+    sleepTime = "10min"
+  modifyProperties("/etc/systemd/login.conf",
+    ("IdleAction", "suspend"), ("IdleActionSec", sleepTime))
+  modifyProperties("/etc/systemd/sleep.conf",
+    ("AllowSuspendThenHibernate", "no"))
