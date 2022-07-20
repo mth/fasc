@@ -7,7 +7,6 @@ for nth in 1 .. (paramCount() - 1) div 2:
   let key = paramStr(idx)
   let value = paramStr(idx + 1)
   capture value:
-    update[key] = proc(old: string): string =
-      return value
+    update[key] = old => value
 
 modifyProperties(paramStr(1), update)
