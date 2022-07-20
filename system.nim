@@ -47,3 +47,4 @@ proc tuneSystem*(args: Strs) =
   sysctls(battery)
   systemdSleep(if battery: "10min"
                else: "30min")
+  systemdReload = true
