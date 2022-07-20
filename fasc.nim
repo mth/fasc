@@ -7,7 +7,7 @@ let tasks = {
   "sway": ("Configure sway desktop startup", swayUnit),
   "swaycfg": ("Configure sway compositor", swayConf),
   "apt": ("Configure APT defaults", configureAPT),
-  "sysctl": ("Configure sysctl parameters", sysctls),
+  "tunesys": ("Tune system configuration", tuneSystem),
 }.toTable
 
 if paramCount() == 0:

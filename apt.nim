@@ -51,7 +51,7 @@ proc configureAPT*(args: Strs) =
   mandbUpdate()
   defaultPrune()
 
-proc installDestopPackages() =
+proc installDesktopPackages() =
   packagesToInstall.add ["pinfo", "strace", "lsof", "rlwrap"]
 
 proc installDevel*(args: Strs) =
