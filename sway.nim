@@ -350,8 +350,8 @@ proc runWayland(compositor, user: string, info: UserInfo) =
   var service = [
     "[Unit]",
     "Description=Runs wayland desktop",
-    "Wants=usb-gadget.target",
-    "After=systemd-user-sessions.service plymouth-quit-wait.service usb-gadget.target",
+    "Wants=sysinit.target usb-gadget.target",
+    "After=systemd-user-sessions.service plymouth-quit-wait.service sysinit.target usb-gadget.target",
     "",
     "[Service]",
     fmt"ExecStartPre=/usr/bin/install -m 700 -o {user} -g {gid} -d /tmp/.{user}-cache",
