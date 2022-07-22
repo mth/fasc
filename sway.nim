@@ -356,7 +356,7 @@ proc runWayland(compositor, user: string, info: UserInfo) =
     "[Service]",
     fmt"ExecStartPre=/usr/bin/install -m 700 -o {user} -g {gid} -d /tmp/.{user}-cache",
     fmt"ExecStartPre=/usr/bin/install -m 700 -o {user} -g {gid} -d /tmp/downloads",
-    "ExecStart=/usr/bin/ssh-agent " & compositor,
+    "ExecStart=" & compositor,
     "KillMode=control-group",
     "Restart=no",
     "StandardInput=tty-fail",
@@ -385,7 +385,7 @@ proc runWayland(compositor, user: string, info: UserInfo) =
   writeFile("/etc/systemd/system/run-wayland.service", service)
   writeFile("/etc/fonts/conf.d/10-autohinting.conf", [font_auto_hinting])
   enableUnits.add "run-wayland.service"
-  packagesToInstall.add(["openssh-client", "qtwayland5", "xwayland"])
+  packagesToInstall.add(["qtwayland5", "xwayland"])
   systemdReload = true
   runCmd("usermod", "-G",
     "adm,audio,cdrom,input,kvm,video,render,systemd-journal", user)
@@ -407,7 +407,7 @@ proc swayUnit*(args: Strs) =
   let info = user.userInfo
   writeFile("/usr/share/X11/xkb/symbols/uml", @[xkb_uml])
   configureSway info
-  runWayland("sway", "mzz", info)
+  runWayland("/usr/bin/ssh-agent /usr/bin/sway", "mzz", info)
   let ytdlAlias = "/usr/local/bin/youtube-dl"
   if not ytdlAlias.fileExists:
     try:
@@ -416,8 +416,8 @@ proc swayUnit*(args: Strs) =
       echo("Cannot link /usr/bin/yt-dlp to ", ytdlAlias)
   addFirefoxESR()
   # fonts-dejavu? fonts-liberation? fonts-freefont-ttf?
-  packagesToInstall.add ["sway", "swayidle", "foot", "evince", "gammastep",
-                         "grim", "mpv", "yt-dlp", "fonts-terminus-otb",
-                         "fonts-unifont"]
+  packagesToInstall.add ["sway", "swayidle", "openssh-client", "foot",
+                         "evince", "gammastep", "grim", "mpv", "yt-dlp",
+                         "fonts-terminus-otb", "fonts-unifont"]
   if listDir("/sys/class/backlight").len != 0:
     packagesToInstall.add ["brightnessctl", "brightness-udev"]
