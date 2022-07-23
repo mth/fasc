@@ -147,11 +147,11 @@ func stringFunc*(value: string, onlyEmpty = false): proc(old: string): string =
                                       else: old)
 
 proc modifyProperties*(filename: string, update: openarray[(string, string)],
-                       onlyEmpty = true) =
+                       onlyEmpty = true): bool =
   var updateMap: UpdateMap
   for (key, value) in update:
     updateMap[key] = stringFunc(value, onlyEmpty)
-  discard modifyProperties(filename, updateMap)
+  return modifyProperties(filename, updateMap)
 
 proc nonEmptyParam*(params: StrMap, key: string): string =
   result = params.getOrDefault(key)

@@ -53,15 +53,14 @@ proc bootConf() =
   # resume spews errors and delays boot with swap encrypted using random key
   const resume = "/etc/initramfs-tools/conf.d/resume"
   var initramfs = encryptedSwap() and resume.fileExists and
-    modifyProperties(resume, {"RESUME": stringFunc("none")}.toTable)
-  modifyProperties("/etc/initramfs-tools/initramfs.conf", [("MODULES", "dep")], true)
+    modifyProperties(resume, [("RESUME", "none")], false)
   var grubUpdate: UpdateMap
   if readLines("/proc/swaps", 2).len > 1:
     echo "Configuring zram..."
     grubUpdate["GRUB_CMDLINE_LINUX_DEFAULT"] = addGrubZSwap
     initramfs = appendMissing("/etc/initramfs-tools/modules", "lz4hc", "z3fold")
   if modifyProperties("/etc/initramfs-tools/initramfs.conf",
-                      {"MODULES": stringFunc("dep")}.toTable) or initramfs:
+                      [("MODULES", "dep")], false) or initramfs:
     runCmd("update-initramfs", "-u")
   grubUpdate["GRUB_TIMEOUT"] = stringFunc("3")
   if modifyProperties("/etc/default/grub", grubUpdate):
@@ -72,9 +71,9 @@ proc defaultSleepMinutes*(): int =
   else: 15
 
 proc systemdSleep*(sleepMinutes: int) =
-  modifyProperties("/etc/systemd/logind.conf",
+  discard modifyProperties("/etc/systemd/logind.conf",
     [("IdleAction", "suspend"), ("IdleActionSec", fmt"{sleepMinutes}min")])
-  modifyProperties("/etc/systemd/sleep.conf",
+  systemdReload = modifyProperties("/etc/systemd/sleep.conf",
     [("AllowSuspendThenHibernate", "no")])
 
 proc tuneSystem*(args: StrMap) =
