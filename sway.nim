@@ -85,7 +85,7 @@ bindsym $mod+g exec /usr/games/xmahjongg
 bindsym $mod+l exec swaylock -f -c 000000
 bindsym $mod+s exec GRIM_DEFAULT_DIR=/tmp/downloads exec grim
 bindsym XF86MonBrightnessUp exec brightnessctl -q s +2%
-bindsym XF86MonBrightnessDown exec brightnessctl -q -n96 s 2%-
+bindsym XF86MonBrightnessDown exec brightnessctl -q -n60 s 2%-
 
 exec exec foot -s
 exec exec gammastep -m wayland
