@@ -45,7 +45,8 @@ func addGrubZSwap(old: string): string =
 proc encryptedSwap(): bool =
   if fileExists("/etc/crypttab"):
     for crypt in lines("/etc/crypttab"):
-      if " /dev/random " in crypt and "swap" in crypt:
+      if "swap" in crypt and (" /dev/urandom " in crypt or
+                              " /dev/random " in crypt):
         return true
 
 proc bootConf() =
