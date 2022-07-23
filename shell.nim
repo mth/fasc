@@ -21,6 +21,8 @@ shopt -s globstar
 shopt -s globasciiranges
 shopt -s autocd
 
+[ "$TERM" != "foot" ] || PROMPT_COMMAND='echo -ne "\033]0;${HOSTNAME@U} ${PWD}\007"'
+
 if ! shopt -oq posix; then
   if [ -f /usr/share/bash-completion/bash_completion ]; then
     . /usr/share/bash-completion/bash_completion
