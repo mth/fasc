@@ -65,7 +65,7 @@ proc bootConf() =
     modifyProperties(resume, [("RESUME", "none")], false)
   var grubUpdate: UpdateMap
   if readLines("/proc/swaps", 2).len > 1:
-    echo "Configuring zram..."
+    echo "Configuring zswap..."
     grubUpdate["GRUB_CMDLINE_LINUX_DEFAULT"] = addGrubZSwap
     initramfs = appendMissing("/etc/initramfs-tools/modules", "lz4hc", "z3fold")
   if modifyProperties("/etc/initramfs-tools/initramfs.conf",
