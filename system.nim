@@ -71,6 +71,7 @@ proc defaultSleepMinutes*(): int =
   else: 15
 
 proc systemdSleep*(sleepMinutes: int) =
+  # FIXME should restart logind _if_ sway isn't active
   discard modifyProperties("/etc/systemd/logind.conf",
     [("IdleAction", "suspend"), ("IdleActionSec", fmt"{sleepMinutes}min")])
   systemdReload = modifyProperties("/etc/systemd/sleep.conf",
