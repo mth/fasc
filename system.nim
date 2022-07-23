@@ -58,6 +58,8 @@ proc encryptedSwap(): bool =
                               " /dev/random " in crypt):
         return true
 
+# some laptops need psmouse.synaptics_intertouch=1, however its not universal
+
 proc bootConf() =
   # resume spews errors and delays boot with swap encrypted using random key
   const resume = "/etc/initramfs-tools/conf.d/resume"
