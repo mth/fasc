@@ -24,7 +24,7 @@ zram
         | forwarding
 idcard
 hdparm
-automatic fsck
+- automatic fsck - not possible anymore with systemd?
 unattended-upgrades (and automatic apt-cache updating)
 ??admin user
 locales
