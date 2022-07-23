@@ -48,8 +48,10 @@ proc zswap() =
   grubUpdate["GRUB_TIMEOUT"] = stringFunc("3", false)
   grubUpdate["GRUB_CMDLINE_LINUX_DEFAULT"] = addGrubZSwap
   modifyProperties("/etc/default/grub", grubUpdate)
-  # TODO add lz4hc and z3fold into /etc/initramfs-tools/modules
-  # TODO run update-initramfs -u if modules was updated
+  # TODO not zswap specific, but should set MODULES=dep in update-initramfs.conf
+  # and this also requires running update-initramfs afterwards
+  if appendMissing("/etc/initramfs-tools/modules", "lz4hc", "z3fold"):
+    runCmd("update-initramfs", "-u")
 
 proc defaultSleepMinutes*(): int =
   if hasBattery(): 7
