@@ -13,7 +13,7 @@ proc hasProcess(exePath: string): bool =
           expandSymlink(subdir / "exe") == exePath:
         return true
     except:
-      continue
+      discard
 
 proc sysctls(battery: bool) =
   var conf = @[
