@@ -1,9 +1,9 @@
-import std/[sequtils, strutils, os]
+import std/[sequtils, strformat, strutils, os]
 import utils
   
 const sys_psu = "/sys/class/power_supply"
 
-proc hasBattery(): bool =
+proc hasBattery*(): bool =
   sys_psu.listDir.anyIt(readFile(it / "type").strip == "Battery")
 
 proc sysctls(battery: bool) =
@@ -33,18 +33,15 @@ proc sysctls(battery: bool) =
     conf.add "vm.dirty_writeback_centisecs=1500"
   writeFile("/etc/sysctl.d/00-local.conf", conf)
 
-proc systemdSleep(sleepTime: string) =
-  var sleepTime = "30min"
-  if hasBattery():
-    sleepTime = "10min"
+proc defaultSleepMinutes*(): int =
+  if hasBattery(): 7
+  else: 15
+
+proc systemdSleep*(sleepMinutes: int) =
   modifyProperties("/etc/systemd/logind.conf",
-    [("IdleAction", "suspend"), ("IdleActionSec", sleepTime)])
+    [("IdleAction", "suspend"), ("IdleActionSec", fmt"{sleepMinutes}min")])
   modifyProperties("/etc/systemd/sleep.conf",
     [("AllowSuspendThenHibernate", "no")])
 
 proc tuneSystem*(args: StrMap) =
-  let battery = hasBattery()
-  sysctls(battery)
-  systemdSleep(if battery: "10min"
-               else: "30min")
-  systemdReload = true
+  sysctls(hasBattery())

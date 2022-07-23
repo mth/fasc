@@ -1,5 +1,5 @@
 import std/[strformat, os]
-import utils, firefox
+import utils, firefox, system
 
 const user_config = [
   (".XCompose", """
@@ -348,6 +348,16 @@ const font_auto_hinting = """
 </fontconfig>
 """
 
+# desktop - blank 600, suspend 660; laptop - blank 300, suspend 480
+func swayIdle(blankTime: int): string = fmt"""
+  exec exec swayidle -w \
+    timeout {blank_time} 'swaymsg "output * dpms off"' \
+    resume 'swaymsg "output * dpms on"' \
+    before-sleep 'swaylock -f -c 092a00' \
+    after-resume 'pidof -q gammastep || gammastep&' \
+    idlehint 20
+"""
+
 proc runWayland(compositor, user: string, info: UserInfo) =
   let gid = info.gid
   var service = [
@@ -393,24 +403,27 @@ proc runWayland(compositor, user: string, info: UserInfo) =
   runCmd("usermod", "-G",
     "adm,audio,cdrom,input,kvm,video,render,systemd-journal", user)
 
-proc configureSway(user: UserInfo) =
+proc configureSway(user: UserInfo, sleepMinutes: int) =
   for (file, conf) in user_config:
     writeAsUser(user, file, conf)
   for (file, conf) in sway_config:
     writeAsUser(user, ".config/sway" / file, conf)
+  writeAsUser(user, ".config/sway/idle", swayIdle((sleepMinutes - 2) * 60))
   user.firefoxConfig
 
 proc swayConf*(args: StrMap) =
   let user = "mzz" # TODO
   echo "swayConf called."
-  configureSway user.userInfo
+  configureSway(user.userInfo, defaultSleepMinutes())
 
 proc swayUnit*(args: StrMap) =
   let user = "mzz" # TODO
   let info = user.userInfo
+  let sleepTime = defaultSleepMinutes()
   writeFile("/usr/share/X11/xkb/symbols/uml", @[xkb_uml])
-  configureSway info
+  configureSway(info, sleepTime)
   runWayland("/usr/bin/ssh-agent /usr/bin/sway", "mzz", info)
+  systemdSleep(sleepTime)
   let ytdlAlias = "/usr/local/bin/youtube-dl"
   if not ytdlAlias.fileExists:
     try:
