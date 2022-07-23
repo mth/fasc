@@ -81,8 +81,8 @@ proc defaultSleepMinutes*(): int =
 
 proc systemdSleep*(sleepMinutes: int) =
   # sway loses display output on logind restart
-  if modifyProperties("/etc/systemd/logind.conf", [("IdleAction", "suspend"),
-        ("IdleActionSec", fmt"{sleepMinutes}min")]) and
+  if modifyProperties("/etc/systemd/logind.conf",
+      [("IdleAction", "suspend"), ("IdleActionSec", fmt"{sleepMinutes}min")]) and
      not hasProcess("/usr/bin/sway"):
     runCmd("systemctl", "restart", "systemd-logind.service")
   systemdReload = modifyProperties("/etc/systemd/sleep.conf",
