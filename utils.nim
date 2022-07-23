@@ -98,6 +98,17 @@ proc userInfo*(user: string): UserInfo =
     quit 1
   return (home: $pw.pw_dir, uid: pw.pw_uid, gid: pw.pw_gid)
 
+proc appendMissing*(filename: string, needed: varargs[string]) =
+  var addLines = @needed
+  for line in lines(filename):
+    let idx = addLines.find line.strip
+    if idx >= 0:
+      addLines.delete idx
+  var f = open(filename, fmAppend)
+  defer: f.close
+  for line in addLines:
+    f.writeLine line
+
 proc modifyProperties*(filename: string, update: UpdateMap) =
   var updatedConf: seq[string]
   var updateMap = update
