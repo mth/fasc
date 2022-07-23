@@ -50,8 +50,9 @@ proc encryptedSwap(): bool =
 
 proc bootConf() =
   # resume spews errors and delays boot with swap encrypted using random key
-  var initramfs = encryptedSwap() and
-    tryRemoveFile("/etc/initramfs-tools/conf.d/resume")
+  const resume = "/etc/initramfs-tools/conf.d/resume"
+  var initramfs = encryptedSwap() and resume.fileExists and
+    modifyProperties(resume, {"RESUME": stringFunc("none")}.toTable)
   modifyProperties("/etc/initramfs-tools/initramfs.conf", [("MODULES", "dep")], true)
   var grubUpdate: UpdateMap
   if readLines("/proc/swaps", 2).len > 1:
@@ -60,8 +61,9 @@ proc bootConf() =
     initramfs = appendMissing("/etc/initramfs-tools/modules", "lz4hc", "z3fold")
   if initramfs:
     runCmd("update-initramfs", "-u")
-  grubUpdate["GRUB_TIMEOUT"] = stringFunc("3", false)
-  modifyProperties("/etc/default/grub", grubUpdate)
+  grubUpdate["GRUB_TIMEOUT"] = stringFunc("3")
+  if modifyProperties("/etc/default/grub", grubUpdate):
+    runCmd("update-grub")
   # TODO not zswap specific, but should set MODULES=dep in update-initramfs.conf
   # and this also requires running update-initramfs afterwards
 

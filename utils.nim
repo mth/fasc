@@ -112,10 +112,9 @@ proc appendMissing*(filename: string, needed: varargs[string]): bool =
     f.writeLine line
   return true
 
-proc modifyProperties*(filename: string, update: UpdateMap) =
+proc modifyProperties*(filename: string, update: UpdateMap): bool =
   var updatedConf: seq[string]
   var updateMap = update
-  var modified = false
   for line in lines(filename):
     updatedConf.add line
     let notSpace = line.skipWhitespace
@@ -134,16 +133,16 @@ proc modifyProperties*(filename: string, update: UpdateMap) =
       if updated != value:
         updatedConf[^1] = line[0..<notSpace] &
           name & line[nameEnd+1..assign] & updated
-        modified = true
+        result = true
   for key, updater in updateMap:
     let value = updater("")
     if value.len != 0:
       updatedConf.add(key & '=' & value)
-      modified = true
-  if modified:
+      result = true
+  if result:
     writeFile(filename, updatedConf.join("\n") & '\n')
 
-func stringFunc*(value: string, onlyEmpty: bool): proc(old: string) : string =
+func stringFunc*(value: string, onlyEmpty = false): proc(old: string): string =
   return proc(old: string): string = (if not onlyEmpty or old.len == 0: value
                                       else: old)
 
@@ -152,7 +151,7 @@ proc modifyProperties*(filename: string, update: openarray[(string, string)],
   var updateMap: UpdateMap
   for (key, value) in update:
     updateMap[key] = stringFunc(value, onlyEmpty)
-  modifyProperties(filename, updateMap)
+  discard modifyProperties(filename, updateMap)
 
 proc nonEmptyParam*(params: StrMap, key: string): string =
   result = params.getOrDefault(key)
