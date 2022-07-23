@@ -42,7 +42,7 @@ proc systemdSleep(sleepTime: string) =
   modifyProperties("/etc/systemd/sleep.conf",
     [("AllowSuspendThenHibernate", "no")])
 
-proc tuneSystem*(args: Strs) =
+proc tuneSystem*(args: StrMap) =
   let battery = hasBattery()
   sysctls(battery)
   systemdSleep(if battery: "10min"

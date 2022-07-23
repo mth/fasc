@@ -67,6 +67,7 @@ set $up k
 set $right l
 set $term exec footclient
 set $firefox_workspace 1
+set $blank_time 300
 
 input * xkb_layout uml,ee
 input * xkb_options grp:ctrls_toggle
@@ -96,11 +97,13 @@ include bar
 include touchpad
 include /etc/sway/config.d/*
 """), ("idle", """
+# desktop - blank 600, suspend 660; laptop - blank 300, suspend 480
 exec exec swayidle -w \
-  timeout 600 'swaymsg "output * dpms off"' \
-  resume 'swaymsg "output * dpms on"; pidof -q gammastep || gammastep&' \
-  timeout 660 'swaylock -f -c 000000' \
-  before-sleep 'swaylock -f -c 000000'
+  timeout $blank_time 'swaymsg "output * dpms off"' \
+  resume 'swaymsg "output * dpms on"' \
+  before-sleep 'swaylock -f -c 092a00' \
+  after-resume 'pidof -q gammastep || gammastep&' \
+  idlehint 10
 """), ("idle2", """
 exec exec swayidle -w \
   timeout 300 'swaymsg "output * dpms off"' \
@@ -397,12 +400,12 @@ proc configureSway(user: UserInfo) =
     writeAsUser(user, ".config/sway" / file, conf)
   user.firefoxConfig
 
-proc swayConf*(args: Strs) =
+proc swayConf*(args: StrMap) =
   let user = "mzz" # TODO
   echo "swayConf called."
   configureSway user.userInfo
 
-proc swayUnit*(args: Strs) =
+proc swayUnit*(args: StrMap) =
   let user = "mzz" # TODO
   let info = user.userInfo
   writeFile("/usr/share/X11/xkb/symbols/uml", @[xkb_uml])

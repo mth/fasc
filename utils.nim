@@ -1,12 +1,12 @@
 import std/[sequtils, streams, parseutils, strformat, strutils,
             tables, os, osproc, posix]
 
-type Strs* = seq[string]
+type StrMap* = Table[string, string]
 type UserInfo* = tuple[home: string, uid: Uid, gid: Gid]
 
-var packagesToInstall*: Strs
-var enableUnits*: Strs
-var startUnits*: Strs
+var packagesToInstall*: seq[string]
+var enableUnits*: seq[string]
+var startUnits*:  seq[string]
 var systemdReload*: bool
 
 proc enableAndStart*(units: varargs[string]) =
@@ -139,3 +139,9 @@ proc modifyProperties*(filename: string, update: openarray[(string, string)],
   for (key, value) in update:
     updateMap[key] = stringFunc(value, onlyEmpty)
   modifyProperties(filename, updateMap)
+
+proc nonEmptyParam*(params: StrMap, key: string): string =
+  result = params.getOrDefault(key)
+  if result.len == 0:
+    echo fmt"Expected parameter {key}=<{key}>"
+    quit 1

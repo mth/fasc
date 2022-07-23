@@ -61,8 +61,8 @@ proc stopWireless(): seq[string] =
     echo("Stopping wireless services: ", services.join(", "))
     runCmd("systemctl", "stop" & services)
 
-proc wlan*(args: Strs) =
-  var devices: Strs
+proc wlan*(args: StrMap) =
+  var devices: seq[string]
   for net in findInterfaces():
     if net.isWireless:
       wlanDevice(net)
@@ -71,11 +71,8 @@ proc wlan*(args: Strs) =
   let deviceList = devices.join ", "
   echo fmt"No wlp* WLAN device found (existing devices: {deviceList})"
 
-proc wifiNet*(args: Strs) =
-  if args.len != 1:
-    echo "Expected fasc wifinet <ssid>"
-    quit 1
-  let ssid = args[0]
+proc wifiNet*(args: StrMap) =
+  let ssid = args.nonEmptyParam "ssid"
   stderr.write fmt"{ssid} pasaword: "
   let pass = stdin.readLine
   var netConf = "\n"

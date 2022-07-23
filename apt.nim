@@ -1,5 +1,5 @@
 import utils, aptcleaner
-import std/[strformat, strutils, os]
+import std/[strformat, strutils, os, tables]
 
 const default_apt_conf = """
 Acquire::Languages "none";
@@ -43,7 +43,7 @@ proc defaultPrune() =
         "telnet", "vim-tiny", "vim-common"]
   prunePackages(["elvis-tiny", "netcat-openbsd"], remove)
 
-proc configureAPT*(args: Strs) =
+proc configureAPT*(args: StrMap) =
   aptConf()
   preferences("o=Ubuntu", -1)
   if "unstable" notin args:
@@ -54,6 +54,6 @@ proc configureAPT*(args: Strs) =
 proc installDesktopPackages() =
   packagesToInstall.add ["pinfo", "strace", "lsof", "rlwrap"]
 
-proc installDevel*(args: Strs) =
+proc installDevel*(args: StrMap) =
   installDesktopPackages()
   packagesToInstall.add "build-essential"

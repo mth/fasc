@@ -1,6 +1,12 @@
 import std/[os, sequtils, strutils, tables]
 import utils, network, sway, apt, system, alsa
 
+func argsToMap(args: seq[string]): StrMap =
+  for arg in args:
+    let argParts = arg.split('=', maxsplit = 1)
+    result[argParts[0]] = if argParts.len == 0: ""
+                          else: argParts[1]
+
 let tasks = {
   "wlan": ("Configure WLAN client with DHCP", wlan),
   "wifinet": ("Add WLAN network", wifiNet),
@@ -19,5 +25,5 @@ if paramCount() == 0:
 if not (paramStr(1) in tasks):
   echo "Unknown task: ", paramStr(1)
 else:
-  tasks[paramStr(1)][1](commandLineParams()[1..^1])
+  tasks[paramStr(1)][1](commandLineParams()[1..^1].argsToMap)
 runQueuedCommands()
