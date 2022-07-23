@@ -59,13 +59,12 @@ proc bootConf() =
     echo "Configuring zram..."
     grubUpdate["GRUB_CMDLINE_LINUX_DEFAULT"] = addGrubZSwap
     initramfs = appendMissing("/etc/initramfs-tools/modules", "lz4hc", "z3fold")
-  if initramfs:
+  if modifyProperties("/etc/initramfs-tools/initramfs.conf",
+                      {"MODULES": stringFunc("dep")}.toTable) or initramfs:
     runCmd("update-initramfs", "-u")
   grubUpdate["GRUB_TIMEOUT"] = stringFunc("3")
   if modifyProperties("/etc/default/grub", grubUpdate):
     runCmd("update-grub")
-  # TODO not zswap specific, but should set MODULES=dep in update-initramfs.conf
-  # and this also requires running update-initramfs afterwards
 
 proc defaultSleepMinutes*(): int =
   if hasBattery(): 7
