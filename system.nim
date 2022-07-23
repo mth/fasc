@@ -42,16 +42,28 @@ func addGrubZSwap(old: string): string =
   return '"' & params &
     "zswap.enabled=1 zswap.compressor=lz4hc zswap.zpool=z3fold zswap.max_pool_percent=33\""
 
-# TODO detect whether we have swap at all ?
-proc zswap() =
+proc encryptedSwap(): bool =
+  if fileExists("/etc/crypttab"):
+    for crypt in lines("/etc/crypttab"):
+      if " /dev/random " in crypt and "swap" in crypt:
+        return true
+
+proc bootConf() =
+  # resume spews errors and delays boot with swap encrypted using random key
+  var initramfs = encryptedSwap() and
+    tryRemoveFile("/etc/initramfs-tools/conf.d/resume")
+  modifyProperties("/etc/initramfs-tools/initramfs.conf", [("MODULES", "dep")], true)
   var grubUpdate: UpdateMap
+  if readLines("/proc/swaps", 2).len > 1:
+    echo "Configuring zram..."
+    grubUpdate["GRUB_CMDLINE_LINUX_DEFAULT"] = addGrubZSwap
+    initramfs = appendMissing("/etc/initramfs-tools/modules", "lz4hc", "z3fold")
+  if initramfs:
+    runCmd("update-initramfs", "-u")
   grubUpdate["GRUB_TIMEOUT"] = stringFunc("3", false)
-  grubUpdate["GRUB_CMDLINE_LINUX_DEFAULT"] = addGrubZSwap
   modifyProperties("/etc/default/grub", grubUpdate)
   # TODO not zswap specific, but should set MODULES=dep in update-initramfs.conf
   # and this also requires running update-initramfs afterwards
-  if appendMissing("/etc/initramfs-tools/modules", "lz4hc", "z3fold"):
-    runCmd("update-initramfs", "-u")
 
 proc defaultSleepMinutes*(): int =
   if hasBattery(): 7
@@ -65,4 +77,4 @@ proc systemdSleep*(sleepMinutes: int) =
 
 proc tuneSystem*(args: StrMap) =
   sysctls(hasBattery())
-  zswap()
+  bootConf()
