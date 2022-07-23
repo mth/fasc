@@ -96,21 +96,6 @@ include idle
 include bar
 include touchpad
 include /etc/sway/config.d/*
-"""), ("idle", """
-# desktop - blank 600, suspend 660; laptop - blank 300, suspend 480
-exec exec swayidle -w \
-  timeout $blank_time 'swaymsg "output * dpms off"' \
-  resume 'swaymsg "output * dpms on"' \
-  before-sleep 'swaylock -f -c 092a00' \
-  after-resume 'pidof -q gammastep || gammastep&' \
-  idlehint 10
-"""), ("idle2", """
-exec exec swayidle -w \
-  timeout 300 'swaymsg "output * dpms off"' \
-  resume 'swaymsg "output * dpms on"' \
-  timeout 480 'grep -q 1 /sys/class/power_supply/ACAD/online || systemctl suspend' \
-  before-sleep 'swaylock -f -c 092a00' \
-  after-resume 'swaymsg "output * dpms on"'
 """), ("bar", """
 bar {
   position bottom
@@ -350,12 +335,12 @@ const font_auto_hinting = """
 
 # desktop - blank 600, suspend 660; laptop - blank 300, suspend 480
 func swayIdle(blankTime: int): string = fmt"""
-  exec exec swayidle -w \
-    timeout {blank_time} 'swaymsg "output * dpms off"' \
-    resume 'swaymsg "output * dpms on"' \
-    before-sleep 'swaylock -f -c 092a00' \
-    after-resume 'pidof -q gammastep || gammastep&' \
-    idlehint 20
+exec exec swayidle -w \
+  timeout {blank_time} 'swaymsg "output * dpms off"' \
+  resume 'swaymsg "output * dpms on"' \
+  before-sleep 'swaylock -f -c 092a00' \
+  after-resume 'pidof -q gammastep || gammastep&' \
+  idlehint 20
 """
 
 proc runWayland(compositor, user: string, info: UserInfo) =
