@@ -2,6 +2,7 @@ import std/[sequtils, streams, parseutils, strformat, strutils,
             tables, os, osproc, posix]
 
 type StrMap* = Table[string, string]
+type UpdateMap* = Table[string, proc(old: string): string]
 type UserInfo* = tuple[home: string, uid: Uid, gid: Gid]
 
 var packagesToInstall*: seq[string]
@@ -97,8 +98,7 @@ proc userInfo*(user: string): UserInfo =
     quit 1
   return (home: $pw.pw_dir, uid: pw.pw_uid, gid: pw.pw_gid)
 
-proc modifyProperties*(filename: string,
-                       update: Table[string, proc(old: string): string]) =
+proc modifyProperties*(filename: string, update: UpdateMap) =
   var updatedConf: seq[string]
   var updateMap = update
   var modified = false
@@ -129,13 +129,13 @@ proc modifyProperties*(filename: string,
   if modified:
     writeFile(filename, updatedConf.join("\n") & '\n')
 
-func stringFunc(value: string, onlyEmpty: bool): proc(old: string) : string =
+func stringFunc*(value: string, onlyEmpty: bool): proc(old: string) : string =
   return proc(old: string): string = (if not onlyEmpty or old.len == 0: value
                                       else: old)
 
 proc modifyProperties*(filename: string, update: openarray[(string, string)],
                        onlyEmpty = true) =
-  var updateMap: Table[string, proc(old: string): string]
+  var updateMap: UpdateMap
   for (key, value) in update:
     updateMap[key] = stringFunc(value, onlyEmpty)
   modifyProperties(filename, updateMap)

@@ -1,4 +1,4 @@
-import std/[sequtils, strformat, strutils, os]
+import std/[sequtils, strformat, strutils, os, tables]
 import utils
   
 const sys_psu = "/sys/class/power_supply"
@@ -33,6 +33,24 @@ proc sysctls(battery: bool) =
     conf.add "vm.dirty_writeback_centisecs=1500"
   writeFile("/etc/sysctl.d/00-local.conf", conf)
 
+func addGrubZSwap(old: string): string =
+  if "zswap." in old:
+    return old
+  var params = old.strip(chars={'"'}).strip
+  if params.len > 0:
+    params &= ' '
+  return '"' & params &
+    "zswap.enabled=1 zswap.compressor=lz4hc zswap.zpool=z3fold zswap.max_pool_percent=33\""
+
+# TODO detect whether we have swap at all ?
+proc zswap() =
+  var grubUpdate: UpdateMap
+  grubUpdate["GRUB_TIMEOUT"] = stringFunc("3", false)
+  grubUpdate["GRUB_CMDLINE_LINUX_DEFAULT"] = addGrubZSwap
+  modifyProperties("/etc/default/grub", grubUpdate)
+  # TODO add lz4hc and z3fold into /etc/initramfs-tools/modules
+  # TODO run update-initramfs -u if modules was updated
+
 proc defaultSleepMinutes*(): int =
   if hasBattery(): 7
   else: 15
@@ -45,3 +63,4 @@ proc systemdSleep*(sleepMinutes: int) =
 
 proc tuneSystem*(args: StrMap) =
   sysctls(hasBattery())
+  zswap()
