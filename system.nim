@@ -67,7 +67,8 @@ proc bootConf() =
   if readLines("/proc/swaps", 2).len > 1:
     echo "Configuring zswap..."
     grubUpdate["GRUB_CMDLINE_LINUX_DEFAULT"] = addGrubZSwap
-    initramfs = appendMissing("/etc/initramfs-tools/modules", "lz4hc", "z3fold")
+    if appendMissing("/etc/initramfs-tools/modules", "lz4hc", "z3fold"):
+      initramfs = true
   if modifyProperties("/etc/initramfs-tools/initramfs.conf",
                       [("MODULES", "dep")], false) or initramfs:
     runCmd("update-initramfs", "-u")
