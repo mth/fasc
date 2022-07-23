@@ -6,6 +6,15 @@ const sys_psu = "/sys/class/power_supply"
 proc hasBattery*(): bool =
   sys_psu.listDir.anyIt(readFile(it / "type").strip == "Battery")
 
+proc hasProcess(exePath: string): bool =
+  for kind, subdir in walkDir("/proc"):
+    try:
+      if kind == pcDir and subdir[^1] in {'0'..'9'} and
+          expandSymlink(subdir / "exe") == exePath:
+        return true
+    except:
+      continue
+
 proc sysctls(battery: bool) =
   var conf = @[
     "kernel.dmesg_restrict=0",
@@ -71,9 +80,11 @@ proc defaultSleepMinutes*(): int =
   else: 15
 
 proc systemdSleep*(sleepMinutes: int) =
-  # FIXME should restart logind _if_ sway isn't active
-  discard modifyProperties("/etc/systemd/logind.conf",
-    [("IdleAction", "suspend"), ("IdleActionSec", fmt"{sleepMinutes}min")])
+  # sway loses display output on logind restart
+  if modifyProperties("/etc/systemd/logind.conf", [("IdleAction", "suspend"),
+        ("IdleActionSec", fmt"{sleepMinutes}min")]) and
+     not hasProcess("/usr/bin/sway"):
+    runCmd("systemctl", "restart", "systemd-logind.service")
   systemdReload = modifyProperties("/etc/systemd/sleep.conf",
     [("AllowSuspendThenHibernate", "no")])
 
