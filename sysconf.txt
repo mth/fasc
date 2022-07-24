@@ -12,7 +12,7 @@ net | systemd-networkd | *wlan
 		       | vlan
     | resolv.conf, dnsmasq
     | wvdial
-    | nftables
+    | *nftables
     | simple static lan configuration using ifupdown?
 *grub boot delay
 zram
