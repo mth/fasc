@@ -388,6 +388,10 @@ proc runWayland(compositor, user: string, info: UserInfo) =
   writeFile("/etc/fonts/conf.d/10-autohinting.conf", [font_auto_hinting])
   enableUnits.add "run-wayland.service"
   packagesToInstall.add(["qtwayland5", "xwayland"])
+  if isIntelCPU():
+    packagesToInstall.add "i965-va-driver"
+  else:
+    packagesToInstall.add "mesa-va-drivers"
   systemdReload = true
   runCmd("usermod", "-G",
     "adm,audio,cdrom,input,kvm,video,render,systemd-journal", user)
