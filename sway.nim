@@ -86,8 +86,8 @@ bindsym $mod+l exec swaylock -f -c 000000
 bindsym $mod+s exec GRIM_DEFAULT_DIR=/tmp/downloads exec grim
 bindsym XF86MonBrightnessUp exec brightnessctl -q s +2%
 bindsym XF86MonBrightnessDown exec brightnessctl -q -n60 s 2%-
-bindsym XF86AudioRaiseVolume exec amixer set Master 1+
-bindsym XF86AudioLowerVolume exec amixer set Master 1-
+bindsym XF86AudioRaiseVolume exec amixer set Master 2+
+bindsym XF86AudioLowerVolume exec amixer set Master 2-
 bindsym XF86AudioMute exec amixer set Master toggle
 bindsym XF86AudioMicMute exec amixer set Mic toggle
 
