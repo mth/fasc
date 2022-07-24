@@ -86,8 +86,8 @@ bindsym $mod+l exec swaylock -f -c 000000
 bindsym $mod+s exec GRIM_DEFAULT_DIR=/tmp/downloads exec grim
 bindsym XF86MonBrightnessUp exec brightnessctl -q s +2%
 bindsym XF86MonBrightnessDown exec brightnessctl -q -n60 s 2%-
-bindsym XF86AudioRaiseVolume exec what
-bindsym XF86AudioLowerVolume exec what
+bindsym XF86AudioRaiseVolume exec amixer sset Master 1+
+bindsym XF86AudioLowerVolume exec amixer sset Master 1-
 
 exec exec foot -s
 exec exec gammastep -m wayland
