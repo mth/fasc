@@ -89,3 +89,8 @@ proc wifiNet*(args: StrMap) =
   file.close
   echo fmt"Added {ssid} network into {wpa_supplicant_conf}"
   startUnits.add(stoppedInterfaces.map supplicantService)
+
+# nft
+# nft add rule inet filter input tcp dport 80 accept
+# nft list ruleset
+# man nft /Add, change, delete a table.
