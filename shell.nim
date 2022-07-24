@@ -56,9 +56,12 @@ alias ssh='TERM=xterm-256color ssh'
 
 proc configureUserBash(user: UserInfo) =
   let bashrc = user.home / ".bashrc"
-  if readLines(bashrc, 1) != [debian_bashrc_header]:
-    echo(bashrc, " is not a debian default, not modifying")
-    return
+  try:
+    if readLines(bashrc, 1) != [debian_bashrc_header]:
+      echo(bashrc, " is not a debian default, not modifying")
+      return
+  except:
+    discard # non-existent .bashrc isn't a problem
   echo("Replacing ", bashrc)
   writeFile(bashrc, dot_bashrc)
 

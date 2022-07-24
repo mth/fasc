@@ -99,7 +99,8 @@ proc userInfo*(param: StrMap): UserInfo =
     var name = param.getOrDefault("user")
     if name == "":
       while (pw = getpwent(); pw != nil):
-        uid = max(uid, pw.pw_uid)
+        if pw.pw_uid != 65534: # ignore nobody
+          uid = max(uid, pw.pw_uid)
       if uid != 1000:
         echo fmt"Maximum uid in passwd {uid} > 1000, couldn't guess user"
         quit 1
