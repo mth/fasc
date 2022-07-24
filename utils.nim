@@ -91,8 +91,6 @@ proc runQueuedCommands*() =
     echo("Starting services: ", units.join(", "))
     runCmd("systemctl", "start" & units)
 
-proc getPwByName(name: string): ptr Passwd = getpwnam(name)
-
 proc userInfo*(param: StrMap): UserInfo =
   var pw: ptr Passwd
   var uid = getuid()
@@ -107,7 +105,7 @@ proc userInfo*(param: StrMap): UserInfo =
         quit 1
       endpwent()
   if name != "":
-    pw = getPwByName(name)
+    pw = getpwnam(name.cstring)
   else:
     pw = getpwuid(uid)
     name = $uid
