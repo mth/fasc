@@ -89,6 +89,7 @@ bindsym XF86MonBrightnessDown exec brightnessctl -q -n60 s 2%-
 bindsym XF86AudioRaiseVolume exec amixer set Master 1+
 bindsym XF86AudioLowerVolume exec amixer set Master 1-
 bindsym XF86AudioMute exec amixer set Master toggle
+bindsym XF86AudioMicMute exec amixer set Mic toggle
 
 exec exec foot -s
 exec exec gammastep -m wayland
