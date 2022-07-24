@@ -3,7 +3,7 @@ import std/[sequtils, streams, parseutils, strformat, strutils,
 
 type StrMap* = Table[string, string]
 type UpdateMap* = Table[string, proc(old: string): string]
-type UserInfo* = tuple[home: string, uid: Uid, gid: Gid]
+type UserInfo* = tuple[user: string, home: string, uid: Uid, gid: Gid]
 
 var packagesToInstall*: seq[string]
 var enableUnits*: seq[string]
@@ -91,12 +91,30 @@ proc runQueuedCommands*() =
     echo("Starting services: ", units.join(", "))
     runCmd("systemctl", "start" & units)
 
-proc userInfo*(user: string): UserInfo =
-  let pw = user.getpwnam
+proc getPwByName(name: string): ptr Passwd = getpwnam(name)
+
+proc userInfo*(param: StrMap): UserInfo =
+  var pw: ptr Passwd
+  var uid = getuid()
+  var name: string
+  if uid == 0:
+    var name = param.getOrDefault("user")
+    if name == "":
+      while (pw = getpwent(); pw != nil):
+        uid = max(uid, pw.pw_uid)
+      if uid != 1000:
+        echo fmt"Maximum uid in passwd {uid} > 1000, couldn't guess user"
+        quit 1
+      endpwent()
+  if name != "":
+    pw = getPwByName(name)
+  else:
+    pw = getpwuid(uid)
+    name = $uid
   if pw == nil:
-    echo fmt"Unknown user {user}"
+    echo fmt"Unknown user {name}"
     quit 1
-  return (home: $pw.pw_dir, uid: pw.pw_uid, gid: pw.pw_gid)
+  return (user: $pw.pw_name, home: $pw.pw_dir, uid: pw.pw_uid, gid: pw.pw_gid)
 
 proc appendMissing*(filename: string, needed: varargs[string]): bool =
   var addLines = @needed

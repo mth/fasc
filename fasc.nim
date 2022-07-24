@@ -1,5 +1,5 @@
 import std/[os, sequtils, strutils, tables]
-import utils, network, sway, apt, system, alsa
+import utils, network, sway, apt, system, alsa, shell
 
 func argsToMap(args: seq[string]): StrMap =
   for arg in args:
@@ -15,6 +15,7 @@ let tasks = {
   "apt": ("Configure APT defaults", configureAPT),
   "tunesys": ("Tune system configuration", tuneSystem),
   "alsa": ("Configure ALSA dmixer", configureALSA),
+  "bash": ("Configure bash", configureBash),
 }.toTable
 
 if paramCount() == 0:

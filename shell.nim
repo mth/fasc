@@ -1,5 +1,8 @@
+import std/os
+import utils
+
 # This part is unlikely to need customization, and probably should into /etc/bash.bashrc
-const bashrc = """
+const etc_bashrc = """
 # If not running interactively, don't do anything
 [ -z "$PS1" ] && return
 
@@ -38,7 +41,7 @@ alias grep='grep --color=auto'
 const debian_bashrc_header = "# ~/.bashrc: executed by bash(1) for non-login shells."
 
 const dot_bashrc = """
-PATH="/home/mzz/bin:$PATH:/home/mzz/.opam/default/bin"
+PATH="$HOME/bin:$PATH:$HOME/.opam/default/bin"
 [ -z "$PS1" ] && return
 PS1='\h \w\[\e`[ $? = 0 ]&&echo \e[32m||echo \e[31m`\]/\[\e[0m\] '
 export JAVA_HOME=/usr/lib/jvm/default-java
@@ -50,3 +53,16 @@ alias bc='rlwrap bc'
 alias sad='ssh-add'
 alias ssh='TERM=xterm-256color ssh'
 """
+
+proc configureUserBash(user: UserInfo) =
+  let bashrc = user.home / ".bashrc"
+  if readLines(bashrc, 1) != [debian_bashrc_header]:
+    echo(bashrc, " is not a debian default, not modifying")
+    return
+  echo("Replacing ", bashrc)
+  writeFile(bashrc, dot_bashrc)
+
+proc configureBash*(args: StrMap) =
+  echo "Replacing /etc/bash.bashrc"
+  writeFile("/etc/bash.bashrc", etc_bashrc)
+  configureUserBash(args.userInfo)

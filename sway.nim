@@ -405,13 +405,11 @@ proc configureSway(user: UserInfo, sleepMinutes: int) =
   user.firefoxConfig
 
 proc swayConf*(args: StrMap) =
-  let user = "mzz" # TODO
   echo "swayConf called."
-  configureSway(user.userInfo, defaultSleepMinutes())
+  configureSway(args.userInfo, defaultSleepMinutes())
 
 proc swayUnit*(args: StrMap) =
-  let user = "mzz" # TODO
-  let info = user.userInfo
+  let info = args.userInfo
   let sleepTime = defaultSleepMinutes()
   writeFile("/usr/share/X11/xkb/symbols/uml", @[xkb_uml])
   configureSway(info, sleepTime)
