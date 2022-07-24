@@ -24,6 +24,7 @@ shopt -s globstar
 shopt -s globasciiranges
 shopt -s autocd
 
+[ -n "${SUDO_USER}" -a -n "${SUDO_PS1}" ] || PS1='\u@\h:\w\$ '
 [ "$TERM" != "foot" ] || PROMPT_COMMAND='echo -ne "\033]0;${HOSTNAME@U} ${PWD}\007"'
 
 if ! shopt -oq posix; then

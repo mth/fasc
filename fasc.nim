@@ -16,6 +16,7 @@ let tasks = {
   "tunesys": ("Tune system configuration", tuneSystem),
   "alsa": ("Configure ALSA dmixer", configureALSA),
   "bash": ("Configure bash", configureBash),
+  "firewall": ("Setup default firewall", enableDefaultFirewall),
 }.toTable
 
 if paramCount() == 0:

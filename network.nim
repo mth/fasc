@@ -1,5 +1,37 @@
-import std/[parseutils, sequtils, strformat, strutils, os]
+import std/[parseutils, sequtils, strformat, strutils, os, posix]
 import utils
+
+const nft_prefix = """
+#!/usr/sbin/nft -f
+
+flush ruleset
+
+"""
+
+const default_firewall = """
+table inet filter {
+	ct helper ftp-inet {
+		type "ftp" protocol tcp
+	}
+	chain input {
+		type filter hook input priority 0;
+		policy drop
+		ct state established,related accept
+		iif lo accept
+		ip6 nexthdr icmpv6 icmpv6 type { nd-neighbor-solicit,  nd-router-advert, nd-neighbor-advert } accept
+	}
+
+	chain forward {
+		type filter hook forward priority 0;
+		policy drop
+	}
+
+	chain output {
+		type filter hook output priority 0;
+		tcp dport ftp ct helper set "ftp-inet"
+	}
+}
+"""
 
 proc network(unit, match: string, options: varargs[string]) =
   var net = @[
@@ -94,3 +126,13 @@ proc wifiNet*(args: StrMap) =
 # nft add rule inet filter input tcp dport 80 accept
 # nft list ruleset
 # man nft /Add, change, delete a table.
+proc enableDefaultFirewall*(args: StrMap) =
+  const confFile = "/etc/nftables.conf"
+  for line in lines(confFile):
+    if line.endsWith(" accept") or line.endsWith(" drop"):
+      echo "Not a default Debian /etc/nftables.conf, not modifying"
+      return
+  echo "Setting up default firewall"
+  writeFile(confFile, nft_prefix & default_firewall)
+  discard chmod(confFile, 0o755)
+  enableAndStart("nftables.service")
