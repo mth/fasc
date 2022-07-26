@@ -113,3 +113,9 @@ proc startNTP*(args: StrMap) =
   elif modifyProperties("/etc/systemd/timesyncd.conf", [("NTP", ntpServer)]):
     runCmd("systemctl", "restart", "systemd-timesyncd.service")
     enableUnits.add "systemd-timesyncd.service"
+
+# hdparm
+# /etc/hdparm.conf
+# ls /dev/disk/by-id/ && readlink and sdX (or nvmeX??)
+# cat /sys/block/sda/queue/rotational 0 - SSD, 1 - hard disk
+
