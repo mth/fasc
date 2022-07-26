@@ -2,8 +2,8 @@ import std/[strformat, strutils]
 import utils
 
 const run_firefox_script = readResource("user/firefox.sh")
-const ff2mpv_script = readResource("user/ff2mpv.py")
-const ff2mpv_host = readResource("user/ff2mpv.json")
+const ff2mpv_script = readResource("ff2mpv/ff2mpv.py")
+const ff2mpv_host = readResource("ff2mpv/ff2mpv.json")
 
 func pref(key, value: string): string =
   fmt"""pref("{key}", {(value.escape)});"""
