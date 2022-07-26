@@ -41,14 +41,17 @@ proc writeFile*(filename: string, content: openarray[string], force = false) =
   createDir dir
   writeFileIfNotExists(filename, content.join("\n"), force)
 
-proc setPermissions(fullPath: string, user: UserInfo, permissions: int) =
-  if chown(fullPath, user.uid, user.gid) == -1:
-    echo fmt"chown({fullPath}) failed: {strerror(errno)}"
-  if chmod(fullPath, 0o755) == -1:
+proc setPermissions*(fullPath: string, permissions: Mode) =
+  if chmod(fullPath, permissions) == -1:
     echo fmt"chmod({fullPath}) failed: {strerror(errno)}"
 
+proc setPermissions(fullPath: string, user: UserInfo, permissions: Mode) =
+  if chown(fullPath, user.uid, user.gid) == -1:
+    echo fmt"chown({fullPath}) failed: {strerror(errno)}"
+  setPermissions(fullPath, permissions)
+
 proc writeAsUser*(user: UserInfo, filename, content: string,
-                  permissions: int = 0o644, force = false) =
+                  permissions: Mode = 0o644, force = false) =
   for part in filename.parentDirs(fromRoot = true, inclusive = false):
     var absolute = user.home / part
     absolute.removeSuffix '/'

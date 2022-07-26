@@ -7,7 +7,14 @@ APT::ExtractTemplates::TempDir "/dev/shm";
 APT::Get::AutomaticRemove true;
 aptitude::AutoClean-After-Update true;
 aptitude::Delete-Unused true;
-""";
+"""
+
+const apt_why = """
+#!/bin/sh
+apt-cache --installed rdepends "$@" | awk '{if (!($0 in X)) print; X[$0]=1}'
+"""
+
+const apt_upgrade = readResource("apt-upgrade")
 
 proc preferences(release: string, priority: int) =
   let name = release.rsplit('=', 1)[^1]
@@ -50,6 +57,10 @@ proc configureAPT*(args: StrMap) =
     preferences("o=Debian,a=unstable", -1)
   mandbUpdate()
   defaultPrune()
+  writeFile("/usr/local/bin/apt-why", apt_why)
+  setPermissions(apt_why, 0o755)
+  writeFile("/usr/local/sbin/apt-upgrade", apt_upgrade)
+  setPermissions(apt_upgrade, 0o700)
 
 proc installDesktopPackages*(args: StrMap) =
   packagesToInstall.add ["ncal", "bc", "pinfo", "strace", "lsof", "rlwrap"]
