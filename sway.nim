@@ -22,8 +22,9 @@ exec exec swayidle -w \
   idlehint 20
 """
 
-proc runWayland(compositor, user: string, info: UserInfo) =
-  let gid = info.gid
+proc runWayland(userInfo: UserInfo, compositor: string) =
+  let user = userInfo.user
+  let gid = userInfo.gid
   var service = [
     "[Unit]",
     "Description=Runs wayland desktop",
@@ -43,9 +44,9 @@ proc runWayland(compositor, user: string, info: UserInfo) =
     "TTYReset=yes",
     "TTYVHangup=yes",
     "TTYVTDisallocate=yes",
-    "WorkingDirectory=" & info.home,
+    "WorkingDirectory=" & userInfo.home,
     "User=" & user,
-    fmt"Group={info.gid}",
+    fmt"Group={userInfo.gid}",
     "PAMName=login",
     "UtmpIdentifier=tty7",
     "UtmpMode=user",
@@ -84,11 +85,11 @@ proc swayConf*(args: StrMap) =
   configureSway(args.userInfo, defaultSleepMinutes())
 
 proc swayUnit*(args: StrMap) =
-  let info = args.userInfo
+  let userInfo = args.userInfo
   let sleepTime = defaultSleepMinutes()
   writeFile("/usr/share/X11/xkb/symbols/uml", @[xkb_uml])
-  configureSway(info, sleepTime)
-  runWayland("/usr/bin/ssh-agent /usr/bin/sway", info.user, info)
+  userInfo.configureSway sleepTime
+  userInfo.runWayland "/usr/bin/ssh-agent /usr/bin/sway"
   systemdSleep(sleepTime)
   let ytdlAlias = "/usr/local/bin/youtube-dl"
   if not ytdlAlias.fileExists:
