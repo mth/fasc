@@ -7,8 +7,8 @@ include "%L"
 
 <dead_tilde> <dead_tilde>: "≈"
 <dead_circumflex> <n>: "ⁿ"
-<dead_circumflex> <(>: "⁽"
-<dead_circumflex> <)>: "⁾"
+<dead_circumflex> <parenleft>: "⁽"
+<dead_circumflex> <parenright>: "⁾"
 <dead_diaeresis> <m>: "µ"
 """), (".config/foot/foot.ini", """
 font=Terminus:size=12,Monospace:size=12
