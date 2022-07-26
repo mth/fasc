@@ -4,7 +4,7 @@ while true; do
 		/sbin/iw dev "${net##*/}" link | {
 			while read -ra iw; do
 				case "${iw[0]}" in
-				signal) signal=${iw[1]};;
+				signal:) signal=${iw[1]};;
 				rx) rx=${iw[2]};;
 				tx) tx=${iw[2]};;
 				esac
