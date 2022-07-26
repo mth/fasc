@@ -46,7 +46,7 @@ hosts
 modules
 java, gradle
 sandboxed zoom
-scripts? screen wrapper, apt-why, apt-upgrade
+scripts? screen wrapper, *apt-why, *apt-upgrade
 
 User configuration tasks
   /etc/groups
