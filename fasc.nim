@@ -13,6 +13,8 @@ let tasks = {
   "sway": ("Configure sway desktop startup", swayUnit),
   "swaycfg": ("Configure sway compositor", swayConf),
   "apt": ("Configure APT defaults", configureAPT),
+  "apt-prune": ("Configure APT defaults and prune extraneous packages",
+                configureAndPruneAPT),
   "tunesys": ("Tune system configuration", tuneSystem),
   "alsa": ("Configure ALSA dmixer", configureALSA),
   "bash": ("Configure bash", configureBash),
