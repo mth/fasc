@@ -88,7 +88,7 @@ proc swayUnit*(args: StrMap) =
   let sleepTime = defaultSleepMinutes()
   writeFile("/usr/share/X11/xkb/symbols/uml", @[xkb_uml])
   configureSway(info, sleepTime)
-  runWayland("/usr/bin/ssh-agent /usr/bin/sway", "mzz", info)
+  runWayland("/usr/bin/ssh-agent /usr/bin/sway", info.user, info)
   systemdSleep(sleepTime)
   let ytdlAlias = "/usr/local/bin/youtube-dl"
   if not ytdlAlias.fileExists:
