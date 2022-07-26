@@ -1,0 +1,12 @@
+bar {
+  position bottom
+  mode hide
+
+  status_command exec bash ~/.config/sway/status.sh
+
+  colors {
+    statusline #ffff00
+    background #000000
+    inactive_workspace #111133 #111133 #dddddd
+  }
+}

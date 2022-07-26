@@ -10,6 +10,16 @@ var enableUnits*: seq[string]
 var startUnits*:  seq[string]
 var systemdReload*: bool
 
+const resourceDir = currentSourcePath().parentDir / "resources"
+
+proc readResource*(filename: string): string =
+  readFile(resourceDir / filename)
+
+proc readResourceDir*(dirname: string): seq[(string, string)] =
+  for kind, file in walkDir(resourceDir / dirname):
+    if kind == pcFile:
+      result.add (file.extractFilename, readFile(file))
+
 proc enableAndStart*(units: varargs[string]) =
   for unit in units:
     enableUnits.add unit
@@ -23,7 +33,7 @@ proc writeFileIfNotExists*(filename, content: string; force: bool) =
     filename.writeFile content
 
 proc listDir*(path: string): seq[string] =
-  for kind, subdir in walkDir(path):
+  for _, subdir in walkDir(path):
     result.add subdir
 
 proc writeFile*(filename: string, content: openarray[string], force = false) =

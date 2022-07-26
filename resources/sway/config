@@ -1,0 +1,40 @@
+set $mod Mod4
+set $left h
+set $down j
+set $up k
+set $right l
+set $term exec footclient
+set $firefox_workspace 1
+set $blank_time 300
+
+input * xkb_layout uml,ee
+input * xkb_options grp:ctrls_toggle
+output * bg #103800 solid_color
+
+default_border pixel
+client.focused #4c7899 #285577 #ffffff #2e9ef4 #daa520
+
+hide_edge_borders --i3 smart
+# hide_edge_borders --i3 both
+# workspace_layout tabbed
+
+bindsym $mod+o exec exec ~/.config/sway/firefox.sh --vdesk=$firefox_workspace
+bindsym $mod+g exec /usr/games/xmahjongg
+bindsym $mod+l exec swaylock -f -c 000000
+bindsym $mod+s exec GRIM_DEFAULT_DIR=/tmp/downloads exec grim
+bindsym XF86MonBrightnessUp exec brightnessctl -q s +2%
+bindsym XF86MonBrightnessDown exec brightnessctl -q -n60 s 2%-
+bindsym XF86AudioRaiseVolume exec amixer set Master 2+
+bindsym XF86AudioLowerVolume exec amixer set Master 2-
+bindsym XF86AudioMute exec amixer set Master toggle
+bindsym XF86AudioMicMute exec amixer set Mic toggle
+
+exec exec foot -s
+exec exec gammastep -m wayland
+
+include windows
+include bindings
+include idle
+include bar
+include touchpad
+include /etc/sway/config.d/*

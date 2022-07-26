@@ -1,0 +1,7 @@
+include "%L"
+
+<dead_tilde> <dead_tilde>: "≈"
+<dead_circumflex> <n>: "ⁿ"
+<dead_circumflex> <parenleft>: "⁽"
+<dead_circumflex> <parenright>: "⁾"
+<dead_diaeresis> <m>: "µ"

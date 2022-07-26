@@ -51,9 +51,9 @@ proc configureAPT*(args: StrMap) =
   mandbUpdate()
   defaultPrune()
 
-proc installDesktopPackages() =
-  packagesToInstall.add ["pinfo", "strace", "lsof", "rlwrap"]
+proc installDesktopPackages*(args: StrMap) =
+  packagesToInstall.add ["ncal", "bc", "pinfo", "strace", "lsof", "rlwrap"]
 
 proc installDevel*(args: StrMap) =
-  installDesktopPackages()
+  installDesktopPackages(args)
   packagesToInstall.add "build-essential"

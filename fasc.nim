@@ -17,6 +17,7 @@ let tasks = {
   "alsa": ("Configure ALSA dmixer", configureALSA),
   "bash": ("Configure bash", configureBash),
   "firewall": ("Setup default firewall", enableDefaultFirewall),
+  "desktop-packages": ("Install desktop packages", installDesktopPackages),
 }.toTable
 
 if paramCount() == 0:

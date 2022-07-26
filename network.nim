@@ -8,30 +8,7 @@ flush ruleset
 
 """
 
-const default_firewall = """
-table inet filter {
-	ct helper ftp-inet {
-		type "ftp" protocol tcp
-	}
-	chain input {
-		type filter hook input priority 0;
-		policy drop
-		ct state established,related accept
-		iif lo accept
-		ip6 nexthdr icmpv6 icmpv6 type { nd-neighbor-solicit,  nd-router-advert, nd-neighbor-advert } accept
-	}
-
-	chain forward {
-		type filter hook forward priority 0;
-		policy drop
-	}
-
-	chain output {
-		type filter hook output priority 0;
-		tcp dport ftp ct helper set "ftp-inet"
-	}
-}
-"""
+const default_firewall = readResource("nftables.conf")
 
 proc network(unit, match: string, options: varargs[string]) =
   var net = @[

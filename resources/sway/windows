@@ -1,0 +1,12 @@
+for_window [app_id="firefox"] {
+  move container to workspace $firefox_workspace
+  workspace $firefox_workspace
+}
+for_window [app_id="chrome-token-signing"] floating enable
+for_window [title="User Identification Request"] floating enable
+for_window [title="Password Required - Mozilla Firefox"] floating enable
+for_window [class="ioquake3"] {
+  move container to workspace 8
+  workspace 8
+  fullscreen enable
+}
