@@ -35,7 +35,6 @@ proc sysctls(battery: bool) =
     "net.ipv4.ip_forward=1",
     "net.ipv4.tcp_congestion_control=westwood",
     "net.core.default_qdisc=fq_codel",
-    #"net.netfilter.nf_conntrack_helper=1",
 
     # Enable IPv6 temporary addresses to obstruct web tracking
     "net.ipv6.conf.all.use_tempaddr=2",
