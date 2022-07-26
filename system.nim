@@ -86,15 +86,30 @@ proc defaultSleepMinutes*(): int =
   if hasBattery(): 7
   else: 15
 
+proc serviceTimeouts() =
+  for filename in ["/etc/systemd/system.conf", "/etc/systemd/user.conf"]:
+    if modifyProperties(filename, [("DefaultTimeoutStartSec", "15s"),
+                                   ("DefaultTimeoutStopSec", "10s")]):
+      systemdReload = true
+
 proc systemdSleep*(sleepMinutes: int) =
   # sway loses display output on logind restart
   if modifyProperties("/etc/systemd/logind.conf",
       [("IdleAction", "suspend"), ("IdleActionSec", fmt"{sleepMinutes}min")]) and
      not hasProcess("/usr/bin/sway"):
     runCmd("systemctl", "restart", "systemd-logind.service")
-  systemdReload = modifyProperties("/etc/systemd/sleep.conf",
-    [("AllowSuspendThenHibernate", "no")])
+  if modifyProperties("/etc/systemd/sleep.conf", [("AllowSuspendThenHibernate", "no")]):
+    systemdReload = true
 
 proc tuneSystem*(args: StrMap) =
   sysctls(hasBattery())
+  serviceTimeouts()
   bootConf()
+
+proc startNTP*(args: StrMap) =
+  let ntpServer = args.getOrDefault ""
+  if ntpServer == "":
+    enableAndStart "systemd-timesyncd.service" # gets server from DHCP
+  elif modifyProperties("/etc/systemd/timesyncd.conf", [("NTP", ntpServer)]):
+    runCmd("systemctl", "restart", "systemd-timesyncd.service")
+    enableUnits.add "systemd-timesyncd.service"

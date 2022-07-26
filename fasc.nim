@@ -9,7 +9,8 @@ func argsToMap(args: seq[string]): StrMap =
 
 let tasks = {
   "wlan": ("Configure WLAN client with DHCP", wlan),
-  "wifinet": ("Add WLAN network", wifiNet),
+  "wifinet": ("Add WLAN network ssid=<ssid>", wifiNet),
+  "ntp": ("Enable timesyncd, optional ntp=<server>", startNTP),
   "sway": ("Configure sway desktop startup", swayUnit),
   "swaycfg": ("Configure sway compositor", swayConf),
   "apt": ("Configure APT defaults", configureAPT),

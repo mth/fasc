@@ -23,6 +23,7 @@ zram
         | vm
         | forwarding
 idcard
+!!!
 hdparm
 - automatic fsck - not possible anymore with systemd?
 unattended-upgrades (and automatic apt-cache updating)
@@ -32,9 +33,9 @@ pam optimization
 *alsa
 cvpn
 rsyslog, journal
-systemd | timeouts
-        | logind - suspend timeouts, sessions
-        | timesyncd
+*systemd | timeouts
+         | logind - suspend timeouts, sessions
+         | timesyncd
 *initramfs
 nspawn
 fstab | nfs, usb vfat, tmp
