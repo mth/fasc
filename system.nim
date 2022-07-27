@@ -104,7 +104,8 @@ proc systemdSleep*(sleepMinutes: int) =
 const hdparmConf = "/etc/hdparm.conf"
 const hdparmAPM = "/usr/lib/pm-utils/power.d/95hdparm-apm"
 
-proc hdparm(battery: bool) =
+proc hdparm(args: StrMap, battery: bool) =
+  let standbyTime = args.getOrDefault ""
   var sataDevs: seq[(string, string)]
   for kind, disk in walkDir("/dev/disk/by-id"):
     block current:
@@ -129,8 +130,10 @@ proc hdparm(battery: bool) =
     var modified = false
     for (name, dev) in sataDevs:
       if (dev & " {") notin conf:
-        var time = 242 # 30 min
-        if readFile(fmt"/sys/block/{name}/queue/rotational").strip != "1":
+        var time = 242 # 1 hour
+        if standbyTime.len != 0:
+          time = standbyTime.parseInt
+        elif readFile(fmt"/sys/block/{name}/queue/rotational").strip != "1":
           time = 1  # 5 sec
         elif battery:
           time = 12 # 1 min
@@ -146,7 +149,7 @@ proc tuneSystem*(args: StrMap) =
   sysctls battery
   serviceTimeouts()
   bootConf()
-  hdparm battery
+  hdparm(args, battery)
 
 proc startNTP*(args: StrMap) =
   let ntpServer = args.getOrDefault ""
