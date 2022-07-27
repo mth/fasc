@@ -46,7 +46,7 @@ proc defaultPrune() =
         "liblockfile-bin", "nano", "netcat-traditional", "reportbug",
         "task-english", "task-laptop", "tasksel", "tasksel-data",
         "telnet", "vim-tiny", "vim-common"]
-  prunePackages(["elvis-tiny", "netcat-openbsd"], remove)
+  prunePackages(["elvis-tiny", "netcat-openbsd", "psmisc"], remove)
 
 proc configureAPT*(args: StrMap) =
   aptConf()

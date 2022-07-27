@@ -116,6 +116,6 @@ proc startNTP*(args: StrMap) =
 
 # hdparm
 # /etc/hdparm.conf
-# ls /dev/disk/by-id/ && readlink and sdX (or nvmeX??)
+# ls /dev/disk/by-id/ && readlink and sdX
 # cat /sys/block/sda/queue/rotational 0 - SSD, 1 - hard disk
 
