@@ -89,10 +89,12 @@ proc outputOfCommand*(inputString, command: string;
     quit 1
   process.close
 
+proc aptInstallNow*(packages: varargs[string]) =
+  runCmd("apt-get", @["install", "-y", "--no-install-recommends"] & @packages)
+
 proc runQueuedCommands*() =
   if packagesToInstall.len > 0:
-    runCmd("apt-get", @["install", "-y", "--no-install-recommends"] &
-           packagesToInstall.deduplicate)
+    aptInstallNow packagesToInstall
   if systemdReload:
     runCmd("systemctl", "daemon-reload")
   if enableUnits.len > 0:

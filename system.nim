@@ -44,7 +44,7 @@ proc sysctls(battery: bool) =
   if battery:
     conf.add "kernel.nmi_watchdog=0"
     conf.add "vm.dirty_writeback_centisecs=1500"
-  writeFile("/etc/sysctl.d/00-local.conf", conf)
+  writeFile("/etc/sysctl.d/00-local.conf", conf, force=true)
 
 func addGrubZSwap(old: string): string =
   if "zswap." in old:
@@ -101,10 +101,52 @@ proc systemdSleep*(sleepMinutes: int) =
   if modifyProperties("/etc/systemd/sleep.conf", [("AllowSuspendThenHibernate", "no")]):
     systemdReload = true
 
+const hdparmConf = "/etc/hdparm.conf"
+const hdparmAPM = "/usr/lib/pm-utils/power.d/95hdparm-apm"
+
+proc hdparm(battery: bool) =
+  var sataDevs: seq[(string, string)]
+  for kind, disk in walkDir("/dev/disk/by-id"):
+    block current:
+      if kind == pcLinkToFile:
+        let devName = disk.expandSymlink.extractFilename
+        if devName.len == 3 and devName.startsWith "sd":
+          for i in 0..<sataDevs.len:
+            if sataDevs[i][0] == devName:
+              if sataDevs[i][1].extractFilename.startsWith "ata-":
+                break current
+              sataDevs.del i
+              break
+          sataDevs.add (devName, disk)
+  if sataDevs.len != 0:
+    if not (hdparmConf.fileExists and hdparmAPM.fileExists):
+      aptInstallNow "hdparm"
+    var conf: seq[string]
+    for line in lines(hdparmConf):
+      if line == "# Config examples:":
+        break
+      conf.add line
+    var modified = false
+    for (name, dev) in sataDevs:
+      if (dev & " {") notin conf:
+        var time = 242 # 1 hour
+        if readFile(fmt"/sys/block/{name}/queue/rotational").strip != "1":
+          time = 1  # 5 sec
+        elif battery:
+          time = 12 # 1 min
+        conf.add(dev & " {")
+        conf.add("\tspindown_time = " & $time & "\n}\n")
+        modified = true
+    if modified:
+      writeFile(hdparmConf, conf, true)
+      runCmd(hdparmAPM, "resume")
+
 proc tuneSystem*(args: StrMap) =
-  sysctls(hasBattery())
+  let battery = hasBattery()
+  sysctls battery
   serviceTimeouts()
   bootConf()
+  hdparm battery
 
 proc startNTP*(args: StrMap) =
   let ntpServer = args.getOrDefault ""
@@ -113,9 +155,4 @@ proc startNTP*(args: StrMap) =
   elif modifyProperties("/etc/systemd/timesyncd.conf", [("NTP", ntpServer)]):
     runCmd("systemctl", "restart", "systemd-timesyncd.service")
     enableUnits.add "systemd-timesyncd.service"
-
-# hdparm
-# /etc/hdparm.conf
-# ls /dev/disk/by-id/ && readlink and sdX
-# cat /sys/block/sda/queue/rotational 0 - SSD, 1 - hard disk
 
