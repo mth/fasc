@@ -129,7 +129,7 @@ proc hdparm(battery: bool) =
     var modified = false
     for (name, dev) in sataDevs:
       if (dev & " {") notin conf:
-        var time = 242 # 1 hour
+        var time = 241 # 30 min
         if readFile(fmt"/sys/block/{name}/queue/rotational").strip != "1":
           time = 1  # 5 sec
         elif battery:
