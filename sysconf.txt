@@ -23,8 +23,7 @@ zram
         | vm
         | forwarding
 idcard
-!!!
-hdparm
+*hdparm
 - automatic fsck - not possible anymore with systemd?
 unattended-upgrades (and automatic apt-cache updating)
 ??admin user
@@ -38,6 +37,7 @@ rsyslog, journal
          | timesyncd
 *initramfs
 nspawn
+!!!
 fstab | nfs, usb vfat, tmp
 sudoers
 sshd
