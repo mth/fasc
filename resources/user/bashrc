@@ -4,6 +4,7 @@ PS1='\h \w\[\e`[ $? = 0 ]&&echo \e[32m||echo \e[31m`\]/\[\e[0m\] '
 export JAVA_HOME=/usr/lib/jvm/default-java
 alias less='less -cS'
 alias jgrep='rg -tjava'
+alias bc='bc -l'
 alias ocaml='rlwrap ocaml'
 alias screen='env LOCKPRG=/bin/true screen'
 alias sad='ssh-add'
