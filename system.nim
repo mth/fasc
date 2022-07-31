@@ -1,4 +1,4 @@
-import std/[sequtils, strformat, strutils, os, tables]
+import std/[sequtils, strformat, strutils, os, posix, tables]
 import utils
   
 const sys_psu = "/sys/class/power_supply"
@@ -81,6 +81,63 @@ proc bootConf() =
   grubUpdate["GRUB_TIMEOUT"] = stringFunc("3")
   if modifyProperties("/etc/default/grub", grubUpdate):
     runCmd("update-grub")
+
+proc memTotal(): int =
+  for line in lines("/proc/meminfo"):
+    let parts = line.split
+    if parts[0] == "MemTotal:":
+      try:
+        return parts[1].parseInt
+      except:
+        discard
+
+proc nextSata(): string =
+  result = "/dev/sd`"
+  for kind, disk in walkDir("/dev/disk/by-id"):
+    let name = disk.extractFilename
+    if kind == pcDir and name.startsWith("sd") and name > result:
+      result = "/dev/" & name
+  result[^1].inc
+
+proc fstab() =
+  var fstab: seq[string]
+  var afterRoot = -1
+  var hasTmp = false
+  var hasY = false
+  var hasSwap = false
+  for line in lines("/etc/fstab"):
+    fstab.add line
+    if not line.startsWith('#'):
+      let fields = line.split
+      if fields[1] == "/":
+        afterRoot = fstab.len
+      elif fields[1] == "/tmp":
+        hasTmp = true
+      elif fields[2] == "swap":
+        hasSwap = true
+  if not hasTmp:
+    let mem = memTotal()
+    if afterRoot < 0:
+      afterRoot = fstab.len
+    if mem >= 4096:
+      fstab.insert("none\t/tmp\ttmpfs\tnosuid,size=2048kB", afterRoot)
+    elif mem >= 2048:
+      fstab.insert("none\t/tmp\ttmpfs\tnosuid", afterRoot)
+    else:
+      hasTmp = true # too little memory, store tmp on rootfs
+  if not hasY:
+    createDir "/y"
+    fstab.add(nextSata() & "\tvfat\tnoauto,user")
+  if not (hasTmp and hasY):
+    echo "Updating /etc/fstab"
+    fstab.add ""
+    var ts: Timespec
+    discard clock_gettime(CLOCK_REALTIME, ts)
+    let tmpFile = "/etc/fstab.tmp" & ts.tv_nsec.int64.toHex
+    writeFileSynced(tmpFile, fstab.join("\n"))
+    setPermissions(tmpFile, 0o644)
+    moveFile(tmpFile, "/etc/fstab")
+  # TODO if no swap, add zswap
 
 proc defaultSleepMinutes*(): int =
   if hasBattery(): 7

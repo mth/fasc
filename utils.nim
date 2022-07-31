@@ -25,12 +25,19 @@ proc enableAndStart*(units: varargs[string]) =
     enableUnits.add unit
     startUnits.add unit
 
+proc writeFileSynced*(filename, content: string) =
+  let f = open(filename, fmWrite)
+  defer: f.close
+  f.write content
+  if f.getFileHandle.fsync != 0:
+    raise newException(OSError, $strerror(errno))
+
 proc writeFileIfNotExists*(filename, content: string; force: bool) =
   if not force and filename.fileExists:
     echo fmt"Retaining existing {filename}"
   else:
     echo fmt"Created {filename}"
-    filename.writeFile content
+    filename.writeFileSynced content
 
 proc listDir*(path: string): seq[string] =
   for _, subdir in walkDir(path):
