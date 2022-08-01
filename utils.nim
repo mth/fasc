@@ -106,12 +106,13 @@ proc outputOfCommand*(inputString, command: string;
   process.close
 
 proc aptInstallNow*(packages: varargs[string]) =
-  runCmd("apt-get", @["install", "-y", "--no-install-recommends"] & @packages)
+  packagesToInstall.add packages
+  if packagesToInstall.len > 0:
+    runCmd("apt-get", @["install", "-y", "--no-install-recommends"] & packagesToInstall)
+    packagesToInstall.reset
 
 proc commitQueue*() =
-  if packagesToInstall.len > 0:
-    aptInstallNow packagesToInstall
-    packagesToInstall.reset
+  aptInstallNow()
   if systemdReload:
     runCmd("systemctl", "daemon-reload")
     systemdReload = false
