@@ -1,0 +1,43 @@
+// Lines below have the format "keyword=value,...".  A package will be
+// upgraded only if the values in its metadata match all the supplied
+// keywords in a line. The keywords originate from the Release file,
+// but several aliases are accepted.  The accepted keywords are:
+//   a,archive,suite (eg, "stable")
+//   c,component     (eg, "main", "contrib", "non-free")
+//   l,label         (eg, "Debian", "Debian-Security")
+//   o,origin        (eg, "Debian", "Unofficial Multimedia Packages")
+//   n,codename      (eg, "jessie", "jessie-updates")
+//     site          (eg, "http.debian.net")
+// The available values are printed by "apt-cache policy", and can be
+// debugged by running "unattended-upgrades -d" and looking at the log file.
+// 2 macros whose values are derived from /etc/debian_version:
+//   ${distro_id}            Installed origin.
+//   ${distro_codename}      Installed codename (eg, "buster")
+Unattended-Upgrade::Origins-Pattern {
+//	"origin=Debian,codename=${distro_codename}-updates";
+//	"origin=Debian,codename=${distro_codename}-proposed-updates";
+//	"origin=Debian,codename=${distro_codename},label=Debian";
+	"origin=Debian,codename=${distro_codename},label=Debian-Security";
+	"origin=Debian,codename=${distro_codename}-security,label=Debian-Security";
+};
+
+Unattended-Upgrade::Package-Blacklist {
+	"libc6$";
+	"libc6-dev$";
+	"libc6-i686$";
+};
+
+// Allow shutdown while upgrade is running.
+Unattended-Upgrade::MinimalSteps "true";
+
+// Set this value to one of: "always", "only-on-error" or "on-change"
+//Unattended-Upgrade::MailReport "on-change";
+//Unattended-Upgrade::Mail "";
+
+Unattended-Upgrade::Remove-Unused-Kernel-Packages "true";
+Unattended-Upgrade::Remove-New-Unused-Dependencies "false";
+Unattended-Upgrade::Remove-Unused-Dependencies "false";
+
+// Enable logging to syslog. Default is False
+Unattended-Upgrade::SyslogEnable "true";
+Unattended-Upgrade::OnlyOnACPower "true";
