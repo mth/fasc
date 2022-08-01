@@ -46,6 +46,7 @@ proc setupUnattendedUpgrades() =
   try:
     for line in lines(conf_path):
       if line.strip == "//FASC: preserve":
+        echo "Preserving ", conf_path
         return
   except:
     discard
