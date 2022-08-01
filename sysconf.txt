@@ -25,7 +25,7 @@ zram
 idcard
 *hdparm
 - automatic fsck - not possible anymore with systemd?
-unattended-upgrades (and automatic apt-cache updating)
+*unattended-upgrades (and automatic apt-cache updating)
 ??admin user
 locales
 pam optimization
