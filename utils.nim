@@ -126,6 +126,7 @@ proc commitQueue*() =
     echo("Starting services: ", units.join(", "))
     runCmd("systemctl", "start" & units)
     startUnits.reset
+  sync()
 
 proc userInfo*(param: StrMap): UserInfo =
   var pw: ptr Passwd

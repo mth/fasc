@@ -14,6 +14,8 @@ const scripts = [("/usr/local/bin/apt-why", """
 apt-cache --installed rdepends "$@" | awk '{if (!($0 in X)) print; X[$0]=1}'
 """), ("/usr/local/sbin/apt-upgrade", readResource("apt/apt-upgrade"))]
 
+const unattended_upgrade_conf = readResource("apt/50unattended-upgrades")
+
 proc preferences(release: string, priority: int) =
   let name = release.rsplit('=', 1)[^1]
   writeFile(fmt"/etc/apt/preferences.d/{name}-priority", [
@@ -39,14 +41,30 @@ proc mandbUpdate() =
   else:
     echo("Not found ", autoUpdate)
 
+proc setupUnattendedUpgrades() =
+  const conf_path = "/etc/apt/apt.conf.d/50unattended-upgrades"
+  try:
+    for line in lines(conf_path):
+      if line.strip == "FASC: preserve":
+        echo "Preserving ", conf_path
+        return
+  except:
+    discard
+  safeFileUpdate(conf_path, unattended_upgrade_conf)
+  enableUnits.add "unattended-upgrades.service"
+  runCmd("systemctl", "restart", "unattended-upgrades.service")
+
 # XXX removing ifupdown should be network modules job
-proc defaultPrune() =
-  let remove = ["avahi-autoipd", "debian-faq", "discover", "doc-debian",
+proc defaultPrune(additionalRemove: varargs[string]) =
+  var remove = @["avahi-autoipd", "debian-faq", "discover", "doc-debian",
         "ifupdown", "installation-report", "isc-dhcp-client", "isc-dhcp-common",
         "liblockfile-bin", "nano", "netcat-traditional", "reportbug",
         "task-english", "task-laptop", "tasksel", "tasksel-data",
         "telnet", "vim-tiny", "vim-common"]
-  prunePackages(["elvis-tiny", "netcat-openbsd", "psmisc"], remove)
+  remove.add additionalRemove
+  packagesToInstall.add ["elvis-tiny", "netcat-openbsd", "psmisc"]
+  prunePackages(packagesToInstall, remove)
+  packagesToInstall.reset
 
 proc configureAPT*(args: StrMap) =
   aptConf()
@@ -61,7 +79,17 @@ proc configureAPT*(args: StrMap) =
 
 proc configureAndPruneAPT*(args: StrMap) =
   configureAPT(args)
-  defaultPrune()
+  runCmd("apt-get", "update")
+  packagesToInstall.add ["systemd-cron", "unattended-upgrades"]
+  defaultPrune("anacron", "cron")
+  try:
+    const anacronTimer = "/etc/systemd/system/anacron.timer"
+    if anacronTimer.expandSymlink == "/dev/null":
+      discard anacronTimer.tryRemoveFile
+  except:
+    discard
+  systemdReload = true
+  setupUnattendedUpgrades()
 
 proc installDesktopPackages*(args: StrMap) =
   packagesToInstall.add ["ncal", "bc", "pinfo", "strace", "lsof", "rlwrap"]
