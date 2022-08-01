@@ -32,4 +32,4 @@ if not (paramStr(1) in tasks):
   echo "Unknown task: ", paramStr(1)
 else:
   tasks[paramStr(1)][1](commandLineParams()[1..^1].argsToMap)
-runQueuedCommands()
+commitQueue()

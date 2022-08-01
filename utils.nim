@@ -108,19 +108,23 @@ proc outputOfCommand*(inputString, command: string;
 proc aptInstallNow*(packages: varargs[string]) =
   runCmd("apt-get", @["install", "-y", "--no-install-recommends"] & @packages)
 
-proc runQueuedCommands*() =
+proc commitQueue*() =
   if packagesToInstall.len > 0:
     aptInstallNow packagesToInstall
+    packagesToInstall.reset
   if systemdReload:
     runCmd("systemctl", "daemon-reload")
+    systemdReload = false
   if enableUnits.len > 0:
     let units = enableUnits.deduplicate
     echo("Enabling services: ", units.join(", "))
     runCmd("systemctl", "enable" & units)
+    enableUnits.reset
   if startUnits.len > 0:
     let units = startUnits.deduplicate
     echo("Starting services: ", units.join(", "))
     runCmd("systemctl", "start" & units)
+    startUnits.reset
 
 proc userInfo*(param: StrMap): UserInfo =
   var pw: ptr Passwd
