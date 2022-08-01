@@ -5,7 +5,7 @@ packages | sources.list, *apt.conf, *preferences
          | *removing unneeded packages
          | ?adding useful packages - some default package lists
          | *systemd-cron
-         | firmware
+         | *firmware
 net | systemd-networkd | *wlan
                        | eth
                        | bridge

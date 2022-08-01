@@ -3,11 +3,6 @@ import utils
   
 const sys_psu = "/sys/class/power_supply"
 
-proc isIntelCPU*(): bool =
-  for line in lines("/proc/cpuinfo"):
-    if line.startsWith("vendor_id") and line.endsWith("GenuineIntel"):
-      return true
-
 proc hasBattery*(): bool =
   sys_psu.listDir.anyIt(readFile(it / "type").strip == "Battery")
 

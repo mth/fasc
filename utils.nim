@@ -12,6 +12,14 @@ var systemdReload*: bool
 
 const resourceDir = currentSourcePath().parentDir / "resources"
 
+proc isCPUVendor(vendor: string): bool =
+  for line in lines("/proc/cpuinfo"):
+    if line.startsWith("vendor_id") and line.endsWith(vendor):
+      return true
+
+proc isAMDCPU*(): bool = isCPUVendor("AuthenticAMD")
+proc isIntelCPU*(): bool = isCPUVendor("GenuineIntel")
+
 proc readResource*(filename: string): string =
   readFile(resourceDir / filename)
 

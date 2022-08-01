@@ -45,14 +45,22 @@ proc setupUnattendedUpgrades() =
   const conf_path = "/etc/apt/apt.conf.d/50unattended-upgrades"
   try:
     for line in lines(conf_path):
-      if line.strip == "FASC: preserve":
-        echo "Preserving ", conf_path
+      if line.strip == "//FASC: preserve":
         return
   except:
     discard
   safeFileUpdate(conf_path, unattended_upgrade_conf)
   enableUnits.add "unattended-upgrades.service"
   runCmd("systemctl", "restart", "unattended-upgrades.service")
+
+proc installFirmware() =
+  packagesToInstall.add ["firmware-linux-free", "firmware-misc-nonfree", "firmware-realtek"]
+  if dirExists("/sys/module/iwlwifi"):
+    packagesToInstall.add "firmware-iwlwifi"
+  if isIntelCPU():
+    packagesToInstall.add "intel-microcode"
+  if isAMDCPU():
+    packagesToInstall.add ["firmware-amd-graphics", "amd64-microcode"]
 
 # XXX removing ifupdown should be network modules job
 proc defaultPrune(additionalRemove: varargs[string]) =
@@ -62,6 +70,7 @@ proc defaultPrune(additionalRemove: varargs[string]) =
         "task-english", "task-laptop", "tasksel", "tasksel-data",
         "telnet", "vim-tiny", "vim-common"]
   remove.add additionalRemove
+  installFirmware()
   packagesToInstall.add ["elvis-tiny", "netcat-openbsd", "psmisc"]
   prunePackages(packagesToInstall, remove)
   packagesToInstall.reset
@@ -91,7 +100,7 @@ proc configureAndPruneAPT*(args: StrMap) =
   setupUnattendedUpgrades()
 
 proc installDesktopPackages*(args: StrMap) =
-  packagesToInstall.add ["ncal", "bc", "pinfo", "strace", "lsof", "rlwrap"]
+  packagesToInstall.add ["ncal", "bc", "pinfo", "strace", "lsof", "rlwrap", "mc"]
 
 proc installDevel*(args: StrMap) =
   installDesktopPackages(args)
