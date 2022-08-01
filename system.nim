@@ -1,4 +1,4 @@
-import std/[parseutils, sequtils, strformat, strutils, os, posix, tables]
+import std/[parseutils, sequtils, strformat, strutils, os, tables]
 import utils
   
 const sys_psu = "/sys/class/power_supply"
@@ -131,14 +131,7 @@ proc fstab() =
     createDir "/y"
     fstab.add(&"/dev/{nextSata()}1\t/y\tvfat\tnoauto,user")
   if not (hasTmp and hasY):
-    echo "Updating /etc/fstab"
-    fstab.add ""
-    var ts: Timespec
-    discard clock_gettime(CLOCK_REALTIME, ts)
-    let tmpFile = "/etc/fstab.tmp" & ts.tv_nsec.int64.toHex
-    writeFileSynced(tmpFile, fstab.join("\n"))
-    setPermissions(tmpFile, 0o644)
-    moveFile(tmpFile, "/etc/fstab")
+    safeFileUpdate("/etc/fstab", fstab.join("\n") & "\n")
   # TODO if no swap, add zswap
 
 proc defaultSleepMinutes*(): int =

@@ -25,12 +25,30 @@ proc enableAndStart*(units: varargs[string]) =
     enableUnits.add unit
     startUnits.add unit
 
+proc setPermissions*(fullPath: string, permissions: Mode) =
+  if chmod(fullPath, permissions) == -1:
+    echo fmt"chmod({fullPath}) failed: {strerror(errno)}"
+
+proc setPermissions(fullPath: string, user: UserInfo, permissions: Mode) =
+  if chown(fullPath, user.uid, user.gid) == -1:
+    echo fmt"chown({fullPath}) failed: {strerror(errno)}"
+  setPermissions(fullPath, permissions)
+
 proc writeFileSynced*(filename, content: string) =
   let f = open(filename, fmWrite)
   defer: f.close
   f.write content
   if f.getFileHandle.fsync != 0:
     raise newException(OSError, $strerror(errno))
+
+proc safeFileUpdate*(filename, content: string, permissions: Mode = 0o644) =
+  echo "Updating ", filename
+  var ts: Timespec
+  discard clock_gettime(CLOCK_REALTIME, ts)
+  let tmpFile = filename & ".tmp" & ts.tv_nsec.int64.toHex
+  writeFileSynced(tmpFile, content)
+  setPermissions(tmpFile, permissions)
+  moveFile(tmpFile, filename)
 
 proc writeFileIfNotExists*(filename, content: string; force: bool) =
   if not force and filename.fileExists:
@@ -47,15 +65,6 @@ proc writeFile*(filename: string, content: openarray[string], force = false) =
   let (dir, _, _) = filename.splitFile
   createDir dir
   writeFileIfNotExists(filename, content.join("\n"), force)
-
-proc setPermissions*(fullPath: string, permissions: Mode) =
-  if chmod(fullPath, permissions) == -1:
-    echo fmt"chmod({fullPath}) failed: {strerror(errno)}"
-
-proc setPermissions(fullPath: string, user: UserInfo, permissions: Mode) =
-  if chown(fullPath, user.uid, user.gid) == -1:
-    echo fmt"chown({fullPath}) failed: {strerror(errno)}"
-  setPermissions(fullPath, permissions)
 
 proc writeAsUser*(user: UserInfo, filename, content: string,
                   permissions: Mode = 0o644, force = false) =
@@ -179,7 +188,7 @@ proc modifyProperties*(filename: string, update: UpdateMap): bool =
       updatedConf.add(key & '=' & value)
       result = true
   if result:
-    writeFile(filename, updatedConf.join("\n") & '\n')
+    safeFileUpdate(filename, updatedConf.join("\n") & '\n')
 
 func stringFunc*(value: string, onlyEmpty = false): proc(old: string): string =
   return proc(old: string): string = (if not onlyEmpty or old.len == 0: value
