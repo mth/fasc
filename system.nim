@@ -3,6 +3,14 @@ import utils
   
 const sys_psu = "/sys/class/power_supply"
 
+proc isCPUVendor(vendor: string): bool =
+  for line in lines("/proc/cpuinfo"):
+    if line.startsWith("vendor_id") and line.endsWith(vendor):
+      return true
+
+proc isAMDCPU*(): bool = isCPUVendor("AuthenticAMD")
+proc isIntelCPU*(): bool = isCPUVendor("GenuineIntel")
+
 proc hasBattery*(): bool =
   sys_psu.listDir.anyIt(readFile(it / "type").strip == "Battery")
 

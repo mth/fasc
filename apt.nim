@@ -1,4 +1,4 @@
-import utils, aptcleaner
+import utils, aptcleaner, system
 import std/[strformat, strutils, os, tables]
 
 const default_apt_conf = """
