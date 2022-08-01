@@ -70,7 +70,6 @@ proc defaultPrune(additionalRemove: varargs[string]) =
         "task-english", "task-laptop", "tasksel", "tasksel-data",
         "telnet", "vim-tiny", "vim-common"]
   remove.add additionalRemove
-  installFirmware()
   packagesToInstall.add ["elvis-tiny", "netcat-openbsd", "psmisc"]
   prunePackages(packagesToInstall, remove)
   packagesToInstall.reset
@@ -88,6 +87,7 @@ proc configureAPT*(args: StrMap) =
 
 proc configureAndPruneAPT*(args: StrMap) =
   configureAPT(args)
+  installFirmware()
   packagesToInstall.add ["systemd-cron", "unattended-upgrades"]
   defaultPrune("anacron", "cron")
   try:
