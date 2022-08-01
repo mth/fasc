@@ -206,6 +206,7 @@ proc tuneSystem*(args: StrMap) =
   sysctls battery
   serviceTimeouts()
   bootConf()
+  fstab()
   hdparm(args, battery)
 
 proc startNTP*(args: StrMap) =
