@@ -26,7 +26,7 @@ proc preferences(release: string, priority: int) =
 
 proc aptConf() =
   writeFile("/etc/apt/apt.conf.d/90disable-recommends",
-    ["APT::Install-Recommends false;"])
+    ["APT::Install-Recommends false;\n"])
   writeFile("/etc/apt/apt.conf", [default_apt_conf])
 
 proc mandbUpdate() =
