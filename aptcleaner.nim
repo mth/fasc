@@ -141,6 +141,7 @@ proc prunePackages*(addPackages: openarray[string],
   if setAuto.len != 0:
     runCmd("apt-mark", "auto" & setAuto.toSeq)
   if addPackageSet.len != 0:
+    runCmd("apt-get", "update")
     runCmd("apt-get", @["install", "-y", "--no-install-recommends"] &
                       addPackageSet.toSeq)
   if explicitRemove.len != 0:

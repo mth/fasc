@@ -79,7 +79,6 @@ proc configureAPT*(args: StrMap) =
 
 proc configureAndPruneAPT*(args: StrMap) =
   configureAPT(args)
-  runCmd("apt-get", "update")
   packagesToInstall.add ["systemd-cron", "unattended-upgrades"]
   defaultPrune("anacron", "cron")
   try:
