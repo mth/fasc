@@ -12,7 +12,7 @@ aptitude::Delete-Unused true;
 const scripts = [("/usr/local/bin/apt-why", """
 #!/bin/sh
 apt-cache --installed rdepends "$@" | awk '{if (!($0 in X)) print; X[$0]=1}'
-"""), ("/usr/local/sbin/apt-upgrade", readResource("apt-upgrade"))]
+"""), ("/usr/local/sbin/apt-upgrade", readResource("apt/apt-upgrade"))]
 
 proc preferences(release: string, priority: int) =
   let name = release.rsplit('=', 1)[^1]
