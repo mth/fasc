@@ -4,7 +4,7 @@ packages | sources.list, *apt.conf, *preferences
          | *marking libs etc as automatically installed
          | *removing unneeded packages
          | ?adding useful packages - some default package lists
-         | systemd-cron
+         | *systemd-cron
          | firmware
 net | systemd-networkd | *wlan
                        | eth
