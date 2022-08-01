@@ -1,4 +1,4 @@
-import std/[sequtils, strformat, strutils, os, posix, tables]
+import std/[parseutils, sequtils, strformat, strutils, os, posix, tables]
 import utils
   
 const sys_psu = "/sys/class/power_supply"
@@ -84,12 +84,10 @@ proc bootConf() =
 
 proc memTotal(): int =
   for line in lines("/proc/meminfo"):
-    let parts = line.split
-    if parts[0] == "MemTotal:":
-      try:
-        return parts[1].parseInt
-      except:
-        discard
+    const total = "MemTotal:"
+    if line.startsWith(total) and
+       line.parseInt(result, total.len + line.skipWhiteSpace(total.len)) > 0:
+      return
 
 proc nextSata(): string =
   result = "/dev/sd`"
@@ -127,7 +125,7 @@ proc fstab() =
       hasTmp = true # too little memory, store tmp on rootfs
   if not hasY:
     createDir "/y"
-    fstab.add(nextSata() & "\tvfat\tnoauto,user")
+    fstab.add(nextSata() & "1\tvfat\tnoauto,user")
   if not (hasTmp and hasY):
     echo "Updating /etc/fstab"
     fstab.add ""
