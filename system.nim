@@ -99,9 +99,7 @@ proc nextSata(): string =
 
 proc fstab() =
   var fstab: seq[string]
-  var afterRoot = -1
-  var hasTmp = false
-  var hasY = false
+  var mounts: Table[string, int]
   var hasSwap = false
   for line in lines("/etc/fstab"):
     fstab.add line
@@ -110,27 +108,21 @@ proc fstab() =
       if fields[2] == "swap":
         hasSwap = true
       else:
-        case fields[1]:
-          of "/": afterRoot = fstab.len
-          of "/tmp": hasTmp = true
-          of "/y": hasY = true
-  if not hasTmp:
+        mounts[fields[1]] = fstab.len
+  let originalLen = fstab.len
+  if "/tmp" notin mounts:
     let mem = memTotal()
-    if afterRoot < 0:
-      afterRoot = fstab.len
-    var tmpfs = "none\t/tmp\ttmpfs\tnosuid"
-    if mem >= 4096:
-      tmpfs &= ",size=2048kB"
-    elif mem < 2048:
-      hasTmp = true # too little memory, store tmp on rootfs
-    if not hasTmp:
+    if mem >= 2048:
+      var tmpfs = "none\t/tmp\ttmpfs\tnosuid"
+      if mem >= 4096:
+        tmpfs &= ",size=2048kB"
       echo "Adding ", tmpfs
-      fstab.insert(tmpfs, afterRoot)
-  if not hasY:
+      fstab.insert(tmpfs, mounts.getOrDefault("/", fstab.len))
+  if "/y" notin mounts:
     echo "Adding /y vfat user mount"
     createDir "/y"
     fstab.add(&"/dev/{nextSata()}1\t/y\tvfat\tnoauto,user")
-  if not (hasTmp and hasY):
+  if fstab.len != originalLen:
     safeFileUpdate("/etc/fstab", fstab.join("\n") & "\n")
   # TODO if no swap, add zswap
 
