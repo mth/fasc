@@ -38,7 +38,7 @@ rsyslog, journal
 *initramfs
 nspawn
 !!!
-fstab | nfs, usb vfat, tmp
+fstab | nfs, *usb vfat, *tmp
 sudoers
 sshd
 cpufreq, fancontrol

@@ -71,9 +71,9 @@ proc bootConf() =
     modifyProperties(resume, [("RESUME", "none")], false)
   var grubUpdate: UpdateMap
   if readLines("/proc/swaps", 2).len > 1:
-    echo "Configuring zswap..."
     grubUpdate["GRUB_CMDLINE_LINUX_DEFAULT"] = addGrubZSwap
     if appendMissing("/etc/initramfs-tools/modules", "lz4hc", "z3fold"):
+      echo "Configured zswap"
       initramfs = true
   if modifyProperties("/etc/initramfs-tools/initramfs.conf",
                       [("MODULES", "dep")], false) or initramfs:
@@ -90,12 +90,12 @@ proc memTotal(): int =
       return
 
 proc nextSata(): string =
-  result = "/dev/sd`"
-  for kind, disk in walkDir("/dev/disk/by-id"):
+  result = "sd`"
+  for _, disk in walkDir("/sys/class/block"):
     let name = disk.extractFilename
-    if kind == pcDir and name.startsWith("sd") and name > result:
-      result = "/dev/" & name
-  result[^1].inc
+    if name.len == 3 and name.startsWith("sd") and name > result:
+      result = name
+  result[2].inc
 
 proc fstab() =
   var fstab: seq[string]
@@ -105,27 +105,31 @@ proc fstab() =
   var hasSwap = false
   for line in lines("/etc/fstab"):
     fstab.add line
-    if not line.startsWith('#'):
-      let fields = line.split
-      if fields[1] == "/":
-        afterRoot = fstab.len
-      elif fields[1] == "/tmp":
-        hasTmp = true
-      elif fields[2] == "swap":
+    let fields = line.split.filterIt(it.len > 0)
+    if fields.len >= 2 and not fields[0].startsWith('#'):
+      if fields[2] == "swap":
         hasSwap = true
+      else:
+        case fields[1]:
+          of "/": afterRoot = fstab.len
+          of "/tmp": hasTmp = true
+          of "/y": hasY = true
   if not hasTmp:
     let mem = memTotal()
     if afterRoot < 0:
       afterRoot = fstab.len
+    var tmpfs = "none\t/tmp\ttmpfs\tnosuid"
     if mem >= 4096:
-      fstab.insert("none\t/tmp\ttmpfs\tnosuid,size=2048kB", afterRoot)
-    elif mem >= 2048:
-      fstab.insert("none\t/tmp\ttmpfs\tnosuid", afterRoot)
-    else:
+      tmpfs &= ",size=2048kB"
+    elif mem < 2048:
       hasTmp = true # too little memory, store tmp on rootfs
+    if not hasTmp:
+      echo "Adding ", tmpfs
+      fstab.insert(tmpfs, afterRoot)
   if not hasY:
+    echo "Adding /y vfat user mount"
     createDir "/y"
-    fstab.add(nextSata() & "1\tvfat\tnoauto,user")
+    fstab.add(&"/dev/{nextSata()}1\t/y\tvfat\tnoauto,user")
   if not (hasTmp and hasY):
     echo "Updating /etc/fstab"
     fstab.add ""
