@@ -21,6 +21,7 @@ let tasks = {
   "bash": ("Configure bash", configureBash),
   "firewall": ("Setup default firewall", enableDefaultFirewall),
   "desktop-packages": ("Install desktop packages", installDesktopPackages),
+  "devel": ("Install development packages", installDevel),
 }.toTable
 
 if paramCount() == 0:
