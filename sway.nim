@@ -1,4 +1,4 @@
-import std/[strformat, os]
+import std/[strformat, strutils, os]
 import utils, firefox, system
 
 const user_config = [
@@ -21,6 +21,15 @@ exec exec swayidle -w \
   after-resume 'pidof -q gammastep || gammastep&' \
   idlehint 20
 """
+
+proc getDefaultLocale(): string =
+  for line in lines("/etc/default/locale"):
+    let strippedLine = line.strip
+    if strippedLine.startsWith "LANG=":
+      result = strippedLine[5..^1].strip(chars = {'"'})
+      break
+  if result.len == 0:
+    result = "C"
 
 proc runWayland(userInfo: UserInfo, compositor: string) =
   let user = userInfo.user
@@ -61,7 +70,7 @@ proc runWayland(userInfo: UserInfo, compositor: string) =
     " QT_QPA_PLATFORM=wayland-egl" &
     " XDG_SESSION_TYPE=wayland" &
     " MOZ_WEBRENDER=1" &
-    " LANG=et_EE.utf8", # should be read from /etc/default/locale
+    " LANG=" & getDefaultLocale(),
     "",
     "[Install]",
     "WantedBy=graphical.target",
