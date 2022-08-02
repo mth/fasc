@@ -29,18 +29,6 @@ proc aptConf() =
     ["APT::Install-Recommends false;\n"])
   writeFile("/etc/apt/apt.conf", [default_apt_conf])
 
-proc mandbUpdate() =
-  let autoUpdate = "/var/lib/man-db/auto-update"
-  if fileExists(autoUpdate):
-    echo "Disabling man-db/auto-update..."
-    echo outputOfCommand(
-          "debconf man-db/auto-update select false\n",
-          "debconf-set-selections")
-    removeFile(autoUpdate)
-    echo("Deleted ", autoUpdate)
-  else:
-    echo("Not found ", autoUpdate)
-
 proc setupUnattendedUpgrades() =
   const conf_path = "/etc/apt/apt.conf.d/50unattended-upgrades"
   try:
@@ -53,6 +41,18 @@ proc setupUnattendedUpgrades() =
   safeFileUpdate(conf_path, unattended_upgrade_conf)
   enableUnits.add "unattended-upgrades.service"
   runCmd("systemctl", "restart", "unattended-upgrades.service")
+
+proc mandbUpdate() =
+  let autoUpdate = "/var/lib/man-db/auto-update"
+  if fileExists(autoUpdate):
+    echo "Disabling man-db/auto-update..."
+    echo outputOfCommand(
+          "debconf man-db/auto-update select false\n",
+          "debconf-set-selections")
+    removeFile(autoUpdate)
+    echo("Deleted ", autoUpdate)
+  else:
+    echo("Not found ", autoUpdate)
 
 proc installFirmware() =
   packagesToInstall.add ["firmware-linux-free", "firmware-misc-nonfree", "firmware-realtek"]
