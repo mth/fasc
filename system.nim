@@ -3,6 +3,8 @@ import utils
 
 const clean_old_tmp_service = readResource("tmpfs/clean-old-tmp.service")
 const clean_old_tmp_sh = readResource("tmpfs/clean-old-tmp.sh")
+const pci_autosuspend_service = readResource("power/pci-autosuspend.service")
+const pci_autosuspend = readResource("power/pci-autosuspend")
 const sys_psu = "/sys/class/power_supply"
 
 proc isCPUVendor(vendor: string): bool =
@@ -68,7 +70,6 @@ proc encryptedSwap(): bool =
         return true
 
 # some laptops need psmouse.synaptics_intertouch=1, however its not universal
-
 proc bootConf() =
   # resume spews errors and delays boot with swap encrypted using random key
   const resume = "/etc/initramfs-tools/conf.d/resume"
@@ -196,11 +197,17 @@ proc hdparm*(args: StrMap) =
       writeFile(hdparmConf, conf, true)
       runCmd(hdparmAPM, "resume")
 
+proc autosuspendPCI() =
+  writeFile "/etc/systemd/system/pci-autosuspend.service", [pci_autosuspend_service]
+  safeFileUpdate "/usr/local/sbin/pci-autosuspend", pci_autosuspend, 0o755
+  enableAndStart "pci-autosuspend.service"
+
 proc tuneSystem*(args: StrMap) =
   sysctls hasBattery()
   serviceTimeouts()
   bootConf()
   fstab()
+  autosuspendPCI()
 
 proc startNTP*(args: StrMap) =
   let ntpServer = args.getOrDefault ""

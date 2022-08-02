@@ -105,4 +105,4 @@ proc installDesktopPackages*(args: StrMap) =
 
 proc installDevel*(args: StrMap) =
   installDesktopPackages(args)
-  packagesToInstall.add "build-essential"
+  packagesToInstall.add ["build-essential", "git"]
