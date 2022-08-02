@@ -106,8 +106,9 @@ proc swayUnit*(args: StrMap) =
       echo("Cannot link /usr/bin/yt-dlp to ", ytdlAlias)
   addFirefoxESR()
   # fonts-dejavu? fonts-liberation? fonts-freefont-ttf?
+  # yt-dlp is in unstable, causes problems here
   packagesToInstall.add ["sway", "swayidle", "openssh-client", "foot",
-                         "evince", "gammastep", "grim", "mpv", "yt-dlp",
+                         "evince", "gammastep", "grim", "mpv", #"yt-dlp",
                          "fonts-terminus-otb", "fonts-unifont"]
   if listDir("/sys/class/backlight").len != 0:
     packagesToInstall.add ["brightnessctl", "brightness-udev"]

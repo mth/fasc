@@ -17,6 +17,7 @@ let tasks = {
   "apt-all": ("Configure APT defaults and prune extraneous packages",
                 configureAndPruneAPT),
   "tunesys": ("Tune system configuration", tuneSystem),
+  "hdparm": ("Configure SATA idle timeouts", hdparm),
   "alsa": ("Configure ALSA dmixer", configureALSA),
   "bash": ("Configure bash", configureBash),
   "firewall": ("Setup default firewall", enableDefaultFirewall),
