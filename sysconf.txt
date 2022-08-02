@@ -55,6 +55,7 @@ User configuration tasks
   vim
   *firefox
     ff2mpv
+  move ~/.cache/* into /tmp/.$user-cache/ and replace ~/.cache with symlink
 
 profiles
  | desktop
