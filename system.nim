@@ -1,6 +1,8 @@
 import std/[parseutils, sequtils, strformat, strutils, os, tables]
 import utils
-  
+
+const clean_old_tmp_service = readResource("tmpfs/clean-old-tmp.service")
+const clean_old_tmp_sh = readResource("tmpfs/clean-old-tmp.sh")
 const sys_psu = "/sys/class/power_supply"
 
 proc isCPUVendor(vendor: string): bool =
@@ -116,11 +118,14 @@ proc fstab() =
   if "/tmp" notin mounts:
     let mem = memTotal()
     if mem >= 2048:
-      var tmpfs = "none\t/tmp\ttmpfs\tnosuid"
+      var tmpfs = "tmpfs\t/tmp\ttmpfs\tnosuid"
       if mem >= 4096:
-        tmpfs &= ",size=2048kB"
+        tmpfs &= ",size=2048m"
       echo "Adding ", tmpfs
       fstab.insert(tmpfs, mounts.getOrDefault("/", fstab.len))
+      writeFile("/var/spool/clean-old-tmp.sh", clean_old_tmp_sh)
+      writeFileSynced("/etc/systemd/system/clean-old-tmp.service", clean_old_tmp_service)
+      enableUnits.add "clean-old-tmp.service"
   if "/y" notin mounts:
     echo "Adding /y vfat user mount"
     createDir "/y"

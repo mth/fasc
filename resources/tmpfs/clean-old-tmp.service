@@ -1,0 +1,10 @@
+[Unit]
+Description=Delete old files under /tmp
+RequiresMountsFor=/tmp
+
+[Service]
+Type=oneshot
+ExecStart=/bin/sh /var/spool/clean-old-tmp.sh
+
+[Install]
+WantedBy=basic.target
