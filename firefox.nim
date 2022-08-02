@@ -80,9 +80,9 @@ proc addFirefoxESR*() =
   packagesToInstall.add "firefox-esr"
 
 proc firefoxConfig*(user: UserInfo) =
-    writeAsUser(user, ".mozilla/ff2mpv.py", ff2mpv_script, force = true)
-    writeAsUser(user, ".mozilla/native-messaging-hosts/ff2mpv.json",
-                ff2mpv_host.replace("HOME", user.home),
+    writeAsUser(user, ".mozilla/ff2mpv.py", ff2mpv_script,
                 permissions = 0o755, force = true)
+    writeAsUser(user, ".mozilla/native-messaging-hosts/ff2mpv.json",
+                ff2mpv_host.replace("HOME", user.home), force = true)
     writeAsUser(user, ".config/sway/firefox.sh", run_firefox_script,
                 permissions = 0o755, force = true)
