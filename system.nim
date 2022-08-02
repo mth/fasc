@@ -119,7 +119,7 @@ proc fstab() =
     let mem = memTotal()
     if mem >= 2048:
       var tmpfs = "tmpfs\t/tmp\ttmpfs\tnosuid"
-      if mem >= 4096:
+      if mem >= 8192:
         tmpfs &= ",size=2048m"
       echo "Adding ", tmpfs
       fstab.insert(tmpfs, mounts.getOrDefault("/", fstab.len))
