@@ -25,6 +25,12 @@ exec exec swayidle -w \
 proc runWayland(userInfo: UserInfo, compositor: string) =
   let user = userInfo.user
   let gid = userInfo.gid
+  const maxMemLimit = 0x100000000 # 4GB
+  const minMemLimit = 0x040000000 # 1GB
+  # Within limits, single process shouldn't exceed 3/4 of physical memory
+  var memLimit = memTotal().int64 * 0x300
+  if memLimit < minMemLimit or memLimit > maxMemLimit:
+    memLimit = maxMemLimit
   var service = [
     "[Unit]",
     "Description=Runs wayland desktop",
@@ -44,6 +50,7 @@ proc runWayland(userInfo: UserInfo, compositor: string) =
     "TTYReset=yes",
     "TTYVHangup=yes",
     "TTYVTDisallocate=yes",
+    "LimitDATA={memLimit}", # limit process data sizes to 2GB
     "WorkingDirectory=" & userInfo.home,
     "User=" & user,
     fmt"Group={userInfo.gid}",

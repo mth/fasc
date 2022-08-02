@@ -85,7 +85,7 @@ proc bootConf() =
   if modifyProperties("/etc/default/grub", grubUpdate):
     runCmd("update-grub")
 
-proc memTotal(): int =
+proc memTotal*(): int =
   for line in lines("/proc/meminfo"):
     const total = "MemTotal:"
     if line.startsWith(total) and
