@@ -36,6 +36,7 @@ rsyslog, journal
 *systemd | timeouts
          | logind - suspend timeouts, sessions
          | timesyncd
+? should timesyncd configured to have FallbackNTP=time.windows.com
 *initramfs
 nspawn
 fstab | nfs, *usb vfat, *tmp
