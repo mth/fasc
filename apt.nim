@@ -101,7 +101,7 @@ proc configureAndPruneAPT*(args: StrMap) =
   setupUnattendedUpgrades()
 
 proc installDesktopPackages*(args: StrMap) =
-  packagesToInstall.add ["ncal", "bc", "pinfo", "strace", "lsof", "rlwrap", "mc"]
+  packagesToInstall.add ["ncal", "bc", "pinfo", "strace", "lsof", "rlwrap", "mc", "curl"]
 
 proc installDevel*(args: StrMap) =
   installDesktopPackages(args)
