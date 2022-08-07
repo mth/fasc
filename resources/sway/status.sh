@@ -1,7 +1,7 @@
 exec 5<> <(:)
 while true; do
 	OUT="`for net in /sys/class/net/wl*; do
-		/sbin/iw dev "${net##*/}" link | {
+		[ -e "$net" ] && /sbin/iw dev "${net##*/}" link | {
 			while read -ra iw; do
 				case "${iw[0]}" in
 				signal:) signal=${iw[1]};;
@@ -17,7 +17,7 @@ while true; do
 		}
 	done`"
 
-	for bat in /sys/class/power_supply/BAT*; do
+	[ -e "/sys/class/power_supply/BAT*" ] && for bat in /sys/class/power_supply/BAT*; do
 		read stat < "$bat/status"
 		case "$stat" in
 		Charging) OUT="$OUT ⌁";;
