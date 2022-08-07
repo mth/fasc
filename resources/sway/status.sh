@@ -17,8 +17,8 @@ while true; do
 		}
 	done`"
 
-	[ -e "/sys/class/power_supply/BAT*" ] && for bat in /sys/class/power_supply/BAT*; do
-		read stat < "$bat/status"
+	for bat in /sys/class/power_supply/BAT*; do
+		read stat < "$bat/status" || break
 		case "$stat" in
 		Charging) OUT="$OUT ⌁";;
 		Discharging) OUT="$OUT ↯";;
