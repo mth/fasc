@@ -133,7 +133,7 @@ proc userInfo*(param: StrMap): UserInfo =
   var uid = getuid()
   var name: string
   if uid == 0:
-    var name = param.getOrDefault("user")
+    name = param.getOrDefault("user")
     if name == "":
       while (pw = getpwent(); pw != nil):
         if pw.pw_uid != 65534: # ignore nobody

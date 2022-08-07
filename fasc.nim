@@ -7,6 +7,9 @@ func argsToMap(args: seq[string]): StrMap =
     result[argParts[0]] = if argParts.len == 0: ""
                           else: argParts[1]
 
+proc showUser(args: StrMap) =
+  echo args.userInfo
+
 let tasks = {
   "wlan": ("Configure WLAN client with DHCP", wlan),
   "wifinet": ("Add WLAN network ssid=<ssid>", wifiNet),
@@ -23,6 +26,7 @@ let tasks = {
   "firewall": ("Setup default firewall", enableDefaultFirewall),
   "desktop-packages": ("Install desktop packages", installDesktopPackages),
   "devel": ("Install development packages", installDevel),
+  "showuser": ("Shows user", showUser),
 }.toTable
 
 if paramCount() == 0:
