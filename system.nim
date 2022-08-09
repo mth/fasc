@@ -27,7 +27,12 @@ proc hasProcess(exePath: string): bool =
     except:
       discard
 
-proc sysctls(battery: bool) =
+proc sysctls(args: StrMap) =
+  let battery = hasBattery()
+  # expect that buffer-bloat restriction on wired connection is routers problem
+  let qdisc = args.getOrDefault("default-qdisc",
+                                if battery: "fq_codel"
+                                else: "sfq")
   var conf = @[
     "kernel.dmesg_restrict=0",
     "kernel.sched_autogroup_enabled=1",
@@ -41,17 +46,21 @@ proc sysctls(battery: bool) =
 
     "net.ipv4.ip_forward=1",
     "net.ipv4.tcp_congestion_control=westwood",
-    "net.core.default_qdisc=fq_codel",
+    "net.ipv4.tcp_sack=0", # avoid SACK panic attacks
+    "net.core.default_qdisc=" & qdisc,
 
     # Enable IPv6 temporary addresses to obstruct web tracking
     "net.ipv6.conf.all.use_tempaddr=2",
     "net.ipv6.conf.default.use_tempaddr=2",
     "net.ipv6.conf.lo.use_tempaddr=-1",
+
+    "user.max_user_namespaces=0", # security
   ]
   if battery:
     conf.add "kernel.nmi_watchdog=0"
     conf.add "vm.dirty_writeback_centisecs=1500"
   writeFile("/etc/sysctl.d/00-local.conf", conf, force=true)
+  runCmd("sysctl", "-p", "/etc/sysctl.d/00-local.conf")
 
 func addGrubZSwap(old: string): string =
   if "zswap." in old:
@@ -203,7 +212,7 @@ proc autosuspendPCI() =
   enableAndStart "pci-autosuspend.service"
 
 proc tuneSystem*(args: StrMap) =
-  sysctls hasBattery()
+  sysctls args
   serviceTimeouts()
   bootConf()
   fstab()
