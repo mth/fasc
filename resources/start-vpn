@@ -1,0 +1,26 @@
+#!/bin/sh
+
+set -e
+
+if pidof openvpn > /dev/null; then
+	echo Already running
+	exit 1
+fi
+
+cd /root/.vpn
+mkdir -m 700 -p /run/cvpn/tmp
+/usr/sbin/openvpn --daemon --config /root/.vpn/client.ovpn --ping-exit 3600 \
+	--chroot /run/cvpn --user proxy --group proxy
+echo "Waiting for VPN starting up..."
+
+while ! /bin/ip route | /bin/grep -q ' via .* dev tun0 '; do
+        if ! pidof openvpn > /dev/null; then
+                echo "OpenVPN startup failed."
+                exit 1
+        fi
+        sleep 0.3
+done
+
+echo "VPN is up, fixing routes."
+/bin/ip route del 172.16.0.0/12
+exit 0
