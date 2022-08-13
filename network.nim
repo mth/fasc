@@ -1,4 +1,4 @@
-import std/[parseutils, sequtils, strformat, strutils, os, posix]
+import std/[parseutils, sequtils, strformat, strutils, os, posix, tables]
 import utils
 
 const nft_prefix = """
@@ -9,6 +9,7 @@ flush ruleset
 """
 
 const default_firewall = readResource("nftables.conf")
+const ovpnScript = readResource("ovpn")
 
 proc network(unit, match: string, options: varargs[string]) =
   var net = @[
@@ -113,3 +114,23 @@ proc enableDefaultFirewall*(args: StrMap) =
   writeFile(confFile, nft_prefix & default_firewall)
   discard chmod(confFile, 0o755)
   enableAndStart("nftables.service")
+
+proc ovpnClient*(args: StrMap) =
+  const ovpnPath = "/usr/local/bin/ovpn"
+  writeFile(ovpnPath, [ovpnScript])
+  packagesToInstall.add "openvpn"
+  if "nosudo" in args:
+    setPermissions(ovpnPath, 0o750)
+    commitQueue()
+  else:
+    packagesToInstall.add "sudo"
+    commitQueue()
+    let user = userInfo args
+    groupExec(ovpnPath, user)
+    discard appendMissing("/etc/sudoers",
+      user.user & " ALL=(root:root) NOPASSWD: " & ovpnPath)
+  runCmd("systemctl", "disable", "openvpn")
+  runCmd("systemctl", "stop", "openvpn")
+  if not fileExists("/root/.vpn/client.ovpn"):
+    createDir("/root/.vpn")
+    echo "Please copy client.ovpn into /root/.vpn"

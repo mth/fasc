@@ -34,6 +34,11 @@ proc setPermissions(fullPath: string, user: UserInfo, permissions: Mode) =
     echo fmt"chown({fullPath}) failed: {strerror(errno)}"
   setPermissions(fullPath, permissions)
 
+proc groupExec*(fullPath: string, user: UserInfo) =
+  if chown(fullPath, 0, user.gid) == -1:
+    echo fmt"chgrp({fullPath}) failed: {strerror(errno)}"
+  setPermissions(fullPath, 0o750)
+
 proc writeFileSynced*(filename, content: string) =
   let f = open(filename, fmWrite)
   defer: f.close

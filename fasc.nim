@@ -24,6 +24,7 @@ let tasks = {
   "alsa": ("Configure ALSA dmixer", configureALSA),
   "bash": ("Configure bash", configureBash),
   "firewall": ("Setup default firewall", enableDefaultFirewall),
+  "ovpn": ("Setup openvpn client", ovpnClient),
   "desktop-packages": ("Install desktop packages", installDesktopPackages),
   "devel": ("Install development packages", installDevel),
   "showuser": ("Shows user", showUser),

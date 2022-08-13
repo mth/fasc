@@ -7,7 +7,7 @@ if pidof openvpn > /dev/null; then
 	exit 1
 fi
 
-[ "`id -u`" = "0" ] || exec sudo /usr/loca/bin/ovpn
+[ "`id -u`" = "0" ] || exec sudo /usr/local/bin/ovpn
 
 cd /root/.vpn
 mkdir -m 700 -p /run/ovpn/tmp
