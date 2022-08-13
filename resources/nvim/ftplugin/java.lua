@@ -4,7 +4,7 @@ local gradlew = io.open(project_dir .. '/gradlew')
 if gradlew then
   io.close(gradlew)
   local project_name = string.gsub(project_dir, '/', '_')
-  local workspace_dir = '/home/madis/.local/jdtls/workspace/' .. project_name
+  local workspace_dir = 'HOME/.local/jdtls/workspace/' .. project_name
   vim.fn.mkdir(workspace_dir, 'p')
 
   -- See `:help vim.lsp.start_client` for an overview of the supported `config` options.
@@ -30,12 +30,12 @@ if gradlew then
       '--add-modules=ALL-SYSTEM',
       '--add-opens', 'java.base/java.util=ALL-UNNAMED',
       '--add-opens', 'java.base/java.lang=ALL-UNNAMED',
-      '-javaagent:/home/madis/.local/jdtls/lombok.jar',
-      '-Xbootclasspath/a:/home/madis/.local/jdtls/lombok.jar',
+      '-javaagent:HOME/.local/jdtls/lombok.jar',
+      '-Xbootclasspath/a:HOME/.local/jdtls/lombok.jar',
       -- 💀 Must point to the eclipse.jdt.ls installation
-      '-jar', '/home/madis/.local/jdtls/1.6/plugins/org.eclipse.equinox.launcher_1.6.400.v20210924-0641.jar',
+      '-jar', 'HOME/.local/jdtls/1.6/plugins/org.eclipse.equinox.launcher_1.6.400.v20210924-0641.jar',
       -- 💀 Must point to the eclipse.jdt.ls installation, depending on your system.
-      '-configuration', '/home/madis/.local/jdtls/1.6/config_linux',
+      '-configuration', 'HOME/.local/jdtls/1.6/config_linux',
       -- 💀 See `data directory configuration` section in the README
       '-data', workspace_dir
     },
