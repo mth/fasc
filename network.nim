@@ -115,20 +115,31 @@ proc enableDefaultFirewall*(args: StrMap) =
   discard chmod(confFile, 0o755)
   enableAndStart("nftables.service")
 
+const kill_vpn = """#!/bin/sh
+
+[ "`id -u`" = 0 ] || exec /usr/bin/sudo "$0"
+/usr/bin/killall openvpn
+"""
+
 proc ovpnClient*(args: StrMap) =
   const ovpnPath = "/usr/local/bin/ovpn"
+  const killVPNPath = "/usr/local/bin/kill-vpn"
   writeFile(ovpnPath, [ovpnScript])
+  writeFile(killVPNPath, kill_vpn)
   packagesToInstall.add "openvpn"
   if "nosudo" in args:
     setPermissions(ovpnPath, 0o750)
+    setPermissions(killVPNPath, 0o750)
     commitQueue()
   else:
     packagesToInstall.add "sudo"
     commitQueue()
     let user = userInfo args
     groupExec(ovpnPath, user)
+    groupExec(killVPNPath, user)
     discard appendMissing("/etc/sudoers",
-      user.user & " ALL=(root:root) NOPASSWD: " & ovpnPath)
+      user.user & " ALL=(root:root) NOPASSWD: " & ovpnPath,
+      user.user & " ALL=(root:root) NOPASSWD: " & killVPNPath)
   runCmd("systemctl", "disable", "openvpn")
   runCmd("systemctl", "stop", "openvpn")
   if not fileExists("/root/.vpn/client.ovpn"):
