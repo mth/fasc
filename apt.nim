@@ -105,7 +105,8 @@ proc installDesktopPackages*(args: StrMap) =
 
 proc installDesktopUIPackages*(args: StrMap) =
   args.installDesktopPackages
-  packagesToInstall.add ["geeqie", "xfe", "xdg-utils"]
+  # packagesToInstall.add "xfe"
+  packagesToInstall.add ["geeqie", "xdg-utils"]
 
 proc installDevel*(args: StrMap) =
   installDesktopPackages(args)
