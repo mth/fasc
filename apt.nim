@@ -103,6 +103,10 @@ proc configureAndPruneAPT*(args: StrMap) =
 proc installDesktopPackages*(args: StrMap) =
   packagesToInstall.add ["ncal", "bc", "pinfo", "strace", "lsof", "rlwrap", "mc", "curl"]
 
+proc installDesktopUIPackages*(args: StrMap) =
+  args.installDesktopPackages
+  packagesToInstall.add ["geeqie", "featherpad"]
+
 proc installDevel*(args: StrMap) =
   installDesktopPackages(args)
   packagesToInstall.add ["build-essential", "git"]

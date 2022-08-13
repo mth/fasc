@@ -26,6 +26,7 @@ let tasks = {
   "firewall": ("Setup default firewall", enableDefaultFirewall),
   "ovpn": ("Setup openvpn client", ovpnClient),
   "desktop-packages": ("Install desktop packages", installDesktopPackages),
+  "gui-packages": ("Install GUI desktop packages", installDesktopUIPackages),
   "devel": ("Install development packages", installDevel),
   "showuser": ("Shows user", showUser),
 }.toTable
