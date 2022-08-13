@@ -54,7 +54,7 @@ proc sysctls(args: StrMap) =
     "net.ipv6.conf.default.use_tempaddr=2",
     "net.ipv6.conf.lo.use_tempaddr=-1",
 
-    "user.max_user_namespaces=0", # security
+    # "user.max_user_namespaces=0", # security, but those are needed for nspawn
   ]
   if battery:
     conf.add "kernel.nmi_watchdog=0"
