@@ -105,7 +105,7 @@ proc installDesktopPackages*(args: StrMap) =
 
 proc installDesktopUIPackages*(args: StrMap) =
   args.installDesktopPackages
-  packagesToInstall.add ["geeqie", "featherpad"]
+  packagesToInstall.add ["geeqie", "featherpad", "pcmanfm-qt"]
 
 proc installDevel*(args: StrMap) =
   installDesktopPackages(args)
