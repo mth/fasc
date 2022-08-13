@@ -1,0 +1,9 @@
+fun TabCompletion()
+	if &omnifunc != '' && match(strpart(getline('.'), 0, col('.') - 1), '^\s*$')
+		return "\<C-X>\<C-O>"
+	endif
+	return "\t"
+endfun
+
+se completeopt=menuone,noinsert
+imap <expr> <Tab> TabCompletion()
