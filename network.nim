@@ -133,4 +133,5 @@ proc ovpnClient*(args: StrMap) =
   runCmd("systemctl", "stop", "openvpn")
   if not fileExists("/root/.vpn/client.ovpn"):
     createDir("/root/.vpn")
+    setPermissions("/root/.vpn", 0o700)
     echo "Please copy client.ovpn into /root/.vpn"
