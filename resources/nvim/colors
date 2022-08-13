@@ -1,0 +1,19 @@
+set hlsearch
+filet plugin on
+
+sy on
+hi Comment cterm=NONE ctermfg=Red
+hi Constant cterm=NONE ctermfg=Cyan
+hi Function cterm=bold ctermfg=LightBlue
+hi Identifier cterm=NONE ctermfg=Magenta
+hi Include cterm=NONE ctermfg=DarkMagenta
+hi PreCondit cterm=NONE ctermfg=DarkMagenta
+hi PreProc cterm=NONE ctermfg=LightMagenta
+hi Special cterm=NONE ctermfg=LightGreen
+hi Statement cterm=NONE ctermfg=Yellow
+hi Type cterm=NONE ctermfg=DarkGreen
+hi SpellBad cterm=NONE ctermbg=DarkGray ctermfg=Yellow
+hi SpellCap cterm=NONE ctermbg=DarkBlue ctermfg=LightGray
+hi SpellRare cterm=NONE ctermbg=DarkGray ctermfg=LightGray
+hi SpellLocal cterm=NONE ctermbg=DarkGray ctermfg=LightGray
+"hi ColorColumn ctermbg=darkgray guibg=darkgray
