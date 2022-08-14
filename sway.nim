@@ -122,10 +122,6 @@ proc swayUnit*(args: StrMap) =
                          "fonts-terminus-otb", "fonts-unifont"]
   if listDir("/sys/class/backlight").len != 0:
     packagesToInstall.add ["brightnessctl", "brightness-udev"]
-  if not fileExists("/usr/bin/x-terminal-emulator"):
-    commitQueue()
-    runCmd("update-alternatives", "--install", "/usr/bin/x-terminal-emulator",
-           "x-terminal-emulator", "/usr/bin/foot", "50")
   const vimfmPath = "/usr/share/applications/vimfm.desktop"
   if not vimfmPath.fileExists:
     commitQueue()
