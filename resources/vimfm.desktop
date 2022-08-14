@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=Vim
+GenericName=Text Editor
+Comment=Edit text files and view directory/archive listings
+Icon=nvim
+Categories=Editor
+Exec=x-terminal-emulator vim %U
+TryExec=x-terminal-emulator vim
+StartupNotify=false
+MimeType=application/json;application/x-sh;application/x-httpd-php;text/javascript;text/plain;text/xml;inode/directory;
+Keywords=Editor;Filemanager
