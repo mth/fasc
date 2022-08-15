@@ -11,6 +11,8 @@ flush ruleset
 const default_firewall = readResource("nftables.conf")
 const ovpnScript = readResource("ovpn")
 
+# TODO parameter to set DNSStubListenerExtra= 
+#      parameter to set default DNS addresses?
 proc useResolvedStub() =
   const resolvConf = "/etc/resolv.conf"
   const stub = "/run/systemd/resolve/stub-resolv.conf"
