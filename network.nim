@@ -11,6 +11,23 @@ flush ruleset
 const default_firewall = readResource("nftables.conf")
 const ovpnScript = readResource("ovpn")
 
+proc useResolvedStub() =
+  const resolvConf = "/etc/resolv.conf"
+  const stub = "/run/systemd/resolve/stub-resolv.conf"
+  try:
+    if resolvConf.expandSymlink == stub:
+      return
+  except:
+    discard
+  if stub.fileExists:
+    removeFile resolvConf
+    createSymlink stub, resolvConf
+
+proc configureResolved() =
+  enableAndStart "systemd-resolved"
+  commitQueue()
+  useResolvedStub()
+
 proc network(unit, match: string, options: varargs[string]) =
   var net = @[
     "[Match]",
@@ -76,6 +93,7 @@ proc wlan*(args: StrMap) =
   for net in findInterfaces():
     if net.isWireless:
       wlanDevice(net)
+      configureResolved()
       return
     devices.add net
   let deviceList = devices.join ", "
@@ -126,7 +144,8 @@ proc ovpnClient*(args: StrMap) =
   const killVPNPath = "/usr/local/bin/kill-vpn"
   writeFile(ovpnPath, [ovpnScript])
   writeFile(killVPNPath, kill_vpn)
-  packagesToInstall.add "openvpn"
+  packagesToInstall.add ["openvpn", "openvpn-systemd-resolved"]
+  enableAndStart "systemd-resolved"
   if "nosudo" in args:
     setPermissions(ovpnPath, 0o750)
     setPermissions(killVPNPath, 0o750)
@@ -146,3 +165,4 @@ proc ovpnClient*(args: StrMap) =
     createDir("/root/.vpn")
     setPermissions("/root/.vpn", 0o700)
     echo "Please copy client.ovpn into /root/.vpn"
+  useResolvedStub()

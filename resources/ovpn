@@ -12,10 +12,12 @@ fi
 cd /root/.vpn
 mkdir -m 700 -p /run/ovpn/tmp
 /usr/sbin/openvpn --daemon --config /root/.vpn/client.ovpn --ping-exit 3600 \
-	--chroot /run/ovpn --user proxy --group proxy
+	--script-security 2 --up /etc/openvpn/update-systemd-resolved \
+	--up-restart --down /etc/openvpn/update-systemd-resolved \
+	--down-pre --dev tun0vpn --chroot /run/ovpn --user proxy --group proxy
 echo "Waiting for VPN starting up..."
 
-while ! /bin/ip route | /bin/grep -q ' via .* dev tun0 '; do
+while ! /bin/ip route | /bin/grep -q ' via .* dev tun0vpn '; do
         if ! pidof openvpn > /dev/null; then
                 echo "OpenVPN startup failed."
                 exit 1
