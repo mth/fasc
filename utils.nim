@@ -169,6 +169,8 @@ proc appendMissing*(filename: string, needed: varargs[string]): bool =
   defer: f.close
   for line in addLines:
     f.writeLine line
+  if f.getFileHandle.fsync != 0:
+    raise newException(OSError, $strerror(errno))
   return true
 
 proc modifyProperties*(filename: string, update: UpdateMap): bool =
