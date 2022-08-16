@@ -3,3 +3,11 @@
 cd /sys/bus/pci/devices && for dev in *; do
 	[ "$dev" = "0000:00:00.0" ] || echo auto > "$dev/power/control"
 done
+
+for ata_power in /sys/bus/pci/devices/*/ata?/power/control; do
+	[ -e "$ata_power" ] && echo auto > "$ata_power"
+done
+
+for scsi_power in /sys/class/scsi_host/host?/link_power_management_policy; do
+	[ -e "$scsi_power" ] && echo min_power > "$scsi_power"
+done
