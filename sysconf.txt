@@ -40,7 +40,7 @@ rsyslog, journal
 *initramfs
 nspawn
 fstab | nfs, *usb vfat, *tmp
-sudoers
+*sudoers
 sshd
 cpufreq, fancontrol
 systemd hardening
