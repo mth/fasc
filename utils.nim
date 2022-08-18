@@ -157,21 +157,28 @@ proc userInfo*(param: StrMap): UserInfo =
     quit 1
   return (user: $pw.pw_name, home: $pw.pw_dir, uid: pw.pw_uid, gid: pw.pw_gid)
 
-proc appendMissing*(filename: string, needed: varargs[string]): bool =
+proc appendMissing*(filename: string, needed: openarray[(string, string)]): bool =
   var addLines = @needed
   for line in lines(filename):
-    let idx = addLines.find line.strip
-    if idx >= 0:
-      addLines.delete idx
+    var idx = addLines.len
+    while idx > 0:
+      let (prefix, addLine) = addLines[idx]
+      if (if prefix.len != 0: line.startsWith prefix
+          else: line == addLine):
+        addLines.delete idx
+      idx.dec
   if addLines.len == 0:
     return false
   var f = open(filename, fmAppend)
   defer: f.close
-  for line in addLines:
+  for (_, line) in addLines:
     f.writeLine line
   if f.getFileHandle.fsync != 0:
     raise newException(OSError, $strerror(errno))
   return true
+
+proc appendMissing*(filename: string, needed: varargs[string]): bool =
+  appendMissing(filename, needed.toSeq.mapIt(("", it)))
 
 proc modifyProperties*(filename: string, update: UpdateMap): bool =
   var updatedConf: seq[string]
