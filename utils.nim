@@ -171,8 +171,8 @@ proc appendMissing*(filename: string, needed: openarray[(string, string)]): bool
     return false
   var f = open(filename, fmAppend)
   defer: f.close
-  for (_, line) in addLines:
-    f.writeLine line
+  for (prefix, line) in addLines:
+    f.writeLine(prefix & line)
   if f.getFileHandle.fsync != 0:
     raise newException(OSError, $strerror(errno))
   return true
