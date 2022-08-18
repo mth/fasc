@@ -133,7 +133,7 @@ proc fstab() =
     createDir "/y"
     fstab.add(&"/dev/disk/usbdrive1\t/y\tvfat\tnoauto,user")
     writeFileSynced("/etc/udev/rules.d/85-usb-storage-alias.rules",
-    	"""KERNEL=="sd?1" SUBSYSTEM=="block" SUBSYSTEMS=="usb" SYMLINK+="disk/usbdrive1"""")
+      """KERNEL=="sd?1" SUBSYSTEM=="block" SUBSYSTEMS=="usb" SYMLINK+="disk/usbdrive1"""")
     runCmd("systemctl", "restart", "udev")
   if fstab.len != originalLen:
     safeFileUpdate("/etc/fstab", fstab.join("\n") & "\n")
