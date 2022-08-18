@@ -104,14 +104,6 @@ proc memTotal*(): int =
        line.parseInt(result, total.len + line.skipWhiteSpace(total.len)) > 0:
       return
 
-proc nextSata(): string =
-  result = "sd`"
-  for _, disk in walkDir("/sys/class/block"):
-    let name = disk.extractFilename
-    if name.len == 3 and name.startsWith("sd") and name > result:
-      result = name
-  result[2].inc
-
 proc fstab() =
   var fstab: seq[string]
   var mounts: Table[string, int]
@@ -139,7 +131,10 @@ proc fstab() =
   if "/y" notin mounts:
     echo "Adding /y vfat user mount"
     createDir "/y"
-    fstab.add(&"/dev/{nextSata()}1\t/y\tvfat\tnoauto,user")
+    fstab.add(&"/dev/disk/usbdrive1\t/y\tvfat\tnoauto,user")
+    writeFileSynced("/etc/udev/rules.d/85-usb-storage-alias.rules",
+    	"""KERNEL=="sd?1" SUBSYSTEM=="block" SUBSYSTEMS=="usb" SYMLINK+="disk/usbdrive1"""")
+    runCmd("systemctl", "restart", "udev")
   if fstab.len != originalLen:
     safeFileUpdate("/etc/fstab", fstab.join("\n") & "\n")
   # TODO if no swap, add zswap
