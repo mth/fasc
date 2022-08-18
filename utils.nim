@@ -162,11 +162,11 @@ proc appendMissing*(filename: string, needed: openarray[(string, string)]): bool
   for line in lines(filename):
     var idx = addLines.len
     while idx > 0:
+      idx.dec
       let (prefix, addLine) = addLines[idx]
       if (if prefix.len != 0: line.startsWith prefix
           else: line == addLine):
         addLines.delete idx
-      idx.dec
   if addLines.len == 0:
     return false
   var f = open(filename, fmAppend)
