@@ -40,6 +40,7 @@ rsyslog, journal
 *initramfs
 nspawn
 fstab | nfs, *usb vfat, *tmp
+      | /dev/mmcblk1p1  /mnt/sd auto    noauto,user
 *sudoers
 sshd
 cpufreq, fancontrol
