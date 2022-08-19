@@ -29,6 +29,7 @@ let tasks = {
   "gui-packages": ("Install GUI desktop packages", installDesktopUIPackages),
   "devel": ("Install development packages", installDevel),
   "showuser": ("Shows user", showUser),
+  "nfs": ("Adds NFS mount", nfs),
 }.toTable
 
 if paramCount() == 0:

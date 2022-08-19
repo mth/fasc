@@ -104,18 +104,20 @@ proc memTotal*(): int =
        line.parseInt(result, total.len + line.skipWhiteSpace(total.len)) > 0:
       return
 
-proc fstab() =
-  var fstab: seq[string]
-  var mounts: Table[string, int]
-  var hasSwap = false
+proc readFStab(mounts: var Table[string, int]; hasSwap: var bool): seq[string] =
   for line in lines("/etc/fstab"):
-    fstab.add line
+    result.add line
     let fields = line.split.filterIt(it.len > 0)
     if fields.len >= 2 and not fields[0].startsWith('#'):
       if fields[2] == "swap":
         hasSwap = true
       else:
-        mounts[fields[1]] = fstab.len
+        mounts[fields[1]] = result.len
+
+proc fstab() =
+  var mounts: Table[string, int]
+  var hasSwap = false
+  var fstab = readFStab(mounts, hasSwap)
   let originalLen = fstab.len
   if "/tmp" notin mounts:
     let mem = memTotal()
@@ -221,3 +223,37 @@ proc startNTP*(args: StrMap) =
     runCmd("systemctl", "restart", "systemd-timesyncd.service")
     enableUnits.add "systemd-timesyncd.service"
 
+proc nfs*(args: StrMap) =
+  var mounts: Table[string, int]
+  var hasSwap = false
+  var fstab = readFStab(mounts, hasSwap)
+  var originalLen = fstab.len
+  var hasParam = false
+  for (arg, share) in args.pairs:
+    let argParts = arg.split ':'
+    if argParts.len >= 2 and argParts[0] == "mount":
+      let mount = argParts[^1]
+      if not mount.startsWith("/") or mount == "/":
+        echo("Invalid mount point: ", mount)
+        quit 1
+      hasParam = true
+      var options = "noauto,noexec,nodev,sec=sys,_netdev,"
+      if "ro" in argParts:
+        options = "ro," & options
+      if "user" in argParts:
+        options &= "user"
+      else:
+        options &= "x-systemd.automount,x-systemd.mount-timeout=20,x-systemd.idle-timeout=5min"
+      let line = &"{share}\t{mount}\tnfs4\t{options}"
+      let lineNo = mounts.getOrDefault(mount) - 1
+      if lineNo >= 0:
+        fstab.add line
+      elif fstab[lineNo] != line:
+        fstab[lineNo] = line
+        originalLen.dec
+      createDir mount
+  if not hasParam:
+    echo "fasc nfs mount:[ro:][user:]/mount/point=hostname:/export/path"
+  if fstab.len != originalLen:
+    safeFileUpdate("/etc/fstab", fstab.join("\n") & "\n")
+    packagesToInstall.add "nfs-common"
