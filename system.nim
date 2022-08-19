@@ -229,7 +229,7 @@ proc nfs*(args: StrMap) =
   var fstab = readFStab(mounts, hasSwap)
   var originalLen = fstab.len
   var hasParam = false
-  var restartRemoteFS = false
+  var automounts: seq[string]
   for (arg, share) in args.pairs:
     let argParts = arg.split ':'
     if argParts.len >= 2 and argParts[0] == "mount":
@@ -245,7 +245,7 @@ proc nfs*(args: StrMap) =
         options &= "user"
       else:
         options &= "x-systemd.automount,x-systemd.mount-timeout=20,x-systemd.idle-timeout=5min"
-        restartRemoteFS = true
+        automounts.add(mount[1..^1].replace('/', '-') & ".automount")
       let line = &"{share}\t{mount}\tnfs4\t{options}"
       let lineNo = mounts.getOrDefault(mount) - 1
       if lineNo < 0:
@@ -259,6 +259,6 @@ proc nfs*(args: StrMap) =
   if fstab.len != originalLen:
     safeFileUpdate("/etc/fstab", fstab.join("\n") & "\n")
     packagesToInstall.add "nfs-common"
-    if restartRemoteFS:
-      runCmd "systemctl", "daemon-reload"
-      runCmd "systemctl", "restart", "remote-fs.target"
+    if automounts.len != 0:
+      systemdReload = true
+      startUnits &= automounts
