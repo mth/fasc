@@ -87,7 +87,7 @@ proc runWayland(userInfo: UserInfo, compositor: string) =
     packagesToInstall.add "mesa-va-drivers"
   systemdReload = true
   runCmd("usermod", "-G",
-    "adm,audio,cdrom,input,kvm,video,render,systemd-journal", user)
+    "adm,audio,cdrom,input,netdev,kvm,video,render,systemd-journal", user)
 
 proc configureSway(user: UserInfo, sleepMinutes: int) =
   for (file, conf) in user_config:
