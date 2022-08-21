@@ -7,6 +7,7 @@ const etc_bashrc = readResource("bash.bashrc")
 const dot_bashrc = readResource("user/bashrc")
 const debian_bashrc_header = "# ~/.bashrc: executed by bash(1) for non-login shells."
 const upload_cam_script = readResource("user/upload-cam")
+const upload_cam_desktop = readResource("user/upload-cam.desktop")
 
 proc configureUserBash(user: UserInfo) =
   let bashrc = user.home / ".bashrc"
@@ -26,7 +27,10 @@ proc configureBash*(args: StrMap) =
 
 proc uploadCam*(args: StrMap) =
   let rsync_args = args.getOrDefault("rsync-args", "'--groupmap=*:www-data'")
-  args.userInfo.writeAsUser("bin/upload-cam",
+  let user = args.userInfo
+  user.writeAsUser("bin/upload-cam",
     upload_cam_script.replace("{RSYNC_TARGET}", args.nonEmptyParam("rsync-to"))
                      .replace("{RSYNC_ARGS}", rsync_args), 0o755, true)
+  user.writeAsUser(".local/share/applications/upload-cam.desktop",
+    upload_cam_desktop.replace("HOME", user.home))
   fstab(tmpfs = false)
