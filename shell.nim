@@ -1,5 +1,4 @@
 import std/[os, strutils, tables]
-import system
 import utils
 
 # This part is unlikely to need customization, and probably should into /etc/bash.bashrc
@@ -33,6 +32,5 @@ proc uploadCam*(args: StrMap) =
                      .replace("{RSYNC_ARGS}", rsync_args), 0o755, true)
   user.writeAsUser(".local/share/applications/upload-cam.desktop",
     upload_cam_desktop.replace("HOME", user.home))
-  fstab(tmpfs = false)
   if not fileExists("/usr/bin/rsync"):
     packagesToInstall.add "rsync"

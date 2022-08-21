@@ -1,7 +1,7 @@
 [Desktop Entry]
 Version=1.0
-Name=upload-cam
-GenericName=Copy camera files from SD card
+Name=Copy pictures from SD card
+Name[et]=Kopeeri pildid SD kaardilt
 Exec=HOME/bin/upload-cam
 Terminal=true
 Type=Application
