@@ -1,0 +1,39 @@
+#!/bin/sh
+
+set -e
+Y=/y
+UMOUNT="true"
+TMPDIR=""
+
+cleanup() {
+	$UMOUNT $Y
+	[ "$TMPDIR" = "" ] || rm -rf "$TMPDIR"
+}
+
+if ! grep -q " $Y " /proc/mounts; then
+	mount "$Y"
+	UMOUNT=umount
+fi
+
+trap cleanup EXIT
+
+if ! [ -d "$Y/DCIM" ]; then
+	echo "No $Y/DCIM - not a camera SD card"
+	exit 1
+fi
+
+TMPDIR="`mktemp -d`"
+
+for DIR in $Y/DCIM/*; do
+	MONTH="`echo "$DIR" | sed 's/^.*\([0-9][0-9]\)$/\1/'`"
+	
+	if [ "$MONTH" != "$DIR" ] && [ -d "$DIR" ]; then
+		TIMESTAMP="`stat -c %Y "$DIR"`"
+		YEAR="`date -d "@$TIMESTAMP" +%Y`"
+		mkdir -p "$TMPDIR/$YEAR"
+		ln -s "$DIR" "$TMPDIR/$YEAR/$MONTH"
+	fi
+done
+
+rsync -vLrtg --size-only --chmod=D750,F440 {RSYNC_ARGS} $TMPDIR/* '{RSYNC_TARGET}'
+exit 0

@@ -30,6 +30,7 @@ let tasks = {
   "devel": ("Install development packages", installDevel),
   "showuser": ("Shows user", showUser),
   "nfs": ("Adds NFS mount", nfs),
+  "upload-cam": ("upload-cam script", uploadCam),
 }.toTable
 
 if paramCount() == 0:

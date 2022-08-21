@@ -114,12 +114,12 @@ proc readFStab(mounts: var Table[string, int]; hasSwap: var bool): seq[string] =
       else:
         mounts[fields[1]] = result.len
 
-proc fstab() =
+proc fstab*(tmpfs = true) =
   var mounts: Table[string, int]
   var hasSwap = false
   var fstab = readFStab(mounts, hasSwap)
   let originalLen = fstab.len
-  if "/tmp" notin mounts:
+  if tmpfs and "/tmp" notin mounts:
     let mem = memTotal()
     if mem >= 2048:
       var tmpfs = "tmpfs\t/tmp\ttmpfs\tnosuid"
