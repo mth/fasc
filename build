@@ -1,5 +1,14 @@
 #!/bin/sh
 
-[ "$1" != "musl" ] || exec nim c -d:musl fasc.nim && strip --strip-all fasc
+set -e
+
+if [ "$1" = "musl" ] || [ "$1" = "tiny" ]; then
+	nim c -d:musl fasc.nim && strip --strip-all fasc
+	if [ "$1" = "tiny" ]; then
+		strip --strip-all fasc
+		upx -9 fasc
+	fi
+	exit 0
+fi
 
 nim c fasc.nim
