@@ -31,6 +31,7 @@ let tasks = {
   "showuser": ("Shows user", showUser),
   "nfs": ("Adds NFS mount", nfs),
   "upload-cam": ("upload-cam script", uploadCam),
+  "propset": ("set properties in config=/file/path", propset),
 }.toTable
 
 if paramCount() == 0:

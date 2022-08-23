@@ -20,6 +20,12 @@ proc readResourceDir*(dirname: string): seq[(string, string)] =
     if kind == pcFile:
       result.add (file.extractFilename, readFile(file))
 
+proc nonEmptyParam*(params: StrMap, key: string): string =
+  result = params.getOrDefault(key)
+  if result.len == 0:
+    echo fmt"Expected parameter {key}=<{key}>"
+    quit 1
+
 proc enableAndStart*(units: varargs[string]) =
   for unit in units:
     enableUnits.add unit
@@ -220,9 +226,3 @@ proc modifyProperties*(filename: string, update: openarray[(string, string)],
   for (key, value) in update:
     updateMap[key] = stringFunc(value, onlyEmpty)
   return modifyProperties(filename, updateMap)
-
-proc nonEmptyParam*(params: StrMap, key: string): string =
-  result = params.getOrDefault(key)
-  if result.len == 0:
-    echo fmt"Expected parameter {key}=<{key}>"
-    quit 1

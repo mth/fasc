@@ -27,6 +27,12 @@ proc hasProcess(exePath: string): bool =
     except:
       discard
 
+proc propset*(args: StrMap) =
+  let file = args.nonEmptyParam("config")
+  var properties = args
+  properties.del "config"
+  discard modifyProperties(file, properties.pairs.toSeq, false)
+
 proc sysctls(args: StrMap) =
   let battery = hasBattery()
   # expect that buffer-bloat restriction on wired connection is routers problem
