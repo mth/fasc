@@ -35,5 +35,5 @@ for DIR in $Y/DCIM/*; do
 	fi
 done
 
-rsync -vLrtg --size-only --chmod=D750,F440 {RSYNC_ARGS} $TMPDIR/* '{RSYNC_TARGET}'
+rsync -vLrtg --size-only --chmod=D770,F440 {RSYNC_ARGS} $TMPDIR/* '{RSYNC_TARGET}'
 exit 0
