@@ -142,20 +142,22 @@ const kill_vpn = """#!/bin/sh
 """
 
 proc ovpnClient*(args: StrMap) =
+  var user: UserInfo
+  if "nosudo" notin args:
+    user = userInfo args
   const ovpnPath = "/usr/local/bin/ovpn"
   const killVPNPath = "/usr/local/bin/kill-vpn"
   writeFile(ovpnPath, [ovpnScript])
   writeFile(killVPNPath, kill_vpn)
   packagesToInstall.add ["openvpn", "openvpn-systemd-resolved"]
   enableAndStart "systemd-resolved"
-  if "nosudo" in args:
+  if user.uid == 0:
     setPermissions(ovpnPath, 0o750)
     setPermissions(killVPNPath, 0o750)
     commitQueue()
   else:
     packagesToInstall.add "sudo"
     commitQueue()
-    let user = userInfo args
     groupExec(ovpnPath, user)
     groupExec(killVPNPath, user)
     discard appendMissing("/etc/sudoers",

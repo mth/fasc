@@ -26,5 +26,5 @@ while ! /bin/ip route | /bin/grep -q ' via .* dev tun0vpn '; do
 done
 
 echo "VPN is up."
-/bin/ip route del 172.16.0.0/12 || /bin/ip route del 172.16.0.0/13
+/bin/ip route del 172.16.0.0/13 || /bin/ip route del 172.16.0.0/12
 exit 0
