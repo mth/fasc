@@ -48,4 +48,3 @@ proc addVimPlugins(user: UserInfo, plugins: seq[string]) =
     commitQueue()
     runCmd("wget", "-O", plugScript,
            "https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim")
-    plugScript.setPermissions(user, 0o644)
