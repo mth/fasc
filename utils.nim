@@ -31,6 +31,10 @@ proc enableAndStart*(units: varargs[string]) =
     enableUnits.add unit
     startUnits.add unit
 
+proc addPackageUnless*(packageName, requiredPath: string) =
+  if not requiredPath.fileExists:
+    packagesToInstall.add packageName
+
 proc setPermissions*(fullPath: string, permissions: Mode) =
   if chmod(fullPath, permissions) == -1:
     echo fmt"chmod({fullPath}) failed: {strerror(errno)}"
@@ -85,7 +89,10 @@ proc writeAsUser*(user: UserInfo, filename, content: string,
     if not absolute.existsOrCreateDir:
       setPermissions(absolute, user, 0o755)
   let absolute = user.home / filename
-  writeFileIfNotExists(absolute, content, force)
+  if force:
+    safeFileUpdate(absolute, content, permissions)
+  else:
+    writeFileIfNotExists(absolute, content, false)
   setPermissions(absolute, user, permissions)
 
 proc runCmd*(command: string, args: varargs[string]) =

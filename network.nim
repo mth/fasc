@@ -68,7 +68,7 @@ proc wlanDevice(device: string) =
   echo fmt"Configuring WLAN device {device} for DHCP"
   network("wlan", "Name=wlp*", "DHCP=yes", "IPv6PrivacyExtensions=true")
   wpa_supplicant(device)
-  packagesToInstall.add "wpasupplicant"
+  addPackageUnless("wpasupplicant", "/usr/sbin/wpa_supplicant")
   enableAndStart("systemd-networkd.service", device.supplicantService)
 
 iterator findInterfaces(): string =
@@ -149,14 +149,15 @@ proc ovpnClient*(args: StrMap) =
   const killVPNPath = "/usr/local/bin/kill-vpn"
   writeFile(ovpnPath, [ovpnScript])
   writeFile(killVPNPath, kill_vpn)
-  packagesToInstall.add ["openvpn", "openvpn-systemd-resolved"]
+  if not fileExists("/etc/openvpn/update-systemd-resolved"):
+    packagesToInstall.add ["openvpn", "openvpn-systemd-resolved"]
   enableAndStart "systemd-resolved"
   if user.uid == 0:
     setPermissions(ovpnPath, 0o750)
     setPermissions(killVPNPath, 0o750)
     commitQueue()
   else:
-    packagesToInstall.add "sudo"
+    addPackageUnless("sudo", "/usr/bin/sudo")
     commitQueue()
     groupExec(ovpnPath, user)
     groupExec(killVPNPath, user)

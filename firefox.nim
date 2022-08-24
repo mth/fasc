@@ -77,7 +77,7 @@ proc addFirefoxESR*() =
     pref("privacy.resistFingerprinting", true),
     pref("ui.systemUsesDarkTheme", 1),
   ])
-  packagesToInstall.add "firefox-esr"
+  addPackageUnless("firefox-esr", "/usr/bin/firefox-esr")
 
 proc firefoxConfig*(user: UserInfo) =
     writeAsUser(user, ".mozilla/ff2mpv.py", ff2mpv_script,

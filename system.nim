@@ -264,7 +264,7 @@ proc nfs*(args: StrMap) =
     echo "fasc nfs mount:[ro:][user:]/mount/point=hostname:/export/path"
   if fstab.len != originalLen:
     safeFileUpdate("/etc/fstab", fstab.join("\n") & "\n")
-    packagesToInstall.add "nfs-common"
+    addPackageUnless("nfs-common", "/sbin/mount.nfs")
     if automounts.len != 0:
       systemdReload = true
       startUnits &= automounts

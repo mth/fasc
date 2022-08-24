@@ -32,5 +32,4 @@ proc uploadCam*(args: StrMap) =
                      .replace("{RSYNC_ARGS}", rsync_args), 0o755, true)
   user.writeAsUser(".local/share/applications/upload-cam.desktop",
     upload_cam_desktop.replace("HOME", user.home))
-  if not fileExists("/usr/bin/rsync"):
-    packagesToInstall.add "rsync"
+  addPackageUnless("rsync", "/usr/bin/rsync")

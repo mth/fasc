@@ -1,7 +1,44 @@
+import std/[os, sequtils, strformat, strutils]
+import utils
+
 # TODO
-#  * Parse call plug#begin() ... call plug#end()
 #  * Changing/adding set foo= and PREFIX setlocal foo=
 #    (vim allows multiple assignments after set)
 #    Possible approximation - simple prefix check (could be done with flag to appendMissing)
 #  * Adding unique source directives (can be done with appendMissing)
 #  * Write default colors and some other configurations
+
+func initVim(user: UserInfo): string =
+  user.home / ".config/nvim/init.vim"
+
+proc addVimPlugins(user: UserInfo, plugins: seq[string]) =
+  var addPlugins = plugins.mapIt(fmt"Plug '{it}'")
+  var doubleQuoted = plugins.mapIt(fmt"""Plug "{it}"""")
+  var vimConfig: seq[string]
+  var insertPluginsAt = 0
+  let initFile = user.initVim
+  if initFile.fileExists:
+    var pluginSection = false
+    for line in initFile.lines:
+      vimConfig &= line
+      let stripped = line.strip
+      if stripped == "call plug#begin()":
+        pluginSection = true
+      elif not pluginSection:
+        continue
+      elif stripped == "call plug#end()":
+        insertPluginsAt = vimConfig.len - 1
+      else:
+        var idx = addPlugins.find stripped
+        if idx < 0:
+          idx = doubleQuoted.find stripped
+        if idx >= 0:
+          addPlugins.del idx
+          doubleQuoted.del idx
+  if addPlugins.len > 0:
+    if insertPluginsAt == 0:
+      addPlugins.insert "call plug#begin()"
+      addPlugins.add "call plug#end()"
+    vimConfig.insert(addPlugins, insertPluginsAt)
+    user.writeAsUser(".config/nvim/init.vim", vimConfig.join("\n") & "\n", force=true)
+
