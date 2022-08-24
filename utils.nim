@@ -39,7 +39,7 @@ proc setPermissions*(fullPath: string, permissions: Mode) =
   if chmod(fullPath, permissions) == -1:
     echo fmt"chmod({fullPath}) failed: {strerror(errno)}"
 
-proc setPermissions(fullPath: string, user: UserInfo, permissions: Mode) =
+proc setPermissions*(fullPath: string, user: UserInfo, permissions: Mode) =
   if chown(fullPath, user.uid, user.gid) == -1:
     echo fmt"chown({fullPath}) failed: {strerror(errno)}"
   setPermissions(fullPath, permissions)

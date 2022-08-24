@@ -44,7 +44,7 @@ proc addVimPlugins(user: UserInfo, plugins: seq[string]) =
   let plugScript = user.home / ".config/nvim/autoload/plug.vim"
   if plugins.len > 0 and not plugScript.fileExists:
     user.writeAsUser(".config/nvim/autoload/plug.vim", "")
-    addPackageUnlessExists("wget", "/usr/bin/wget")
+    addPackageUnless("wget", "/usr/bin/wget")
     commitQueue()
     runCmd("wget", "-O", plugScript,
            "https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim")
