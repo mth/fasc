@@ -41,4 +41,11 @@ proc addVimPlugins(user: UserInfo, plugins: seq[string]) =
       addPlugins.add "call plug#end()"
     vimConfig.insert(addPlugins, insertPluginsAt)
     user.writeAsUser(".config/nvim/init.vim", vimConfig.join("\n") & "\n", force=true)
-
+  let plugScript = user.home / ".config/nvim/autoload/plug.vim"
+  if plugins.len > 0 and not plugScript.fileExists:
+    user.writeAsUser(".config/nvim/autoload/plug.vim", "")
+    addPackageUnlessExists("wget", "/usr/bin/wget")
+    commitQueue()
+    runCmd("wget", "-O", plugScript,
+           "https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim")
+    plugScript.setPermissions(user, 0o644)
