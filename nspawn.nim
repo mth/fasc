@@ -13,5 +13,20 @@ proc createKey(user: userInfo, keyfile: string) =
     echo("User ", current_uid, " cannot create key for ", user.name)
     quit 1
 
+func systemdRunArgs(machine: string, command: varargs[string]): seq[string] =
+  @["--machine=" & machine, "--wait", "--service-type=exec" "-PGq"] & @command
+
+proc outputOfCommandAt(machine, input, command: varargs[string]): seq[string] =
+  outputOfCommand(input, "systemd-run", systemdRunArgs(machine, command))
+
+proc writeFileTo(machine, path, owner, mode: string) =
+  var args = @["install", "-D"]
+  if owner != '':
+    args &= ["-o", owner]
+  if mode != '':
+    args &= ["-m", mode]
+  args &= ["/dev/stdin", 
+  for line in outputOfCommandAt(machine, 
+
 proc sshOVPN(user: userInfo, machine: string) =
   
