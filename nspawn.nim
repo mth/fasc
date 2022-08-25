@@ -20,8 +20,7 @@ proc outputOfCommandAt(machine, input: string; command: varargs[string]): seq[st
   outputOfCommand(input, "systemd-run", systemdRunArgs(machine, command))
 
 proc writeTo(machine, dir: string; files: varargs[TarRecord]) =
-  for line in outputOfCommandAt(machine, tar(files), "tar", "-C", dir, "-x"):
-    echo line
+  discard outputOfCommandAt(machine, tar(files), "tar", "-C", dir, "-x"):
 
 proc writeFileTo(machine, path, content: string; mode = 0o644;
                  user = "root"; group = "root") =
