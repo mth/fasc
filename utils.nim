@@ -4,7 +4,7 @@ import std/[sequtils, streams, parseutils, strformat, strutils,
 type StrMap* = Table[string, string]
 type UpdateMap* = Table[string, proc(old: string): string]
 type UserInfo* = tuple[user: string, home: string, uid: Uid, gid: Gid]
-type TarRecord = tuple[prefix, name: string; mode: int; user, group, content: string]
+type TarRecord* = tuple[name: string; mode: int; user, group, content: string]
 
 var packagesToInstall*: seq[string]
 var enableUnits*: seq[string]
@@ -239,7 +239,8 @@ proc tar*(records: varargs[TarRecord]): string =
   var ts: Timespec
   discard clock_gettime(CLOCK_REALTIME, ts)
   for record in records:
-    var h = record.name.alignLeft(100, '\0') &
+    let name = record.name.splitPath
+    var h = name.tail.alignLeft(100, '\0') &
       record.mode.toOct(7) & "\x000000000\x000000000\0" &
       record.content.len.toOct(11) & '\0' &
       ts.tv_sec.BiggestInt.toOct(11) & '\0' & spaces(8) & '0' &
@@ -247,14 +248,14 @@ proc tar*(records: varargs[TarRecord]): string =
       record.user.alignLeft(32, '\0') &
       record.group.alignLeft(32, '\0') &
       "0000000\x000000000\x00" & # device
-      record.prefix.alignLeft(167)
+      name.head.alignLeft(167, '\0')
     var checksum: uint = 0
     for ch in h:
       checksum += ch.uint8
-    h[148..154] = checksum.toOct(6) & '\0'
+    h[148..154] = checksum.int.toOct(6) & '\0'
     result &= h
     let fullLen = record.content.len div 512 * 512
     result &= record.content[0..<fullLen]
     if fullLen < record.content.len:
-      result &= record[fullLen..^1]
+      result &= record.content[fullLen..^1].alignLeft(512, '\0')
   result &= repeat('\0', 1024)
