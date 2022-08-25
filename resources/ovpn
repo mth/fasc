@@ -3,8 +3,12 @@
 set -e
 
 if pidof openvpn > /dev/null; then
-	echo Already running
-	exit 1
+	if [ "`id -u`" = "0" ]; then
+		/usr/bin/killall openvpn
+	else
+		echo Already running
+		exit 1
+	fi
 fi
 
 [ "`id -u`" = "0" ] || exec sudo /usr/local/bin/ovpn
