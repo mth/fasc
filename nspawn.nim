@@ -20,14 +20,13 @@ proc outputOfCommandAt(machine, input: string; command: varargs[string]): seq[st
   outputOfCommand(input, "systemd-run", systemdRunArgs(machine, command))
 
 proc writeTo(machine, dir: string; files: varargs[TarRecord]) =
-  discard outputOfCommandAt(machine, tar(files), "tar", "-C", dir, "-x"):
+  discard outputOfCommandAt(machine, tar(files), "tar", "-C", dir, "-x")
 
-proc writeFileTo(machine, path, content: string; mode = 0o644;
+proc writeFileTo(machine, dir, name, content: string; mode = 0o644;
                  user = "root"; group = "root") =
-  let pathParts = path.splitPath
-  writeTo(machine, pathParts.head, (name: pathParts.tail, mode: mode,
-                                    user: user, group: group, content: content))
+  writeTo(machine, dir, (name: name, mode: mode,
+                         user: user, group: group, content: content))
 
 #proc sshOVPN(user: userInfo, machine: string) =
 
-writeFileTo("dev", "/root/.ssh/authorized_keys", "ssh-ed25519 AAAA", 0o600)
+writeFileTo("dev", "/root", ".ssh/authorized_keys", "ssh-ed25519 AAAA", 0o600)
