@@ -1,7 +1,7 @@
-import std/[os, tables]
+import std/[strformat, os, tables]
 import utils
 
-func runOnScriptSource(command, machine, remoteCommand: string): string = """
+func runOnScriptSource(command, machine, remoteCommand: string): string = fmt"""
 #!/bin/sh
 [ "`id -u`" = "0" ] || exec sudo {command}
 exec systemd-run -tqGM {machine} --wait --service-type=exec {remoteCommand}
@@ -33,6 +33,7 @@ proc fascAt(machine: string, arguments: varargs[string]) =
 proc containerOVPN*(args: StrMap) =
   let machine = args.nonEmptyParam("machine")
   args.userInfo.sudoNoPasswd(
-    runOnScript("/usr/bin/ovpn-" & machine, machine, "/usr/bin/ovpn"),
-    runOnScript("/usr/bin/kill-vpn-" & machine, machine, "/usr/bin/kill-vpn"))
+    runOnScript("/usr/local/bin/ovpn-" & machine, machine, "/usr/local/bin/ovpn"),
+    runOnScript("/usr/local/bin/kill-vpn-" & machine, machine,
+                "systemd-run --scope /usr/local/bin/kill-vpn"))
   machine.fascAt("ovpn", "nosudo")
