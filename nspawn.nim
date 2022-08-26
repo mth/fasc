@@ -1,31 +1,38 @@
-import std/[strformat, os, posix]
-import mktar, utils
+import std/[strformat, os, posix, tables]
+import utils
 
-proc createKey(user: UserInfo, keyfile: string) =
-  var command = fmt"ssh-keygen -t ed25519 -f '{user.home}/.ssh/{keyfile}' -N ''"
-  let current_uid = getuid()
-  if current_uid == user.uid:
-    if execShellCmd(command) != 0:
-      quit 1
-  elif current_uid == 0:
-    runCmd("su", "-c", command, user.user)
-  else:
-    echo("User ", current_uid, " cannot create key for ", user.user)
-    quit 1
+func runOnScriptSource(command, machine, remoteCommand: string): string = """
+#!/bin/sh
+[ "`id -u`" = "0" ] || exec sudo {command}
+exec systemd-run -tqGM {machine} --wait --service-type=exec {remoteCommand}
+"""
+
+proc runOnScript(user: UserInfo, command, machine, remoteCommand: string) =
+  command.safeFileUpdate runOnScriptSource(command, machine, remoteCommand)
+  discard appendMissing("/etc/sudoers", &"{user.user} ALL=(root:root) NOPASSWD: {command}")
 
 func systemdRunArgs(machine: string, command: openarray[string]): seq[string] =
   @["--machine=" & machine, "--wait", "--service-type=exec", "-PGq"] & @command
 
-proc outputOfCommandAt(machine, input: string; command: varargs[string]): seq[string] =
-  outputOfCommand(input, "systemd-run", systemdRunArgs(machine, command))
+proc installFASC*(args: StrMap) =
+  let machine = args.nonEmptyParam("machine")
+  var fascPath = args.getOrDefault "fasc"
+  if fascPath == "":
+    fascPath = paramStr(0).findExe
+    if fascPath == "":
+      fascPath = findExe("fasc")
+      if fascPath == "":
+        echo "Could not find fasc binary"
+        quit 1
+  runCmd("machinectl", machine, "copy-to", fascPath, "/usr/local/bin/fasc")
 
-proc writeTo(machine, dir: string; files: varargs[TarRecord]) =
-  discard outputOfCommandAt(machine, tar(files), "tar", "-C", dir, "-x")
+proc fascAt(machine: string, arguments: varargs[string]) =
+  runCmd("systemd-run", systemdRunArgs(machine, "/usr/local/bin/fasc" & @arguments))
 
-proc sshOVPN(user: UserInfo, machine: string) =
-  let pubKeyFile = user.home / ".ssh/ovpn.pub"
-  if not fileExists(pubKeyFile):
-    user.createKey "ovpn"
-  let pubKey = readFile(pubKeyFile)
-  machine.writeTo("/root", [(".ssh/", 0o700, ""),
-    (".ssh/authorized_keys", 0o600, "command=\"/usr/bin/ovpn\" " & pubKey)].tarRecords)
+# TODO - configure nftables
+proc containerOVPN*(args: StrMap) =
+  let machine = args.nonEmptyParam("machine")
+  let user = args.userInfo
+  user.runOnScript("/usr/bin/ovpn-" & machine, machine, "/usr/bin/ovpn")
+  user.runOnScript("/usr/bin/kill-vpn-" & machine, machine, "/usr/bin/kill-vpn")
+  machine.fascAt("ovpn", "nosudo")

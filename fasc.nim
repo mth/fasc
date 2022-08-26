@@ -1,10 +1,10 @@
 import std/[os, sequtils, strutils, tables]
-import utils, network, sway, apt, system, alsa, shell
+import utils, network, sway, apt, system, alsa, shell, nspawn
 
 func argsToMap(args: seq[string]): StrMap =
   for arg in args:
     let argParts = arg.split('=', maxsplit = 1)
-    result[argParts[0]] = if argParts.len == 0: ""
+    result[argParts[0]] = if argParts.len == 1: ""
                           else: argParts[1]
 
 proc showUser(args: StrMap) =
@@ -32,6 +32,8 @@ let tasks = {
   "nfs": ("Adds NFS mount", nfs),
   "upload-cam": ("upload-cam script", uploadCam),
   "propset": ("set properties in config=/file/path", propset),
+  "install-fasc": ("Install FASC into nspawn container machine=target", installFASC),
+  "nspawn-ovpn": ("Create scripts to run ovpn in container by user=name", containerOVPN),
 }.toTable
 
 if paramCount() == 0:
