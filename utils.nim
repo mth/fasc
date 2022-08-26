@@ -233,3 +233,11 @@ proc modifyProperties*(filename: string, update: openarray[(string, string)],
   for (key, value) in update:
     updateMap[key] = stringFunc(value, onlyEmpty)
   return modifyProperties(filename, updateMap)
+
+proc sudoNoPasswd*(user: UserInfo, paths: varargs[string]) =
+  for path in paths:
+    path.groupExec user
+  addPackageUnless("sudo", "/usr/bin/sudo")
+  commitQueue()
+  discard appendMissing("/etc/sudoers",
+    @paths.toSeq.mapIt(user.user & " ALL=(root:root) NOPASSWD: " & it))

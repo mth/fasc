@@ -157,13 +157,7 @@ proc ovpnClient*(args: StrMap) =
     setPermissions(killVPNPath, 0o750)
     commitQueue()
   else:
-    addPackageUnless("sudo", "/usr/bin/sudo")
-    commitQueue()
-    groupExec(ovpnPath, user)
-    groupExec(killVPNPath, user)
-    discard appendMissing("/etc/sudoers",
-      user.user & " ALL=(root:root) NOPASSWD: " & ovpnPath,
-      user.user & " ALL=(root:root) NOPASSWD: " & killVPNPath)
+    user.sudoNoPasswd ovpnPath, killVPNPath
   runCmd("systemctl", "disable", "openvpn")
   runCmd("systemctl", "stop", "openvpn")
   if not fileExists("/root/.vpn/client.ovpn"):
