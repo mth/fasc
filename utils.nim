@@ -262,3 +262,11 @@ proc tar*(records: varargs[TarRecord]): string =
     if fullLen < record.content.len:
       result &= record.content[fullLen..^1].alignLeft(512, '\0')
   result &= repeat('\0', 1024)
+
+proc tarRecords*(files: openarray[(string, int, string)],
+                 user = "root", group = "root"): seq[TarRecord] =
+  for (path, mode, content) in files:
+    let (name, flag) = if path.endsWith '/': (path[0..^2], TAR_DIR_TYPE)
+                       else: (path, TAR_FILE_TYPE)
+    result &= (name: name, flag: flag, mode: mode,
+                user: user, group: group, content: content)
