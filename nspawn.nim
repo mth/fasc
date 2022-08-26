@@ -15,7 +15,7 @@ func systemdRunArgs(machine: string, command: openarray[string]): seq[string] =
   @["--machine=" & machine, "--wait", "--service-type=exec", "-PGq"] & @command
 
 proc installFASC*(args: StrMap) =
-  let machine = args.nonEmptyParam("machine")
+  let machine = args.nonEmptyParam "machine"
   var fascPath = args.getOrDefault "fasc"
   if fascPath == "":
     fascPath = paramStr(0).findExe
@@ -29,7 +29,7 @@ proc installFASC*(args: StrMap) =
 proc fascAt(machine: string, arguments: varargs[string]) =
   runCmd("systemd-run", systemdRunArgs(machine, "/usr/local/bin/fasc" & @arguments))
 
-# TODO - configure nftables
+# TODO - configure nftables, resolved
 proc containerOVPN*(args: StrMap) =
   let machine = args.nonEmptyParam("machine")
   let user = args.userInfo
