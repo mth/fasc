@@ -1,5 +1,5 @@
 import std/[strformat, os, posix]
-import utils
+import mktar, utils
 
 proc createKey(user: UserInfo, keyfile: string) =
   var command = fmt"ssh-keygen -t ed25519 -f '{user.home}/.ssh/{keyfile}' -N ''"
