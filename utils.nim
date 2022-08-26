@@ -1,10 +1,13 @@
 import std/[sequtils, streams, parseutils, strformat, strutils,
             tables, os, osproc, posix]
 
+const TAR_FILE_TYPE* = '0'
+const TAR_DIR_TYPE*  = '5'
+
 type StrMap* = Table[string, string]
 type UpdateMap* = Table[string, proc(old: string): string]
 type UserInfo* = tuple[user: string, home: string, uid: Uid, gid: Gid]
-type TarRecord* = tuple[name: string; mode: int; user, group, content: string]
+type TarRecord* = tuple[name: string; flag: char; mode: int; user, group, content: string]
 
 var packagesToInstall*: seq[string]
 var enableUnits*: seq[string]
@@ -243,8 +246,8 @@ proc tar*(records: varargs[TarRecord]): string =
     var h = name.tail.alignLeft(100, '\0') &
       record.mode.toOct(7) & "\x000000000\x000000000\0" &
       record.content.len.toOct(11) & '\0' &
-      ts.tv_sec.BiggestInt.toOct(11) & '\0' & spaces(8) & '0' &
-      repeat('\0', 100) & "ustar\x0000" &
+      ts.tv_sec.BiggestInt.toOct(11) & '\0' & spaces(8) &
+      record.flag & repeat('\0', 100) & "ustar\x0000" &
       record.user.alignLeft(32, '\0') &
       record.group.alignLeft(32, '\0') &
       "0000000\x000000000\x00" & # device
