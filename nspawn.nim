@@ -33,7 +33,7 @@ proc fascAt(machine: string, arguments: varargs[string]) =
 proc containerOVPN*(args: StrMap) =
   let machine = args.nonEmptyParam("machine")
   args.userInfo.sudoNoPasswd(
-    runOnScript("/usr/local/bin/ovpn-" & machine, machine, "/usr/local/bin/ovpn"),
-    runOnScript("/usr/local/bin/kill-vpn-" & machine, machine,
-                "systemd-run --scope /usr/local/bin/kill-vpn"))
+    runOnScript("/usr/local/bin/ovpn-" & machine, machine,
+                "systemd-run --scope /usr/local/bin/ovpn"),
+    runOnScript("/usr/local/bin/kill-vpn-" & machine, machine, "/usr/local/bin/kill-vpn"))
   machine.fascAt("ovpn", "nosudo")
