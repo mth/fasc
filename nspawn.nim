@@ -1,4 +1,4 @@
-import std/[strformat, os, posix, tables]
+import std/[strformat, os, tables]
 import utils
 
 func runOnScriptSource(command, machine, remoteCommand: string): string = """

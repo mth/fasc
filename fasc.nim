@@ -1,4 +1,4 @@
-import std/[os, sequtils, strutils, tables]
+import std/[algorithm, os, sequtils, strutils, tables]
 import utils, network, sway, apt, system, alsa, shell, nspawn
 
 func argsToMap(args: seq[string]): StrMap =
@@ -38,7 +38,12 @@ let tasks = {
 
 if paramCount() == 0:
   echo "FAst System Configurator."
-  echo("fasc ", tasks.keys.toSeq.join("|"))
+  echo "fasc command key=value..."
+  echo ""
+  echo "Commands:"
+  for key in tasks.keys.toSeq.sorted:
+    let (description, _) = tasks[key]
+    echo("  ", key.alignLeft(16), ' ', description)
   quit()
 
 if not (paramStr(1) in tasks):
