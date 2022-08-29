@@ -96,6 +96,8 @@ proc bootConf() =
     if appendMissing("/etc/initramfs-tools/modules", "lz4hc", "z3fold"):
       echo "Configured zswap"
       initramfs = true
+  if isAMDCPU() and appendMissing("/etc/initramfs-tools/modules", "amd_pstate"):
+    initramfs = true
   if modifyProperties("/etc/initramfs-tools/initramfs.conf",
                       [("MODULES", "dep")], false) or initramfs:
     runCmd("update-initramfs", "-u")
@@ -163,10 +165,7 @@ proc systemdSleep*(sleepMinutes: int) =
       [("IdleAction", "suspend"), ("IdleActionSec", fmt"{sleepMinutes}min")]) and
      not hasProcess("/usr/bin/sway"):
     runCmd("systemctl", "restart", "systemd-logind.service")
-  let amdPState =
-    isAMDCPU() and appendMissing("/etc/initramfs-tools/modules", "amd_pstate")
-  if modifyProperties("/etc/systemd/sleep.conf", [("AllowSuspendThenHibernate", "no")]) or
-     amdPState:
+  if modifyProperties("/etc/systemd/sleep.conf", [("AllowSuspendThenHibernate", "no")]):
     systemdReload = true
 
 const hdparmConf = "/etc/hdparm.conf"
