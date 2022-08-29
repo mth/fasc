@@ -163,7 +163,10 @@ proc systemdSleep*(sleepMinutes: int) =
       [("IdleAction", "suspend"), ("IdleActionSec", fmt"{sleepMinutes}min")]) and
      not hasProcess("/usr/bin/sway"):
     runCmd("systemctl", "restart", "systemd-logind.service")
-  if modifyProperties("/etc/systemd/sleep.conf", [("AllowSuspendThenHibernate", "no")]):
+  let amdPState =
+    isAMDCPU() and appendMissing("/etc/initramfs-tools/modules", "amd_pstate")
+  if modifyProperties("/etc/systemd/sleep.conf", [("AllowSuspendThenHibernate", "no")]) or
+     amdPState:
     systemdReload = true
 
 const hdparmConf = "/etc/hdparm.conf"
