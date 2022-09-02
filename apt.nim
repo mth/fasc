@@ -91,12 +91,9 @@ proc configureAndPruneAPT*(args: StrMap) =
   installFirmware()
   packagesToInstall.add ["systemd-cron", "unattended-upgrades"]
   defaultPrune("anacron", "cron")
-  try:
-    const anacronTimer = "/etc/systemd/system/anacron.timer"
-    if anacronTimer.expandSymlink == "/dev/null":
-      discard anacronTimer.tryRemoveFile
-  except:
-    discard
+  const anacronTimer = "/etc/systemd/system/anacron.timer"
+  if anacronTimer.readSymlink == "/dev/null":
+    discard anacronTimer.tryRemoveFile
   systemdReload = true
   setupUnattendedUpgrades()
 

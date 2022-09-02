@@ -20,12 +20,9 @@ proc hasBattery*(): bool =
 
 proc hasProcess(exePath: string): bool =
   for kind, subdir in walkDir("/proc"):
-    try:
-      if kind == pcDir and subdir[^1] in {'0'..'9'} and
-          expandSymlink(subdir / "exe") == exePath:
-        return true
-    except:
-      discard
+    if kind == pcDir and subdir[^1] in {'0'..'9'} and
+        readSymlink(subdir / "exe") == exePath:
+      return true
 
 proc propset*(args: StrMap) =
   let file = args.nonEmptyParam("config")

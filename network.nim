@@ -16,11 +16,8 @@ const ovpnScript = readResource("ovpn")
 proc useResolvedStub() =
   const resolvConf = "/etc/resolv.conf"
   const stub = "/run/systemd/resolve/stub-resolv.conf"
-  try:
-    if resolvConf.expandSymlink == stub:
-      return
-  except:
-    discard
+  if resolvConf.readSymlink == stub:
+    return
   if stub.fileExists:
     removeFile resolvConf
     createSymlink stub, resolvConf

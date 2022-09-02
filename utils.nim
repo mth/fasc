@@ -35,6 +35,12 @@ proc addPackageUnless*(packageName, requiredPath: string) =
   if not requiredPath.fileExists:
     packagesToInstall.add packageName
 
+proc readSymlink*(symlink: string): string =
+  try:
+    return expandSymlink(symlink)
+  except:
+    discard
+
 proc setPermissions*(fullPath: string, permissions: Mode) =
   if chmod(fullPath, permissions) == -1:
     echo fmt"chmod({fullPath}) failed: {strerror(errno)}"
