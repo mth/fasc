@@ -9,6 +9,8 @@ proc configureALSA*(args: StrMap) =
   writeFile("/etc/asound.conf", [asoundrc.replace("CARD", "0")])
   packagesToInstall.add ["alsa-utils", "libasound2-plugins"]
 
+# nft add rule inet filter input ip saddr 172.20.0.2 tcp dport 4713 ct state new accept
+
 proc systemPulseAudio*(args: StrMap) =
   packagesToInstall.add "pulseaudio"
   commitQueue()
