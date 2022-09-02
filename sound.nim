@@ -12,11 +12,13 @@ proc configureALSA*(args: StrMap) =
 proc systemPulseAudio*(args: StrMap) =
   packagesToInstall.add "pulseaudio"
   commitQueue()
-  for systemdUser in ["/usr/lib/systemd/user/pulseaudio.socket",
-                      "/usr/lib/systemd/user/pulseaudio.service"]:
+  runCmd("systemctl", "disable", "--global", "pulseaudio.socket", "pulseaudio.service")
+  for systemdUser in ["/etc/systemd/user/pulseaudio.socket",
+                      "/etc/systemd/user/pulseaudio.service"]:
     if systemdUser.readSymlink != "/dev/null":
       discard tryRemoveFile systemdUser
       createSymlink "/dev/null", systemdUser
+      systemdReload = true
   writeFile("/etc/pulse/system.pa", [system_pa], true)
   discard modifyProperties("/etc/pulse/client.conf",
             [("autospawn", "no")], onlyEmpty=false, comment=';')
