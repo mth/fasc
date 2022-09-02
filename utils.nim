@@ -193,13 +193,13 @@ proc appendMissing*(filename: string, needed: openarray[(string, string)]): bool
 proc appendMissing*(filename: string, needed: varargs[string]): bool =
   appendMissing(filename, needed.toSeq.mapIt(("", it)))
 
-proc modifyProperties*(filename: string, update: UpdateMap): bool =
+proc modifyProperties*(filename: string, update: UpdateMap, comment = '#'): bool =
   var updatedConf: seq[string]
   var updateMap = update
   for line in lines(filename):
     updatedConf.add line
     let notSpace = line.skipWhitespace
-    if notSpace >= line.len or line[notSpace] == '#':
+    if notSpace >= line.len or line[notSpace] == comment:
       continue
     var assign = line.skipUntil('=', notSpace)
     var nameEnd = assign - 1
@@ -228,11 +228,11 @@ func stringFunc*(value: string, onlyEmpty = false): proc(old: string): string =
                                       else: old)
 
 proc modifyProperties*(filename: string, update: openarray[(string, string)],
-                       onlyEmpty = true): bool =
+                       onlyEmpty = true, comment = '#'): bool =
   var updateMap: UpdateMap
   for (key, value) in update:
     updateMap[key] = stringFunc(value, onlyEmpty)
-  return modifyProperties(filename, updateMap)
+  return modifyProperties(filename, updateMap, comment)
 
 proc sudoNoPasswd*(user: UserInfo, paths: varargs[string]) =
   for path in paths:

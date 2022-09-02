@@ -8,6 +8,7 @@ proc configureALSA*(args: StrMap) =
   writeFile("/etc/asound.conf", [asoundrc.replace("CARD", "0")])
   packagesToInstall.add ["alsa-utils", "libasound2-plugins"]
 
-proc systemPulseaudio*(args: StrMap) =
+proc systemPulseAudio*(args: StrMap) =
   packagesToInstall.add "pulseaudio"
-
+  discard modifyProperties("/etc/pulse/client.conf",
+            [("autospawn", "no")], onlyEmpty=false, comment=';')
