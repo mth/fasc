@@ -1,5 +1,5 @@
 import std/[algorithm, os, sequtils, strutils, tables]
-import utils, network, sway, apt, system, alsa, shell, nspawn
+import utils, network, sway, apt, system, sound, shell, nspawn
 
 func argsToMap(args: seq[string]): StrMap =
   for arg in args:
