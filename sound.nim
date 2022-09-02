@@ -24,5 +24,5 @@ proc systemPulseAudio*(args: StrMap) =
             [("autospawn", "no")], onlyEmpty=false, comment=';')
   discard modifyProperties("/etc/pulse/daemon.conf",
             [("default-sample-rate", "48000"),
-             ("alternative-sample-rate", "48000")],
+             ("alternate-sample-rate", "48000")],
             comment=';')
