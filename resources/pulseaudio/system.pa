@@ -1,0 +1,6 @@
+#!/usr/bin/pulseaudio -nF
+
+load-module module-alsa-sink control=default
+load-module module-alsa-source
+load-module module-native-protocol-tcp listen=172.20.0.1 auth-anonymous=1 auth-ip-acl=172.20.0.2
+load-module module-suspend-on-idle timeout=3

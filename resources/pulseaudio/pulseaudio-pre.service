@@ -1,0 +1,8 @@
+[Unit]
+Description=Create pulseaudio runtime directory
+After=local-fs.target
+
+[Service]
+Type=oneshot
+Restart=no
+ExecStart=/usr/bin/install -m 755 -o pulse -g audio -d /var/lib/pulse /run/pulse

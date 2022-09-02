@@ -1,0 +1,24 @@
+[Unit]
+Description=Pulseaudio system service
+Requires=pulseaudio-pre.service pulseaudio.socket
+After=pulseaudio-pre.service pulseaudio.socket
+
+[Service]
+ExecStart=/usr/bin/pulseaudio --system --fail --daemonize=no --disallow-exit --disallow-module-loading
+ProtectSystem=strict
+ReadWritePaths=/var/lib/pulse /run/pulse /var/run/pulse
+ProtectKernelLogs=true
+ProtectProc=invisible
+ProtectKernelTunables=yes
+ProtectControlGroups=yes
+ProtectKernelModules=yes
+NoNewPrivileges=yes
+PrivateTmp=true
+MemoryDenyWriteExecute=yes
+NoNewPrivileges=yes
+RestrictNamespaces=yes
+#SystemCallArchitectures=native
+#SystemCallFilter=@system-service
+CapabilityBoundingSet=~CAP_SYS_ADMIN
+Type=notify
+UMask=0077
