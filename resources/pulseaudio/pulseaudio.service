@@ -17,8 +17,9 @@ PrivateTmp=true
 MemoryDenyWriteExecute=yes
 NoNewPrivileges=yes
 RestrictNamespaces=yes
-#SystemCallArchitectures=native
-#SystemCallFilter=@system-service
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
 CapabilityBoundingSet=~CAP_SYS_ADMIN
+Environment=LD_PRELOAD=/usr/local/lib/set-pulse-gid.so
 Type=notify
 UMask=0077
