@@ -2,7 +2,7 @@
 # Defaults!/usr/local/bin/zoom env_keep=WAYLAND_DISPLAY
 
 if [ "`id -u`" != 0 ]; then
-	xhost +si:localuser:zoom
+	xhost +si:localuser:${USER}
 	exec sudo ${SANDBOX}
 fi
 
