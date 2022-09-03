@@ -1,4 +1,4 @@
-import std/[os, strutils, tables]
+import std/[os, posix, strutils, tables]
 import utils
 
 const sandbox_sh = readResource("sandbox.sh")
@@ -15,6 +15,9 @@ proc makeSandbox(invoker, asUser: UserInfo; unit, sandboxScript, command: string
   invoker.sudoNoPasswd "DISPLAY WAYLAND_DISPLAY", sandboxScript
 
 proc downloadZoom(zoomUser: UserInfo, args: StrMap) =
+  if getuid() != 0:
+    echo "Must be root to update zoom"
+    quit 0
   let tarPath = "/tmp/zoom.tar.xz"
   runCmd "wget", "-O", tarPath, args.getOrDefault("zoom", zoom_url)
   removeDir(zoomUser.home / "zoom")
