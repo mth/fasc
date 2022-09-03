@@ -15,7 +15,7 @@ trap stop_zoom INT EXIT
 XDG_RUNTIME_DIR="/run/user/`id -u ${USER}`"
 chmod 770 "/run/user/$SUDO_UID/$WAYLAND_DISPLAY"
 /usr/bin/install -d -o ${USER} -g ${GROUP} -m 700 "$XDG_RUNTIME_DIR"
-systemd-run -P -G --no-ask-password --unit=${UNIT} \
+systemd-run -PG --no-ask-password --service-type=exec --unit=${UNIT} \
 	-p ProtectSystem=strict \
 	-p ProtectKernelTunables=true \
 	-p ProtectKernelModules=true \
