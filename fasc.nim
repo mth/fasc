@@ -1,5 +1,5 @@
 import std/[algorithm, os, sequtils, strutils, tables]
-import utils, network, sway, apt, system, sound, shell, nspawn
+import utils, network, sway, apt, system, sound, shell, nspawn, zoom
 
 func argsToMap(args: seq[string]): StrMap =
   for arg in args:
@@ -35,6 +35,8 @@ let tasks = {
   "propset": ("set properties in config=/file/path", propset),
   "install-fasc": ("Install FASC into nspawn container machine=target", installFASC),
   "nspawn-ovpn": ("Create scripts to run ovpn in container by user=name", containerOVPN),
+  "zoom": ("Install zoom", zoomSandbox),
+  "update-zoom": ("Update zoom install", updateZoom),
 }.toTable
 
 if paramCount() == 0:

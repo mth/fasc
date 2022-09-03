@@ -1,13 +1,14 @@
-import std/strutils
+import std/[os, strformat, strutils, tables]
 import utils
 
 const sandbox_sh = readResource("sandbox.sh")
+const zoom_url = "https://zoom.us/client/latest/zoom_x86_64.tar.xz"
 
 proc makeSandbox(invoker, asUser: UserInfo;
                  unit, sandboxScript, command, env: string) =
   sandboxScript.writeFile sandbox_sh.multiReplace(
     ("${USER}", asUser.user),
-    ("${GROUP}", asUser.group),
+    ("${GROUP}", $asUser.gid),
     ("${HOME}", asUser.home),
     ("${COMMAND}", command),
     ("${SANDBOX}", sandboxScript),
@@ -16,6 +17,28 @@ proc makeSandbox(invoker, asUser: UserInfo;
     ("${UNIT}", unit))
   invoker.sudoNoPasswd "WAYLAND_DISPLAY", sandboxScript
 
-proc zoomSandbox(invoker: UserInfo) =
-  let asUser = (user: "zoom", home: "/home/zoom", )
-  invoker.makeSandbox(
+proc downloadZoom(zoomUser: UserInfo, args: StrMap) =
+  let tarPath = "/tmp/zoom.tar.xz"
+  runCmd "wget", "-O", tarPath, args.getOrDefault("zoom", zoom_url)
+  removeDir(zoomUser.home / "zoom")
+  echo "Extracting ", tarPath, " into ", zoomUser.home
+  runCmd "su", "-c", fmt"tar -C '{zoomUser.home}' -xf '{tarPath}' zoom/", zoomUser.user
+  removeFile tarPath
+
+proc zoomSandbox*(args: StrMap) =
+  let invoker = args.userInfo
+  let asUser =
+    try:
+      userInfo("zoom")
+    except KeyError:
+      runCmd("useradd", "-mNg", $invoker.gid, "-G", "audio,render,video",
+             "-f", "0", "-s", "/bin/false", "zoom")
+      userInfo("zoom")
+  if not fileExists(asUser.home / "zoom/zoom"):
+    asUser.downloadZoom args
+  invoker.makeSandbox(asUser, "Zoom", "/usr/local/bin/zoom",
+                      asUser.home / "zoom/zoom",
+                      fmt"LD_LIBRARY_PATH={asUser.home}/zoom")
+
+proc updateZoom*(args: StrMap) =
+  userInfo("zoom").downloadZoom args

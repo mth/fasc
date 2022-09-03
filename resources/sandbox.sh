@@ -26,5 +26,5 @@ systemd-run -P -G --no-ask-password --unit=${UNIT} \
 	-p 'ReadWritePaths=${HOME} /tmp' \
 	-p User=${USER} -p Group=${GROUP} \
 	-p "BindPaths=/run/user/$SUDO_UID/$WAYLAND_DISPLAY:$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY" \
-	-p "Environment=${ENV}HOME=${HOME} XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR WAYLAND_DISPLAY=$WAYLAND_DISPLAY" \
+	-p "Environment=${ENV}HOME=${HOME} XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR WAYLAND_DISPLAY=$WAYLAND_DISPLAY QT_QPA_PLATFORM=wayland-egl XDG_SESSION_TYPE=wayland" \
 	${COMMAND} "$@"

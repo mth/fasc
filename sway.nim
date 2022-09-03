@@ -23,7 +23,7 @@ exec exec swayidle -w \
   idlehint 20
 """
 
-proc getDefaultLocale(): string =
+proc defaultLocale(): string =
   for line in lines("/etc/default/locale"):
     let strippedLine = line.strip
     if strippedLine.startsWith "LANG=":
@@ -71,7 +71,7 @@ proc runWayland(userInfo: UserInfo, compositor: string) =
     " QT_QPA_PLATFORM=wayland-egl" &
     " XDG_SESSION_TYPE=wayland" &
     " MOZ_WEBRENDER=1" &
-    " LANG=" & getDefaultLocale(),
+    " LANG=" & defaultLocale(),
     "",
     "[Install]",
     "WantedBy=graphical.target",
