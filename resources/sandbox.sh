@@ -1,5 +1,4 @@
 #!/bin/sh
-# Defaults!/usr/local/bin/zoom env_keep=WAYLAND_DISPLAY
 
 if [ "`id -u`" != 0 ]; then
 	xhost +si:localuser:${USER}
