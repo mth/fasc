@@ -22,7 +22,8 @@ proc downloadZoom(zoomUser: UserInfo, args: StrMap) =
   runCmd "wget", "-O", tarPath, args.getOrDefault("zoom", zoom_url)
   removeDir(zoomUser.home / "zoom")
   echo "Extracting ", tarPath, " into ", zoomUser.home
-  runCmd "su", "-c", fmt"tar -C '{zoomUser.home}' -xf '{tarPath}' zoom/", zoomUser.user
+  runCmd "sudo", "-u", zoomUser.user,
+         "tar", "-C", zoomUser.home, "-xf", tarPath, "zoom/"
   removeFile tarPath
 
 proc zoomSandbox*(args: StrMap) =
@@ -32,7 +33,7 @@ proc zoomSandbox*(args: StrMap) =
       userInfo("zoom")
     except KeyError:
       runCmd("useradd", "-mNg", $invoker.gid, "-G", "audio,render,video",
-             "-f", "0", "-s", "/bin/false", "zoom")
+             "-f", "0", "-d", "/var/lib/zoom", "-s", "/bin/false", "zoom")
       userInfo("zoom")
   if not fileExists(asUser.home / "zoom/zoom"):
     asUser.downloadZoom args
