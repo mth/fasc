@@ -1,21 +1,19 @@
-import std/[os, strformat, strutils, tables]
+import std/[os, strutils, tables]
 import utils
 
 const sandbox_sh = readResource("sandbox.sh")
 const zoom_url = "https://zoom.us/client/latest/zoom_x86_64.tar.xz"
+#const zoom_url = "https://zoom.us/client/latest/zoom_amd64.deb"
 
-proc makeSandbox(invoker, asUser: UserInfo;
-                 unit, sandboxScript, command, env: string) =
+proc makeSandbox(invoker, asUser: UserInfo; unit, sandboxScript, command: string) =
   sandboxScript.writeFile sandbox_sh.multiReplace(
     ("${USER}", asUser.user),
     ("${GROUP}", $asUser.gid),
     ("${HOME}", asUser.home),
     ("${COMMAND}", command),
     ("${SANDBOX}", sandboxScript),
-    ("${XHOST}", ""),
-    ("${ENV}", env),
     ("${UNIT}", unit))
-  invoker.sudoNoPasswd "WAYLAND_DISPLAY", sandboxScript
+  invoker.sudoNoPasswd "DISPLAY WAYLAND_DISPLAY", sandboxScript
 
 proc downloadZoom(zoomUser: UserInfo, args: StrMap) =
   let tarPath = "/tmp/zoom.tar.xz"
@@ -37,9 +35,10 @@ proc zoomSandbox*(args: StrMap) =
       userInfo("zoom")
   if not fileExists(asUser.home / "zoom/zoom"):
     asUser.downloadZoom args
+  setPermissions(asUser.home, 0o700)
   invoker.makeSandbox(asUser, "Zoom", "/usr/local/bin/zoom",
-                      asUser.home / "zoom/zoom",
-                      fmt"LD_LIBRARY_PATH={asUser.home}/zoom ")
+                      asUser.home / "zoom/ZoomLauncher")
+  packagesToInstall &= ["libxcb-xtest0", "libxtst6", "x11-xserver-utils"]
 
 proc updateZoom*(args: StrMap) =
   userInfo("zoom").downloadZoom args
