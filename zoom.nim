@@ -27,14 +27,14 @@ proc zoomSandbox*(args: StrMap) =
   let invoker = args.userInfo
   let asUser =
     try:
-      userInfo("zoom")
+      userInfo "zoom"
     except KeyError:
-      runCmd("useradd", "-mNg", $invoker.gid, "-G", "audio,render,video",
-             "-f", "0", "-d", "/var/lib/zoom", "-s", "/bin/false", "zoom")
-      userInfo("zoom")
+      runCmd "useradd", "-mNg", $invoker.gid, "-G", "audio,render,video",
+             "-f", "0", "-d", "/var/lib/zoom", "-s", "/bin/false", "zoom"
+      userInfo "zoom"
   if not fileExists(asUser.home / "zoom/zoom"):
     asUser.downloadZoom args
-  setPermissions(asUser.home, 0o700)
+  setPermissions asUser.home, 0o700
   invoker.makeSandbox(asUser, "Zoom", "/usr/local/bin/zoom",
                       asUser.home / "zoom/ZoomLauncher")
   packagesToInstall &= ["libxcb-xtest0", "libxtst6", "x11-xserver-utils"]
