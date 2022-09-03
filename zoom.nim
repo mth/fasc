@@ -4,13 +4,18 @@ import utils
 const sandbox_sh = readResource("sandbox.sh")
 
 proc makeSandbox(invoker, asUser: UserInfo;
-                 sandboxScript, runScript, unit: string) =
+                 unit, sandboxScript, command, env: string) =
   sandboxScript.writeFile sandbox_sh.multiReplace(
     ("${USER}", asUser.user),
     ("${GROUP}", asUser.group),
     ("${HOME}", asUser.home),
-    ("${RUNSCRIPT}", runScript),
+    ("${COMMAND}", command),
     ("${SANDBOX}", sandboxScript),
     ("${XHOST}", ""),
+    ("${ENV}", env),
     ("${UNIT}", unit))
   invoker.sudoNoPasswd "WAYLAND_DISPLAY", sandboxScript
+
+proc zoomSandbox(invoker: UserInfo) =
+  let asUser = (user: "zoom", home: "/home/zoom", )
+  invoker.makeSandbox(

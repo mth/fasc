@@ -152,6 +152,14 @@ proc commitQueue*() =
     startUnits.reset
   sync()
 
+proc userInfo(pw: ptr Passwd, name: string): UserInfo =
+  if pw == nil:
+     raise newException(KeyError, fmt"Unknown user {name}")
+  (user: $pw.pw_name, home: $pw.pw_dir, uid: pw.pw_uid, gid: pw.pw_gid)
+
+proc userInfo*(name: string): UserInfo =
+  userInfo(getpwnam(name), name)
+
 proc userInfo*(param: StrMap): UserInfo =
   var pw: ptr Passwd
   var uid = getuid()
@@ -171,10 +179,11 @@ proc userInfo*(param: StrMap): UserInfo =
   else:
     pw = getpwuid(uid)
     name = $uid
-  if pw == nil:
-    echo fmt"Unknown user {name}"
+  try:
+    return userInfo(pw, name)
+  except KeyError as e:
+    echo e.msg
     quit 1
-  return (user: $pw.pw_name, home: $pw.pw_dir, uid: pw.pw_uid, gid: pw.pw_gid)
 
 proc appendMissing*(filename: string, needed: openarray[(string, string)]): bool =
   var addLines = @needed
