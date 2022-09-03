@@ -39,7 +39,7 @@ proc zoomSandbox*(args: StrMap) =
     asUser.downloadZoom args
   invoker.makeSandbox(asUser, "Zoom", "/usr/local/bin/zoom",
                       asUser.home / "zoom/zoom",
-                      fmt"LD_LIBRARY_PATH={asUser.home}/zoom")
+                      fmt"LD_LIBRARY_PATH={asUser.home}/zoom ")
 
 proc updateZoom*(args: StrMap) =
   userInfo("zoom").downloadZoom args
