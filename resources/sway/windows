@@ -5,7 +5,7 @@ for_window [app_id="firefox"] {
 for_window [app_id="chrome-token-signing"] floating enable
 for_window [title="User Identification Request"] floating enable
 for_window [title="Password Required - Mozilla Firefox"] floating enable
-for_window [app_id="zoom"] border normal; floating enable
+for_window [title="Leave meeting|Zoom$"] border normal; floating enable
 for_window [class="ioquake3"] {
   move container to workspace 8
   workspace 8
