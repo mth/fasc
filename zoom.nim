@@ -3,7 +3,6 @@ import utils
 
 const sandbox_sh = readResource("sandbox.sh")
 const zoom_url = "https://zoom.us/client/latest/zoom_x86_64.tar.xz"
-#const zoom_url = "https://zoom.us/client/latest/zoom_amd64.deb"
 
 proc makeSandbox(invoker, asUser: UserInfo; unit, sandboxScript, command: string) =
   sandboxScript.writeFile sandbox_sh.multiReplace(
