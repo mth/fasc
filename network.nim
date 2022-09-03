@@ -154,7 +154,7 @@ proc ovpnClient*(args: StrMap) =
     setPermissions(killVPNPath, 0o750)
     commitQueue()
   else:
-    user.sudoNoPasswd ovpnPath, killVPNPath
+    user.sudoNoPasswd "", ovpnPath, killVPNPath
   runCmd("systemctl", "disable", "openvpn")
   runCmd("systemctl", "stop", "openvpn")
   if not fileExists("/root/.vpn/client.ovpn"):

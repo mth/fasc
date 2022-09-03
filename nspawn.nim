@@ -32,7 +32,7 @@ proc fascAt(machine: string, arguments: varargs[string]) =
 # TODO - configure nftables, resolved
 proc containerOVPN*(args: StrMap) =
   let machine = args.nonEmptyParam("machine")
-  args.userInfo.sudoNoPasswd(
+  args.userInfo.sudoNoPasswd("",
     runOnScript("/usr/local/bin/ovpn-" & machine, machine,
                 "systemd-run --scope /usr/local/bin/ovpn"),
     runOnScript("/usr/local/bin/kill-vpn-" & machine, machine, "/usr/local/bin/kill-vpn"))

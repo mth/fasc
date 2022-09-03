@@ -240,10 +240,13 @@ proc modifyProperties*(filename: string, update: openarray[(string, string)],
     updateMap[key] = stringFunc(value, onlyEmpty)
   return modifyProperties(filename, updateMap, comment)
 
-proc sudoNoPasswd*(user: UserInfo, paths: varargs[string]) =
+proc sudoNoPasswd*(user: UserInfo, envKeep: string, paths: varargs[string]) =
+  var rules: seq[string]
   for path in paths:
     path.groupExec user
+    if envKeep.len != 0:
+      rules &= "Defaults!" & path & " env_keep=\"" & envKeep & '"'
+    rules &= user.user & " ALL=(root:root) NOPASSWD: " & path
   addPackageUnless("sudo", "/usr/bin/sudo")
   commitQueue()
-  discard appendMissing("/etc/sudoers",
-    @paths.toSeq.mapIt(user.user & " ALL=(root:root) NOPASSWD: " & it))
+  discard appendMissing("/etc/sudoers", rules)
