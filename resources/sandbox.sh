@@ -13,11 +13,11 @@ stop_zoom
 trap stop_zoom INT EXIT
 
 XDG_RUNTIME_DIR="/run/user/`id -u ${USER}`"
-BIND=""
+BIND="PrivateTmp=no"
 WENV=""
 if [ -n "$WAYLAND_DISPLAY" ]; then
 	chmod 770 "/run/user/$SUDO_UID/$WAYLAND_DISPLAY"
-	BIND="/run/user/$SUDO_UID/$WAYLAND_DISPLAY:$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY"
+	BIND="BindPaths=/run/user/$SUDO_UID/$WAYLAND_DISPLAY:$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY"
 	WENV="WAYLAND_DISPLAY=$WAYLAND_DISPLAY QT_QPA_PLATFORM=wayland-egl QT_WAYLAND_DISABLE_WINDOWDECORATION=1 XDG_SESSION_TYPE=wayland"
 fi
 
@@ -31,6 +31,6 @@ systemd-run -PG --no-ask-password --service-type=exec --unit=${UNIT} \
 	-p CapabilityBoundingSet=~CAP_SYS_ADMIN \
 	-p 'ReadWritePaths=${HOME} /tmp' \
 	-p User=${USER} -p Group=${GROUP} \
-	-p "BindPaths=$BIND" \
+	-p "$BIND" \
 	-p "Environment=HOME=${HOME} XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR DISPLAY=$DISPLAY $WENV" \
 	${COMMAND} "$@"
