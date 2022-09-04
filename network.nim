@@ -1,6 +1,8 @@
 import std/[parseutils, sequtils, strformat, strutils, os, posix, tables]
 import utils
 
+# adding rules is like following:
+# nft add rule inet filter input ip saddr 172.20.0.2 tcp dport 4713 ct state new accept
 const nft_prefix = """
 #!/usr/sbin/nft -f
 

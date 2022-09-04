@@ -22,7 +22,7 @@ let tasks = {
   "tunesys": ("Tune system configuration", tuneSystem),
   "hdparm": ("Configure SATA idle timeouts", hdparm),
   "alsa": ("Configure ALSA dmixer", configureALSA),
-  "pa-tcp": ("Configure PulseAudio server on TCP port", systemPulseAudio),
+  "shared-pa": ("Configure PulseAudio server for shared socket", sharedPulseAudio),
   "bash": ("Configure bash", configureBash),
   "firewall": ("Setup default firewall", enableDefaultFirewall),
   "ovpn": ("Setup openvpn client", ovpnClient),

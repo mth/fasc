@@ -1,0 +1,15 @@
+#!/usr/bin/pulseaudio -nF
+
+# Per-user PulseAudio startup script with static configuration
+.fail
+
+load-module module-device-restore
+load-module module-alsa-card device_id=${CARD}
+
+load-module module-native-protocol-unix auth-anonymous=true
+load-module module-suspend-on-idle timeout=3
+
+# If autoexit on idle is enabled, make sure we only quit when no local session needs us anymore
+load-module module-systemd-login
+
+.nofail
