@@ -4,13 +4,14 @@ import utils
 const sandbox_sh = readResource("sandbox.sh")
 const zoom_url = "https://zoom.us/client/latest/zoom_x86_64.tar.xz"
 
-proc makeSandbox(invoker, asUser: UserInfo; unit, sandboxScript, command: string) =
+proc makeSandbox(invoker, asUser: UserInfo; unit, sandboxScript, command, env: string) =
   sandboxScript.writeFile sandbox_sh.multiReplace(
     ("${USER}", asUser.user),
     ("${GROUP}", $asUser.gid),
     ("${HOME}", asUser.home),
     ("${COMMAND}", command),
     ("${SANDBOX}", sandboxScript),
+    ("${ENV}", env),
     ("${UNIT}", unit))
   invoker.sudoNoPasswd "DISPLAY WAYLAND_DISPLAY", sandboxScript
 
@@ -39,7 +40,8 @@ proc zoomSandbox*(args: StrMap) =
     asUser.downloadZoom args
   setPermissions asUser.home, 0o700
   invoker.makeSandbox(asUser, "Zoom", "/usr/local/bin/zoom",
-                      asUser.home / "zoom/ZoomLauncher")
+                      asUser.home / "zoom/ZoomLauncher",
+                      args.getOrDefault("env"))
   packagesToInstall &= ["libxcb-xtest0", "libxtst6", "x11-xserver-utils"]
 
 proc updateZoom*(args: StrMap) =
