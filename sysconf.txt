@@ -52,7 +52,7 @@ java, gradle
 scripts? screen wrapper, *apt-why, *apt-upgrade
 
 User configuration tasks
-  /etc/groups
+  */etc/groups
   *run-wayland, sway
   vim
   *firefox
