@@ -8,6 +8,12 @@ import utils
 #  * Adding unique source directives (can be done with appendMissing)
 #  * Write default colors and some other configurations
 
+# Colors
+# colorscheme nice
+# set hlsearch
+# filet plugin on
+# sy on
+
 func initVim(user: UserInfo): string =
   user.home / ".config/nvim/init.vim"
 
