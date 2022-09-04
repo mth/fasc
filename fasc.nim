@@ -1,5 +1,5 @@
 import std/[algorithm, os, sequtils, strutils, tables]
-import utils, network, sway, apt, system, sound, shell, nspawn, zoom
+import utils, network, sway, apt, system, sound, shell, nspawn, services, zoom
 
 func argsToMap(args: seq[string]): StrMap =
   for arg in args:
@@ -22,7 +22,8 @@ let tasks = {
   "tunesys": ("Tune system configuration", tuneSystem),
   "hdparm": ("Configure SATA idle timeouts", hdparm),
   "alsa": ("Configure ALSA dmixer", configureALSA),
-  "shared-pa": ("Configure PulseAudio server for shared socket", sharedPulseAudio),
+  "shared-pa": ("Configure PulseAudio server for shared socket [card=1] [user=username]",
+                sharedPulseAudio),
   "bash": ("Configure bash", configureBash),
   "firewall": ("Setup default firewall", enableDefaultFirewall),
   "ovpn": ("Setup openvpn client", ovpnClient),
@@ -35,10 +36,12 @@ let tasks = {
   "propset": ("set properties in config=/file/path", propset),
   "install-fasc": ("Install FASC into nspawn container machine=target", installFASC),
   "nspawn-ovpn": ("Create scripts to run ovpn in container by user=name", containerOVPN),
+  "proxy": ("socket=name[:owner[:group[:mode]]] listen=1234 [bind=host0]\n" &
+            19.spaces & "connect=127.0.0.1:2345 [idle-timeout=10min] [service=foobar]",
+            socketProxy),
   "zoom": ("Install zoom", zoomSandbox),
   "update-zoom": ("Update zoom install", updateZoom),
 }.toTable
-
 if paramCount() == 0:
   echo "FAst System Configurator."
   echo "fasc command key=value..."
