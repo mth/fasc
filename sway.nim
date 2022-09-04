@@ -1,5 +1,5 @@
 import std/[strformat, strutils, os]
-import utils, firefox, system
+import utils, apps, system
 
 const user_config = [
   (".XCompose", readResource("user/XCompose")),

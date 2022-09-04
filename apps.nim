@@ -1,5 +1,8 @@
-import std/[strformat, strutils]
+import std/[os, posix, strformat, strutils, tables]
 import utils
+
+const sandbox_sh = readResource("sandbox.sh")
+const zoom_url = "https://zoom.us/client/latest/zoom_x86_64.tar.xz"
 
 const run_firefox_script = readResource("user/firefox.sh")
 const ff2mpv_script = readResource("ff2mpv/ff2mpv.py")
@@ -86,3 +89,46 @@ proc firefoxConfig*(user: UserInfo) =
                 ff2mpv_host.replace("HOME", user.home), force = true)
     writeAsUser(user, ".config/sway/firefox.sh", run_firefox_script,
                 permissions = 0o755, force = true)
+
+proc makeSandbox(invoker, asUser: UserInfo; unit, sandboxScript, command, env: string) =
+  sandboxScript.writeFile sandbox_sh.multiReplace(
+    ("${USER}", asUser.user),
+    ("${GROUP}", $asUser.gid),
+    ("${HOME}", asUser.home),
+    ("${COMMAND}", command),
+    ("${SANDBOX}", sandboxScript),
+    ("${ENV}", env),
+    ("${UNIT}", unit))
+  invoker.sudoNoPasswd "DISPLAY WAYLAND_DISPLAY", sandboxScript
+
+proc downloadZoom(zoomUser: UserInfo, args: StrMap) =
+  if getuid() != 0:
+    echo "Must be root to update zoom"
+    quit 0
+  let tarPath = "/tmp/zoom.tar.xz"
+  runCmd "wget", "-O", tarPath, args.getOrDefault("zoom", zoom_url)
+  removeDir(zoomUser.home / "zoom")
+  echo "Extracting ", tarPath, " into ", zoomUser.home
+  runCmd "sudo", "-u", zoomUser.user,
+         "tar", "-C", zoomUser.home, "-xf", tarPath, "zoom/"
+  removeFile tarPath
+
+proc zoomSandbox*(args: StrMap) =
+  let invoker = args.userInfo
+  let asUser =
+    try:
+      userInfo "zoom"
+    except KeyError:
+      runCmd "useradd", "-mNg", $invoker.gid, "-G", "audio,render,video",
+             "-f", "0", "-d", "/var/lib/zoom", "-s", "/bin/false", "zoom"
+      userInfo "zoom"
+  if not fileExists(asUser.home / "zoom/zoom"):
+    asUser.downloadZoom args
+  setPermissions asUser.home, 0o700
+  invoker.makeSandbox(asUser, "Zoom", "/usr/local/bin/zoom",
+                      asUser.home / "zoom/ZoomLauncher",
+                      args.getOrDefault("env"))
+  packagesToInstall &= ["libxcb-xtest0", "libxtst6", "x11-xserver-utils"]
+
+proc updateZoom*(args: StrMap) =
+  userInfo("zoom").downloadZoom args
