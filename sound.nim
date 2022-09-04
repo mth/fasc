@@ -25,7 +25,7 @@ proc sharedPulseAudio*(args: StrMap) =
              ("avoid-resampling", "yes")],
             comment=';')
   if mainUID != "":
-    proxy(socketArg="pulse-proxy:pulse:pulse-access:0660",
+    proxy(proxy="pulse-proxy:pulse:pulse-access:0660",
           listen="/run/pulse.native", bindTo="",
           connectTo=fmt"/run/user/{mainUID}/pulse/native",
           exitIdleTime="1min", targetService="",

@@ -1,9 +1,9 @@
 import std/[os, strutils, tables]
 import utils
 
-proc proxy*(socketArg, listen, bindTo, connectTo, exitIdleTime, targetService: string,
+proc proxy*(proxy, listen, bindTo, connectTo, exitIdleTime, targetService: string,
             description = "") =
-  let socketParam = socketArg.split ':'
+  let socketParam = proxy.split ':'
   let socketName = socketParam[0] & ".socket"
   let serviceName = socketParam[0] & ".service"
   let descriptionStr = if description != "": description
@@ -54,7 +54,7 @@ proc proxy*(socketArg, listen, bindTo, connectTo, exitIdleTime, targetService: s
   systemdReload = true
 
 proc socketProxy*(args: StrMap) =
-  proxy(socketArg=args.nonEmptyParam "socket",
+  proxy(proxy=args.nonEmptyParam "proxy",
         listen=args.nonEmptyParam "listen",
         bindTo=args.getOrDefault "bind",
         connectTo=args.nonEmptyParam "connect",
