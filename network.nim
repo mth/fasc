@@ -102,7 +102,7 @@ proc wlan*(args: StrMap) =
 
 proc wifiNet*(args: StrMap) =
   let ssid = args.nonEmptyParam "ssid"
-  stderr.write fmt"{ssid} pasaword: "
+  stderr.write fmt"{ssid} password: "
   let pass = stdin.readLine
   var netConf = "\n"
   for line in outputOfCommand(pass & '\n', "wpa_passphrase", ssid):
