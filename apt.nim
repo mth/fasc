@@ -80,6 +80,8 @@ proc configureAPT*(args: StrMap) =
   preferences("o=Ubuntu", -1)
   if "unstable" notin args:
     preferences("o=Debian,a=unstable", -1)
+  if "testing" notin args:
+    preferences("o=Debian,a=testing", -1)
   for (path, script) in scripts:
     writeFile(path, script)
     echo("Created ", path)
