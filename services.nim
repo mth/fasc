@@ -10,6 +10,14 @@ func descriptionOfName(name, description: string): string =
     return description
   return name.replace('-', ' ').capitalizeAscii
 
+proc addTimer*(name, description: string, options: varargs[string]) =
+  var timer = @["[Unit]", "Description=" & description, "", "[Timer]"]
+  timer.add options
+  timer.add ["", "[Install]", "WantedBy=timers.target", ""]
+  let unitName = name & ".timer"
+  writeFile("/etc/systemd/system" / unitName, timer)
+  enableAndStart(unitName)
+
 proc addService*(name, description: string, depends: openarray[string],
                  exec: string, install="", flags: set[ServiceFlags] = {},
                  options: openarray[string] = [], serviceType="") =
