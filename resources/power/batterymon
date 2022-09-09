@@ -1,9 +1,10 @@
-#!/bin/sh
+#!/bin/bash
 
 set -e
+exec 5<> <(:)
 cd ${BATTERY}
-while sleep 30; do
-	read online < ${MAINS}/online
+while true; do
+	read -t 30 <&5 || read online < ${MAINS}/online
 	read charge_now < ${NOW}
 	read charge_full < ${FULL}
 	[ "$online" = 1 ] || [ $(($charge_now * 60 / $charge_full)) -gt 1 ] || /sbin/poweroff
