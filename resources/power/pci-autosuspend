@@ -5,9 +5,9 @@ cd /sys/bus/pci/devices && for dev in *; do
 done
 
 for ata_power in /sys/bus/pci/devices/*/ata?/power/control; do
-	[ -e "$ata_power" ] && echo auto > "$ata_power"
+	! [ -e "$ata_power" ] || echo auto > "$ata_power"
 done
 
 for scsi_power in /sys/class/scsi_host/host?/link_power_management_policy; do
-	[ -e "$scsi_power" ] && echo min_power > "$scsi_power"
+	! [ -e "$scsi_power" ] || echo min_power > "$scsi_power"
 done

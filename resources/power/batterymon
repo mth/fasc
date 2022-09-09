@@ -1,9 +1,9 @@
 #!/bin/sh
 
 set -e
-cd /sys/class/power_supply/${BATTERY}
+cd ${BATTERY}
 while sleep 30; do
-	read online < /sys/class/power_supply/${MAINS}/online
+	read online < ${MAINS}/online
 	read charge_now < charge_now
 	read charge_full_design < charge_full_design
 	[ "$online" = 1 ] || [ $(($charge_now * 60 / $charge_full_design)) -gt 1 ] || /sbin/poweroff
