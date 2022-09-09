@@ -1,11 +1,12 @@
 import std/[parseutils, sequtils, strformat, strutils, os, tables]
-import utils
+import services, utils
 
 const clean_old_tmp_service = readResource("tmpfs/clean-old-tmp.service")
 const clean_old_tmp_sh = readResource("tmpfs/clean-old-tmp.sh")
-const pci_autosuspend_service = readResource("power/pci-autosuspend.service")
 const pci_autosuspend = readResource("power/pci-autosuspend")
+const batterymon_script = readResource("power/batterymon")
 const sys_psu = "/sys/class/power_supply"
+const batteryType = "Battery"
 
 proc isCPUVendor(vendor: string): bool =
   for line in lines("/proc/cpuinfo"):
@@ -20,7 +21,7 @@ proc findPSU(psuType: string): string =
     if readFile(psu / "type").strip == psuType:
       return psu
 
-proc hasBattery*(): bool = findPSU("Battery").len != 0
+proc hasBattery*(): bool = findPSU(batteryType).len != 0
 
 proc hasProcess(exePath: string): bool =
   for kind, subdir in walkDir("/proc"):
@@ -34,8 +35,7 @@ proc propset*(args: StrMap) =
   properties.del "config"
   discard modifyProperties(file, properties.pairs.toSeq, false)
 
-proc sysctls(args: StrMap) =
-  let battery = hasBattery()
+proc sysctls(args: StrMap, battery: bool) =
   # expect that buffer-bloat restriction on wired connection is routers problem
   let qdisc = args.getOrDefault("default-qdisc",
                                 if battery: "fq_codel"
@@ -212,17 +212,26 @@ proc hdparm*(args: StrMap) =
       writeFile(hdparmConf, conf, true)
       runCmd(hdparmAPM, "resume")
 
-proc autosuspendPCI() =
-  writeFile "/etc/systemd/system/pci-autosuspend.service", [pci_autosuspend_service]
-  safeFileUpdate "/usr/local/sbin/pci-autosuspend", pci_autosuspend, 0o755
-  enableAndStart "pci-autosuspend.service"
+proc batteryMonitor(battery: string) =
+  let path = "/usr/local/sbin/batterymon"
+  path.writeFile [batterymon_script.multiReplace [
+       ("${BATTERY}", battery),
+       ("${MAINS}", findPSU("Mains"))
+    ]]
+  path.setPermissions 0o755
+  addService "batterymon", "Battery monitor service", [], path, "multi-user.target"
 
 proc tuneSystem*(args: StrMap) =
-  sysctls args
+  let battery = findPSU batteryType
+  args.sysctls(battery != "")
   serviceTimeouts()
   bootConf()
   fstab()
-  autosuspendPCI()
+  safeFileUpdate "/usr/local/sbin/pci-autosuspend", pci_autosuspend, 0o755
+  addService "pci-autosuspend", "Enables PCI devices autosuspend", [],
+             "/usr/local/sbin/pci-autosuspend", "multi-user.target"
+  if battery != "":
+    batteryMonitor battery
 
 proc startNTP*(args: StrMap) =
   let ntpServer = args.getOrDefault ""

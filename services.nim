@@ -1,14 +1,18 @@
 import std/[os, strutils, tables]
 import utils
 
+type ServiceFlags* = enum
+  s_sandbox,
+  s_overwrite
+
 func descriptionOfName(name, description: string): string =
   if description != "":
     return description
   return name.replace('-', ' ').capitalizeAscii
 
 proc addService*(name, description: string, depends: openarray[string],
-                 exec: string, options: openarray[string],
-                 serviceType="", install="", force=false) =
+                 exec: string, install="", flags: set[ServiceFlags] = {},
+                 options: openarray[string] = [], serviceType="") =
   var depString = ""
   for dep in depends:
     if dep != "":
@@ -24,19 +28,20 @@ proc addService*(name, description: string, depends: openarray[string],
   service.add ["", "[Service]"]
   if serviceType != "":
     service &= "Type=" & serviceType
-  service.add [
-    "ExecStart=" & exec,
-    "CapabilityBoundingSet=~CAP_SYS_ADMIN",
-    "MemoryDenyWriteExecute=true",
-    "NoNewPrivileges=yes",
-    "SecureBits=nonroot-locked",
-  ]
+  service &= "ExecStart=" & exec
+  if s_sandbox in flags:
+    service &= [
+      "CapabilityBoundingSet=~CAP_SYS_ADMIN",
+      "MemoryDenyWriteExecute=true",
+      "NoNewPrivileges=yes",
+      "SecureBits=nonroot-locked",
+    ]
   service.add options
   if install != "":
     service.add ["", "[Install]", "WantedBy=" & install]
   service.add ""
   let serviceName = name & ".service"
-  writeFile("/etc/systemd/system" / serviceName, service, force)
+  writeFile("/etc/systemd/system" / serviceName, service, s_overwrite in flags)
   if install != "":
     enableAndStart serviceName
 
@@ -44,7 +49,6 @@ proc proxy*(proxy, listen, bindTo, connectTo, exitIdleTime, targetService: strin
             description = "") =
   let socketParam = proxy.split ':'
   let socketName = socketParam[0] & ".socket"
-  let serviceName = socketParam[0] & ".service"
   let descriptionStr = descriptionOfName(socketParam[0], description)
   var socket = @[
     "[Unit]",
@@ -69,7 +73,7 @@ proc proxy*(proxy, listen, bindTo, connectTo, exitIdleTime, targetService: strin
     options.add "PrivateNetwork=yes"
   addService(socketParam[0], descriptionStr, [targetService, socketName],
     "/usr/lib/systemd/systemd-socket-proxyd --exit-idle-time=" &
-      exitIdleTime & ' ' & connectTo, options, force=true)
+      exitIdleTime & ' ' & connectTo, "", {s_sandbox, s_overwrite}, options)
   enableAndStart socketName
   systemdReload = true
 

@@ -1,9 +1,0 @@
-[Unit]
-Description=Enables PCI devices autosuspend
-
-[Service]
-Type=oneshot
-ExecStart=/usr/local/sbin/pci-autosuspend
-
-[Install]
-WantedBy=default.target
