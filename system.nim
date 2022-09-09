@@ -4,7 +4,6 @@ import services, utils
 const clean_old_tmp_service = readResource("tmpfs/clean-old-tmp.service")
 const clean_old_tmp_sh = readResource("tmpfs/clean-old-tmp.sh")
 const pci_autosuspend = readResource("power/pci-autosuspend")
-const batterymon_script = readResource("power/batterymon")
 const sys_psu = "/sys/class/power_supply"
 const batteryType = "Battery"
 
@@ -212,29 +211,24 @@ proc hdparm*(args: StrMap) =
       writeFile(hdparmConf, conf, true)
       runCmd(hdparmAPM, "resume")
 
-proc batteryMonitor(battery: string) =
-  let path = "/usr/local/sbin/batterymon"
-  var now = "energy_now"
-  var full = "energy_full"
-  if not now.fileExists:
-    now = "charge_now"
-    full = "charge_full"
-  path.writeFile [batterymon_script.multiReplace [("${BATTERY}", battery),
-    ("${MAINS}", findPSU("Mains")), ("${NOW}", now), ("${FULL}", full)]]
-  path.setPermissions 0o755
-  addService "batterymon", "Battery monitor service", [], path, "multi-user.target"
+proc batteryMonitor() =
+  packagesToInstall.add "sleepd"
+  commitQueue()
+  if modifyProperties("/etc/default/sleepd",
+                      [("PARAMS", "-b 2 -u 0 -c 30 -I -s 'systemctl suspend'")]):
+    runCmd "systemctl", "restart", "sleepd.service"
 
 proc tuneSystem*(args: StrMap) =
-  let battery = findPSU batteryType
-  args.sysctls(battery != "")
+  let battery = hasBattery()
+  args.sysctls battery
   serviceTimeouts()
   bootConf()
   fstab()
   safeFileUpdate "/usr/local/sbin/pci-autosuspend", pci_autosuspend, 0o755
   addService "pci-autosuspend", "Enables PCI devices autosuspend", [],
              "/usr/local/sbin/pci-autosuspend", "multi-user.target"
-  if battery != "":
-    batteryMonitor battery
+  if battery:
+    batteryMonitor()
 
 proc startNTP*(args: StrMap) =
   let ntpServer = args.getOrDefault ""
