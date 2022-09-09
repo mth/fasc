@@ -15,8 +15,12 @@ proc isCPUVendor(vendor: string): bool =
 proc isAMDCPU*(): bool = isCPUVendor("AuthenticAMD")
 proc isIntelCPU*(): bool = isCPUVendor("GenuineIntel")
 
-proc hasBattery*(): bool =
-  sys_psu.listDir.anyIt(readFile(it / "type").strip == "Battery")
+proc findPSU(psuType: string): string =
+  for psu in sys_psu.listDir:
+    if readFile(psu / "type").strip == psuType:
+      return psu
+
+proc hasBattery*(): bool = findPSU("Battery").len != 0
 
 proc hasProcess(exePath: string): bool =
   for kind, subdir in walkDir("/proc"):
