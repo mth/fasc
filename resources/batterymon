@@ -1,0 +1,8 @@
+#!/bin/sh
+
+set -e
+cd /sys/class/power_supply/${BATTERY}
+while sleep 30
+do [ "`cat /sys/class/power_supply/${MAINS}/online`" = 1 ] \
+|| [ $((`cat charge_now` * 60 / `cat charge_full_design`)) -gt 1 ] || /sbin/poweroff
+done
