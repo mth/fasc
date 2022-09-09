@@ -1,13 +1,51 @@
 import std/[os, strutils, tables]
 import utils
 
+func descriptionOfName(name, description: string): string =
+  if description != "":
+    return description
+  return name.replace('-', ' ').capitalizeAscii
+
+proc addService*(name, description: string, depends: openarray[string],
+                 exec: string, options: openarray[string],
+                 serviceType="", install="", force=false) =
+  var depString = ""
+  for dep in depends:
+    if dep != "":
+      if depString != "":
+        depString &= ' '
+      depString &= dep
+      if '.' notin name:
+        depString &= ".service"
+  var service = @["[Unit]", "Description=" & description]
+  if depString != "":
+    service &= "Requires=" & depString
+    service &= "After=" & depString
+  service.add ["", "[Service]"]
+  if serviceType != "":
+    service &= "Type=" & serviceType
+  service.add [
+    "ExecStart=" & exec,
+    "CapabilityBoundingSet=~CAP_SYS_ADMIN",
+    "MemoryDenyWriteExecute=true",
+    "NoNewPrivileges=yes",
+    "SecureBits=nonroot-locked",
+  ]
+  service.add options
+  if install != "":
+    service.add ["", "[Install]", "WantedBy=" & install]
+  service.add ""
+  let serviceName = name & ".service"
+  writeFile("/etc/systemd/system" / serviceName, service, force)
+  if install != "":
+    enableAndStart serviceName
+
 proc proxy*(proxy, listen, bindTo, connectTo, exitIdleTime, targetService: string,
             description = "") =
   let socketParam = proxy.split ':'
   let socketName = socketParam[0] & ".socket"
   let serviceName = socketParam[0] & ".service"
-  let descriptionStr = if description != "": description
-                       else: socketParam[0].replace('-', ' ').capitalizeAscii
+  let descriptionStr = descriptionOfName(socketParam[0], description)
   var socket = @[
     "[Unit]",
     "Description=" & descriptionStr,
@@ -26,30 +64,12 @@ proc proxy*(proxy, listen, bindTo, connectTo, exitIdleTime, targetService: strin
 
   socket &= ["", "[Install]", "WantedBy=sockets.target", ""]
   writeFile("/etc/systemd/system" / socketName, socket, force=true)
-
-  var serviceDep = targetService
-  if serviceDep != "":
-    if '.' notin serviceDep:
-      serviceDep &= ".service"
-    serviceDep &= ' '
-  var service = @[
-    "[Unit]",
-    "Description=" & descriptionStr & " service",
-    "Requires=" & serviceDep & socketName,
-    "After=" & serviceDep & socketName,
-    "",
-    "[Service]",
-    "ExecStart=" & "/usr/lib/systemd/systemd-socket-proxyd --exit-idle-time=" &
-      exitIdleTime & ' ' & connectTo,
-    "PrivateTmp=yes",
-    "CapabilityBoundingSet=~CAP_SYS_ADMIN",
-    "MemoryDenyWriteExecute=true",
-    "NoNewPrivileges=yes",
-    "SecureBits=nonroot-locked",
-  ]
+  var options = @["PrivateTmp=yes"]
   if listen.startsWith("/") and connectTo.startsWith("/"):
-    service &= "PrivateNetwork=yes"
-  writeFile("/etc/systemd/system" / serviceName, service, force=true)
+    options.add "PrivateNetwork=yes"
+  addService(socketParam[0], descriptionStr, [targetService, socketName],
+    "/usr/lib/systemd/systemd-socket-proxyd --exit-idle-time=" &
+      exitIdleTime & ' ' & connectTo, options, force=true)
   enableAndStart socketName
   systemdReload = true
 
