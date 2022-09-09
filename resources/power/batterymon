@@ -4,7 +4,7 @@ set -e
 cd ${BATTERY}
 while sleep 30; do
 	read online < ${MAINS}/online
-	read charge_now < charge_now
-	read charge_full_design < charge_full_design
-	[ "$online" = 1 ] || [ $(($charge_now * 60 / $charge_full_design)) -gt 1 ] || /sbin/poweroff
+	read charge_now < ${NOW}
+	read charge_full < ${FULL}
+	[ "$online" = 1 ] || [ $(($charge_now * 60 / $charge_full)) -gt 1 ] || /sbin/poweroff
 done

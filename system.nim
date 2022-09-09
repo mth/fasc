@@ -214,10 +214,13 @@ proc hdparm*(args: StrMap) =
 
 proc batteryMonitor(battery: string) =
   let path = "/usr/local/sbin/batterymon"
-  path.writeFile [batterymon_script.multiReplace [
-       ("${BATTERY}", battery),
-       ("${MAINS}", findPSU("Mains"))
-    ]]
+  var now = "energy_now"
+  var full = "energy_full"
+  if not now.fileExists:
+    now = "charge_now"
+    full = "charge_full"
+  path.writeFile [batterymon_script.multiReplace [("${BATTERY}", battery),
+    ("${MAINS}", findPSU("Mains")), ("${NOW}", now), ("${FULL}", full)]]
   path.setPermissions 0o755
   addService "batterymon", "Battery monitor service", [], path, "multi-user.target"
 
