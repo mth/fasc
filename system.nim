@@ -215,8 +215,8 @@ proc batteryMonitor() =
   packagesToInstall.add "sleepd"
   commitQueue()
   if modifyProperties("/etc/default/sleepd",
-                      [("PARAMS", "\"-b 2 -u 0 -c 30 -I -s 'systemctl suspend'\"")],
-                      onlyEmpty=false):
+        [("PARAMS", "\"-b 2 -u 0 -c 30 -I -s '/usr/bin/systemctl suspend'\"")],
+        onlyEmpty=false):
     runCmd "systemctl", "restart", "sleepd.service"
 
 proc tuneSystem*(args: StrMap) =
