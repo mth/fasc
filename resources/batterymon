@@ -2,7 +2,9 @@
 
 set -e
 cd /sys/class/power_supply/${BATTERY}
-while sleep 30
-do [ "`cat /sys/class/power_supply/${MAINS}/online`" = 1 ] \
-|| [ $((`cat charge_now` * 60 / `cat charge_full_design`)) -gt 1 ] || /sbin/poweroff
+while sleep 30; do
+	read online < /sys/class/power_supply/${MAINS}/online
+	read charge_now < charge_now
+	read charge_full_design < charge_full_design
+	[ "$online" = 1 ] || [ $(($charge_now * 60 / $charge_full_design)) -gt 1 ] || /sbin/poweroff
 done
