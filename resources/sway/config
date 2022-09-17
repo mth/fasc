@@ -20,8 +20,10 @@ hide_edge_borders --i3 smart
 
 bindsym $mod+o exec exec ~/.config/sway/firefox.sh --vdesk=$firefox_workspace
 bindsym $mod+g exec /usr/games/xmahjongg
-bindsym $mod+l exec swaylock -f -c 000000
+bindsym Pause exec swaylock -f -c 000000
 bindsym $mod+s exec GRIM_DEFAULT_DIR=/tmp/downloads exec grim
+bindsym ctrl+Print exec XDG_SCREENSHOTS_DIR=/tmp/downloads exec grimshot save area
+bindsym mod5+Print exec XDG_SCREENSHOTS_DIR=/tmp/downloads exec grimshot save window
 bindsym XF86MonBrightnessUp exec brightnessctl -q s +2%
 bindsym XF86MonBrightnessDown exec brightnessctl -q -n30 s 2%-
 bindsym XF86AudioRaiseVolume exec amixer set Master 2+

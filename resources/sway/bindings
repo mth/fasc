@@ -1,6 +1,6 @@
 bindsym $mod+Return exec $term
 bindsym $mod+t exec $term
-bindsym $mod+Shift+s exec systemctl suspend
+bindsym Break exec systemctl suspend
 
 bindsym Mod1+Escape kill
 floating_modifier $mod normal
