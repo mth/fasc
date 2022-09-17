@@ -23,7 +23,7 @@ bindsym $mod+g exec /usr/games/xmahjongg
 bindsym Pause exec swaylock -f -c 000000
 bindsym $mod+s exec GRIM_DEFAULT_DIR=/tmp/downloads exec grim
 bindsym ctrl+Print exec XDG_SCREENSHOTS_DIR=/tmp/downloads exec grimshot save area
-bindsym mod5+Print exec XDG_SCREENSHOTS_DIR=/tmp/downloads exec grimshot save window
+bindsym mod5+Print exec XDG_SCREENSHOTS_DIR=/tmp/downloads exec grimshot save active
 bindsym XF86MonBrightnessUp exec brightnessctl -q s +2%
 bindsym XF86MonBrightnessDown exec brightnessctl -q -n30 s 2%-
 bindsym XF86AudioRaiseVolume exec amixer set Master 2+
