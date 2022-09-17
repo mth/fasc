@@ -1,5 +1,5 @@
 import std/[os, posix, strformat, strutils, tables]
-import utils
+import utils, system
 
 const sandbox_sh = readResource("sandbox.sh")
 const zoom_url = "https://zoom.us/client/latest/zoom_x86_64.tar.xz"
@@ -99,7 +99,9 @@ proc makeSandbox(invoker, asUser: UserInfo; unit, sandboxScript, command, env: s
     ("${SANDBOX}", sandboxScript),
     ("${ENV}", env),
     ("${UNIT}", unit))
-  invoker.sudoNoPasswd "DISPLAY WAYLAND_DISPLAY", sandboxScript
+  let env = if hasBattery(): "DISPLAY WAYLAND_DISPLAY"
+            else: "DISPLAY"
+  invoker.sudoNoPasswd env, sandboxScript
 
 proc downloadZoom(zoomUser: UserInfo, args: StrMap) =
   if getuid() != 0:
