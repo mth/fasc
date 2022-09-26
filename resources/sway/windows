@@ -1,4 +1,4 @@
-for_window [app_id="firefox"] {
+for_window [app_id="Firefox-esr"] {
   move container to workspace $firefox_workspace
   workspace $firefox_workspace
 }
