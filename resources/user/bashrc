@@ -2,7 +2,7 @@ PATH="$HOME/bin:$PATH:$HOME/.opam/default/bin"
 [ -z "$PS1" ] && return
 PS1='\h \w\[\e`[ $? = 0 ]&&echo \e[32m||echo \e[31m`\]/\[\e[0m\] '
 export JAVA_HOME=/usr/lib/jvm/default-java
-alias less='less -cS'
+alias less='less -c'
 alias jgrep='rg -tjava'
 alias bc='bc -l'
 alias ocaml='rlwrap ocaml'
