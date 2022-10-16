@@ -3,6 +3,7 @@ for_window [app_id="Firefox-esr"] {
   workspace $firefox_workspace
 }
 for_window [app_id="chrome-token-signing"] floating enable
+for_window [app_id="eu.web-eid.web-eid"] floating enable
 for_window [title="User Identification Request"] floating enable
 for_window [title="Password Required - Mozilla Firefox"] floating enable
 for_window [title="Leave meeting|Zoom$"] border normal; floating enable

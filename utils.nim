@@ -101,13 +101,25 @@ proc writeAsUser*(user: UserInfo, filename, content: string,
     writeFileIfNotExists(absolute, content, false)
   setPermissions(absolute, user, permissions)
 
-proc runCmd*(command: string, args: varargs[string]) =
+proc runCmd(exitOnError: bool, command: string, args: openarray[string]) =
   let process = startProcess(command, "", args, nil, {poParentStreams, poUsePath})
   let exitCode = process.waitForExit
   if exitCode != 0:
     echo fmt"Executing {command} with {args} failed with exit code {exitCode}"
-    quit 1
+    if exitOnError:
+      quit 1
   process.close
+
+proc runCmd*(command: string, args: varargs[string]) =
+  runCmd(true, command, args)
+
+proc runCmd*(user: UserInfo, exitOnError: bool, command: string, args: varargs[string]) =
+  if getuid() == user.uid:
+    runCmd(exitOnError, command, args)
+  else:
+    runCmd(exitOnError, "systemd-run",
+      @["-qPGp", "User=" & $user.uid, "--working-directory=" & user.home,
+        "--wait", "--service-type=exec", command] & @args)
 
 proc outputOfCommand*(inputString, command: string;
                       args: varargs[string]): seq[string] =

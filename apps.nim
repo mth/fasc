@@ -90,6 +90,16 @@ proc firefoxConfig*(user: UserInfo) =
     writeAsUser(user, ".config/sway/firefox.sh", run_firefox_script,
                 permissions = 0o755, force = true)
 
+proc idCard*(args: StrMap) =
+  let user = args.userInfo
+  # TODO the main idcard setup
+  addPackageUnless "libnss3-tools", "/usr/bin/modutil"
+  commitQueue()
+  let db = fmt"sql:{user.home}/.pki/nssdb"
+  user.runCmd false, "/usr/bin/modutil", "-dbdir", db, "-delete", "opensc-pkcs11"
+  user.runCmd true, "/usr/bin/modutil", "-dbdir", db, "-add", "opensc-pkcs11",
+              "-libfile", "onepin-opensc-pkcs11.so", "-mechanisms", "FRIENDLY"
+
 proc makeSandbox(invoker, asUser: UserInfo; unit, sandboxScript, command, env: string) =
   sandboxScript.writeFile sandbox_sh.multiReplace(
     ("${USER}", asUser.user),
