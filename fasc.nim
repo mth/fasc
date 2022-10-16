@@ -1,5 +1,5 @@
 import std/[algorithm, os, sequtils, strutils, tables]
-import utils, network, sway, apt, system, sound, shell, nspawn, services, apps
+import utils, network, sway, apt, system, sound, shell, nspawn, services, apps, vnc
 
 func argsToMap(args: seq[string]): StrMap =
   for arg in args:
@@ -36,6 +36,7 @@ let tasks = {
   "propset": ("set properties in config=/file/path", propset),
   "install-fasc": ("Install FASC into nspawn container machine=target", installFASC),
   "nspawn-ovpn": ("Create scripts to run ovpn in container by user=name", containerOVPN),
+  "vnc-server": ("Install tigervnc server", installVncServer),
   "proxy": ("proxy=name[:owner[:group[:mode]]] listen=1234 [bind=host0]\n" &
             19.spaces & "connect=127.0.0.1:2345 [idle-timeout=10min] [service=foobar]",
             socketProxy),

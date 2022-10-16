@@ -24,7 +24,7 @@ proc installFASC*(args: StrMap) =
       if fascPath == "":
         echo "Could not find fasc binary"
         quit 1
-  runCmd("machinectl", machine, "copy-to", fascPath, "/usr/local/bin/fasc")
+  runCmd("machinectl", "copy-to", machine, fascPath, "/usr/local/bin/fasc")
 
 proc fascAt(machine: string, arguments: varargs[string]) =
   runCmd("systemd-run", systemdRunArgs(machine, "/usr/local/bin/fasc" & @arguments))
