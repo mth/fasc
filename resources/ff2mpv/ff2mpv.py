@@ -19,7 +19,7 @@ def main():
         height = json.loads(subprocess.run(["swaymsg", "-t", "get_tree"],
                             capture_output=True).stdout)['rect']['height']
         if height:
-            args.append("--ytdl-format=bestvideo[height<=?" + height + "]+bestaudio/best")
+            args.append("--ytdl-format=bestvideo[height<=?" + str(height) + "]+bestaudio/best")
     except:
         final_message = "Couldn't determine screen resolution from swaymsg -t get_tree"
 
