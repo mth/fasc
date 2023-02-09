@@ -27,7 +27,7 @@ proc addService*(name, description: string, depends: openarray[string],
       if depString != "":
         depString &= ' '
       depString &= dep
-      if '.' notin name:
+      if '.' notin dep:
         depString &= ".service"
   var service = @["[Unit]", "Description=" & description]
   if depString != "":
