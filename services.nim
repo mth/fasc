@@ -60,8 +60,12 @@ proc proxy*(proxy, listen, bindTo, connectTo, exitIdleTime, targetService: strin
   let descriptionStr = descriptionOfName(socketParam[0], description)
   var socket = @[
     "[Unit]",
-    "Description=" & descriptionStr,
-    "",
+    "Description=" & descriptionStr
+  ]
+  if ':' in listen:
+    socket.add "Requires=network-online.target"
+    socket.add "After=network-online.target"
+  socket.add ["",
     "[Socket]",
     "ListenStream=" & listen,
   ]
