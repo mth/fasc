@@ -31,4 +31,5 @@ done
 
 echo "VPN is up."
 /bin/ip route del 172.16.0.0/13 || /bin/ip route del 172.16.0.0/12
+/usr/bin/resolvectl flush-caches
 exit 0
