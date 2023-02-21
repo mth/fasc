@@ -31,5 +31,5 @@ while true; do
 	done
 
 	printf "%s 🗓%(%e. %H:%M)T\n" "$OUT"
-	read -t 10 <&5
+	read -t ${1:-1} <&5
 done

@@ -2,7 +2,7 @@ bar {
   position bottom
   mode hide
 
-  status_command exec bash ~/.config/sway/status.sh
+  status_command exec bash ~/.config/sway/status.sh 1
 
   colors {
     statusline #ffff00
