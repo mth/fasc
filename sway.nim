@@ -2,7 +2,7 @@ import std/[strformat, strutils, os]
 import utils, apps, gui, system
 
 const user_config = [
-  (".XCompose", readResource("user/XCompose")),
+  (".XCompose", xcompose),
   (".config/foot/foot.ini", readResource("user/foot.ini")),
   (".config/mpv/mpv.conf", readResource("user/mpv.conf")),
   (".config/gammastep/config.ini", gammastep_ini)

@@ -4,6 +4,7 @@ const font_auto_hinting = readResource("fonts-autohinting.xml")
 const xkb_uml = readResource("uml.xkb")
 const xsession = readResource("icewm/xsession")
 const xdefaults = readResource("icewm/Xdefaults")
+const xcompose* = readResource("user/XCompose")
 const gammastep_ini* = readResource("user/gammastep.ini")
 
 proc disableTracker*(args: StrMap) =
@@ -25,6 +26,7 @@ proc commonGuiSetup*(user: UserInfo) =
 
 proc installX11(user: UserInfo) =
   writeAsUser(user, ".Xdefaults", xdefaults)
+  writeAsUser(user, ".XCompose", xcompose)
   writeAsUser(user, ".config/redshift.conf", gammastep_ini.replace("wayland", "xrandr"))
   packagesToInstall.add ["xserver-xorg", "xserver-xorg-input-evdev",
     "xserver-xorg-video-intel", "lightdm", "x11-utils", "x11-xserver-utils",
