@@ -42,7 +42,8 @@ proc installIceWM*(args: StrMap) =
   let sleepMinutes = defaultSleepMinutes()
   let user = args.userInfo
   writeAsUser(user, ".xsession",
-              xsession.replace("SLEEP_SEC", $((sleepMinutes - 2) * 60)), 0o755)
+              xsession.replace("SLEEP_SEC", $((sleepMinutes - 2) * 60))
+                      .replace("USERNAME", user.user), 0o755)
   packagesToInstall.add ["compton", "icewm", "mirage", "thunar", "xterm", "moc",
     "evince", "fonts-terminus-otb"]
   user.installX11

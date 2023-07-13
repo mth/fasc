@@ -7,7 +7,7 @@ keycode 96 = Next
 keycode 107 = Prior
 KEYMAP
 /usr/bin/xset dpms SLEEP_SEC
-mkdir -m 700 -p /tmp/.mzz-cache
-compton -b
+mkdir -m 700 -p /tmp/.USERNAME-cache
+compton -b --backend glx --vsync opengl-oml --glx-use-copysubbuffermesa --glx-no-stencil
 redshift -oP >/dev/null 2>&1
 exec /usr/bin/icewm
