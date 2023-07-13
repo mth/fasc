@@ -1,16 +1,14 @@
 import std/[strformat, strutils, os]
-import utils, apps, system
+import utils, apps, gui, system
 
 const user_config = [
   (".XCompose", readResource("user/XCompose")),
   (".config/foot/foot.ini", readResource("user/foot.ini")),
   (".config/mpv/mpv.conf", readResource("user/mpv.conf")),
-  (".config/gammastep/config.ini", readResource("user/gammastep.ini"))
+  (".config/gammastep/config.ini", gammastep_ini)
 ]
 
 const sway_config = readResourceDir("sway")
-const xkb_uml = readResource("uml.xkb")
-const font_auto_hinting = readResource("fonts-autohinting.xml")
 const vimfm_desktop = readResource("vimfm.desktop")
 
 # desktop - blank 600, suspend 660; laptop - blank 300, suspend 480
@@ -78,16 +76,10 @@ proc runWayland(userInfo: UserInfo, compositor: string) =
     ""
   ]
   writeFile("/etc/systemd/system/run-wayland.service", service)
-  writeFile("/etc/fonts/conf.d/10-autohinting.conf", [font_auto_hinting])
   enableUnits.add "run-wayland.service"
   packagesToInstall.add(["qtwayland5", "xwayland"])
-  if isIntelCPU():
-    packagesToInstall.add "i965-va-driver"
-  else:
-    packagesToInstall.add "mesa-va-drivers"
   systemdReload = true
-  runCmd("usermod", "-G",
-    "adm,audio,cdrom,input,netdev,kvm,video,render,systemd-journal", user)
+  userInfo.commonGuiSetup
 
 proc configureSway(user: UserInfo, sleepMinutes: int) =
   for (file, conf) in user_config:
@@ -104,7 +96,6 @@ proc swayConf*(args: StrMap) =
 proc swayUnit*(args: StrMap) =
   let userInfo = args.userInfo
   let sleepTime = defaultSleepMinutes()
-  writeFile("/usr/share/X11/xkb/symbols/uml", @[xkb_uml])
   userInfo.configureSway sleepTime
   userInfo.runWayland "/usr/bin/ssh-agent /usr/bin/sway"
   systemdSleep(sleepTime)

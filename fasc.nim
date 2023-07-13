@@ -1,5 +1,5 @@
 import std/[algorithm, os, sequtils, strutils, tables]
-import utils, network, sway, apt, system, sound, shell, nspawn, services, apps, vnc
+import utils, network, gui, sway, apt, system, sound, shell, nspawn, services, apps, vnc
 
 func argsToMap(args: seq[string]): StrMap =
   for arg in args:
@@ -14,6 +14,7 @@ let tasks = {
   "wlan": ("Configure WLAN client with DHCP", wlan),
   "wifinet": ("Add WLAN network ssid=<ssid>", wifiNet),
   "ntp": ("Enable timesyncd, optional ntp=<server>", startNTP),
+  "icewm": ("Install IceWM desktop", installIceWM),
   "sway": ("Configure sway desktop startup", swayUnit),
   "swaycfg": ("Configure sway compositor", swayConf),
   "apt": ("Configure APT defaults", configureAPT),

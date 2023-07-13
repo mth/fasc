@@ -1,0 +1,13 @@
+#!/bin/sh
+
+/usr/bin/xmodmap - <<KEYMAP
+clear lock
+keycode 66 = dead_diaeresis dead_tilde bar
+keycode 96 = Next
+keycode 107 = Prior
+KEYMAP
+/usr/bin/xset dpms SLEEP_SEC
+mkdir -m 700 -p /tmp/.mzz-cache
+compton -b
+redshift -oP >/dev/null 2>&1
+exec /usr/bin/icewm
