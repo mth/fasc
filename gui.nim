@@ -23,17 +23,27 @@ proc commonGuiSetup*(user: UserInfo) =
   else:
     packagesToInstall.add "mesa-va-drivers"
 
+proc installX11(user: UserInfo) =
+  writeAsUser(user, ".Xdefaults", xdefaults)
+  writeAsUser(user, ".config/redshift.conf", gammastep_ini.replace("wayland", "xrandr"))
+  packagesToInstall.add ["xserver-xorg", "xserver-xorg-input-evdev",
+    "xserver-xorg-video-intel", "lightdm", "x11-utils", "x11-xserver-utils",
+    "mesa-utils", "redshift", "mc", "fonts-unifont"]
+  user.commonGuiSetup
+  addFirefoxESR()
+
+proc installLXQT() =
+  packagesToInstall.add ["lxqt", "libio-stringy-perl", "media-player-info",
+    "fonts-hack", "qt5-image-formats-plugins", "qpdfview", "oxygen-icon-theme",
+    "gvfs-backends", "gvfs-fuse", "xscreensaver", "p7zip-full", "moc", "qimgv"]
+  args.userInfo.installX11
+
 proc installIceWM*(args: StrMap) =
   let sleepMinutes = defaultSleepMinutes()
   let user = args.userInfo
   writeAsUser(user, ".xsession",
               xsession.replace("SLEEP_SEC", $((sleepMinutes - 2) * 60)), 0o755)
-  writeAsUser(user, ".Xdefaults", xdefaults)
-  writeAsUser(user, ".config/redshift.conf", gammastep_ini.replace("wayland", "xrandr"))
-  packagesToInstall.add ["xserver-xorg", "xserver-xorg-input-evdev",
-    "xserver-xorg-video-intel", "x11-utils", "x11-xserver-utils", "mesa-utils",
-    "compton", "redshift", "lightdm", "icewm", "mirage", "thunar", "xterm", "moc", "mc",
-    "evince", "fonts-terminus-otb", "fonts-unifont"]
-  user.commonGuiSetup
-  addFirefoxESR()
+  packagesToInstall.add ["compton", "icewm", "mirage", "thunar", "xterm", "moc",
+    "evince", "fonts-terminus-otb"]
+  user.installX11
   systemdSleep sleepMinutes

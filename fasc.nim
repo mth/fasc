@@ -15,6 +15,7 @@ let tasks = {
   "wifinet": ("Add WLAN network ssid=<ssid>", wifiNet),
   "ntp": ("Enable timesyncd, optional ntp=<server>", startNTP),
   "icewm": ("Install IceWM desktop", installIceWM),
+  "lxqt": ("Install LXQT desktop", installLXQT),
   "sway": ("Configure sway desktop startup", swayUnit),
   "swaycfg": ("Configure sway compositor", swayConf),
   "apt": ("Configure APT defaults", configureAPT),
