@@ -32,7 +32,7 @@ proc installX11(user: UserInfo) =
   user.commonGuiSetup
   addFirefoxESR()
 
-proc installLXQT() =
+proc installLXQT*(args: StrMap) =
   packagesToInstall.add ["lxqt", "libio-stringy-perl", "media-player-info",
     "fonts-hack", "qt5-image-formats-plugins", "qpdfview", "oxygen-icon-theme",
     "gvfs-backends", "gvfs-fuse", "xscreensaver", "p7zip-full", "moc", "qimgv"]
