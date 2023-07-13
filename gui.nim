@@ -18,7 +18,8 @@ proc commonGuiSetup*(user: UserInfo) =
   runCmd("usermod", "-G",
     "adm,audio,cdrom,dialout,input,netdev,kvm,video,render,systemd-journal", user.user)
   if isIntelCPU():
-    packagesToInstall.add "i965-va-driver"
+    packagesToInstall.add "intel-media-va-driver" # newer driver, maybe better?
+    # packagesToInstall.add "i965-va-driver"
   else:
     packagesToInstall.add "mesa-va-drivers"
 
