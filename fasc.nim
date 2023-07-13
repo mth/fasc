@@ -44,6 +44,7 @@ let tasks = {
   "zoom": ("Install zoom", zoomSandbox),
   "idcard": ("Configurue ID card", idCard),
   "update-zoom": ("Update zoom install", updateZoom),
+  "disable-tracker": ("Disable GNOME tracker", disableTracker),
 }.toTable
 if paramCount() == 0:
   echo "FAst System Configurator."

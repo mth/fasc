@@ -278,3 +278,9 @@ proc nfs*(args: StrMap) =
     if automounts.len != 0:
       systemdReload = true
       startUnits &= automounts
+
+proc disableTracker*(args: StrMap) =
+  runCmd("systemctl", "--user", "unmask", "tracker-extract-3.service",
+         "tracker-miner-fs-3.service", "tracker-miner-rss-3.service",
+         "tracker-writeback-3.service", "tracker-xdg-portal-3.service",
+         "tracker-miner-fs-control-3.service")
