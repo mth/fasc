@@ -46,7 +46,7 @@ proc installIceWM*(args: StrMap) =
   writeAsUser(user, ".icewm/startup",
               icewm_startup.replace("SLEEP_SEC", $((sleepMinutes - 2) * 60))
                            .replace("USERNAME", user.user), 0o755)
-  packagesToInstall.add ["picom", "icewm", "mirage", "thunar", "urxvt", "moc",
+  packagesToInstall.add ["picom", "icewm", "mirage", "thunar", "xterm", "moc",
                          "evince", "fonts-terminus-otb"]
   user.installX11
   systemdSleep sleepMinutes
