@@ -8,6 +8,5 @@ keycode 107 = Prior
 KEYMAP
 /usr/bin/xset dpms SLEEP_SEC
 mkdir -m 700 -p /tmp/.USERNAME-cache
-picom -b --backend glx --vsync
 redshift -oP >/dev/null 2>&1
-exec /usr/bin/icewm
+picom -b --backend glx --vsync

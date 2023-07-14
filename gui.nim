@@ -2,7 +2,7 @@ import strutils, utils, apps, system
 
 const font_auto_hinting = readResource("fonts-autohinting.xml")
 const xkb_uml = readResource("uml.xkb")
-const xsession = readResource("icewm/xsession")
+const icewm_startup = readResource("icewm/startup")
 const xdefaults = readResource("icewm/Xdefaults")
 const xcompose* = readResource("user/XCompose")
 const gammastep_ini* = readResource("user/gammastep.ini")
@@ -43,10 +43,10 @@ proc installLXQT*(args: StrMap) =
 proc installIceWM*(args: StrMap) =
   let sleepMinutes = defaultSleepMinutes()
   let user = args.userInfo
-  writeAsUser(user, ".xsession",
-              xsession.replace("SLEEP_SEC", $((sleepMinutes - 2) * 60))
-                      .replace("USERNAME", user.user), 0o755)
-  packagesToInstall.add ["picom", "icewm", "mirage", "thunar", "xterm", "moc",
-    "evince", "fonts-terminus-otb"]
+  writeAsUser(user, ".icewm/startup",
+              icewm_startup.replace("SLEEP_SEC", $((sleepMinutes - 2) * 60))
+                           .replace("USERNAME", user.user), 0o755)
+  packagesToInstall.add ["picom", "icewm", "mirage", "thunar", "urxvt", "moc",
+                         "evince", "fonts-terminus-otb"]
   user.installX11
   systemdSleep sleepMinutes
