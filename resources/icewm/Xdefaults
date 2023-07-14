@@ -3,8 +3,7 @@ URxvt.saveLines:2048
 URxvt.cutchars: ‘"’`()*,;<>@[]^{|}\\'
 URxvt.VT100.EightBitInput:False
 URxvt.metaSendsEscape: true
-URxvt.font: -xos4-terminus-medium-r-*-*-22-*-*-*-*-*-iso10646-1
-URxvt.italicFont: -xos4-terminus-medium-o-*-*-22-*-*-*-*-*-iso10646-1
+URxvt.font: xft:DejaVu Sans Mono:pixelsize=20
 URxvt.color1: red2
 URxvt.color2: green2
 URxvt.color4: MediumBlue
@@ -23,8 +22,11 @@ XTerm*metaSendsEscape: true
 XTerm*fastScroll: true
 XTerm*jumpScroll: true
 XTerm*charClass:33:48,36-47:48,58-59:48,61:48,63-64:48,95:48,126:48
-XTerm*font: -xos4-terminus-medium-r-*-*-24-*-*-*-*-*-iso10646-1
-UXTerm*font: -xos4-terminus-medium-r-*-*-24-*-*-*-*-*-iso10646-1
+
+XTerm*faceName: DejaVu Sans Mono
+XTerm*faceSize: 13
+UXTerm*faceName: DejaVu Sans Mono
+UXTerm*faceSize: 13
 *VT100*color1: red2
 *VT100*color2: green2
 *VT100*color4: MediumBlue
