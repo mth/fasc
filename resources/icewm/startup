@@ -9,4 +9,4 @@ KEYMAP
 /usr/bin/xset dpms SLEEP_SEC
 mkdir -m 700 -p /tmp/.USERNAME-cache
 redshift -oP >/dev/null 2>&1
-picom -b --backend glx --vsync
+#picom -b --backend glx --vsync
