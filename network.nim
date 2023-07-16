@@ -172,6 +172,10 @@ const dns_block_service = readResource("dnsblock.service")
 
 proc setupSafeNet*(args: StrMap) =
   configureResolved()
+  let dnsBlockDir = "/var/cache/dnsblock"
+  let resolveUser = userInfo "systemd-resolve"
+  createDir dnsBlockDir
+  setPermissions dnsBlockDir, resolveUser, 0o750
   overrideService "systemd-resolved",
     "BindReadOnlyPaths=/var/cache/dnsblock/dnsblock.txt:/etc/hosts:norbind"
   safeFileUpdate "/etc/systemd/system/start-resolved.service", start_resolved_service
@@ -183,4 +187,5 @@ proc setupSafeNet*(args: StrMap) =
   if modifyProperties("/etc/systemd/resolved.conf",
                       [("DNS", "1.1.1.3"), ("ReadEtcHosts", "yes")], false):
     commitQueue()
+    runCmd "systemctl", "start", "dnsblock.service"
     runCmd "systemctl", "restart", "systemd-resolved.service"
