@@ -53,6 +53,11 @@ proc addService*(name, description: string, depends: openarray[string],
   if install != "":
     enableAndStart serviceName
 
+proc overrideService*(name: string, properties: varargs[string]) =
+  let override = "/etc/systemd/system/" & name & ".service.d/override.conf"
+  writeFile(override, @["[Service]"] & @properties)
+  systemdReload = true
+
 proc proxy*(proxy, listen, bindTo, connectTo, exitIdleTime, targetService: string,
             description = "") =
   let socketParam = proxy.split ':'
@@ -96,3 +101,12 @@ proc socketProxy*(args: StrMap) =
         connectTo=args.nonEmptyParam "connect",
         exitIdleTime=args.getOrDefault("idle-timeout", "10min"),
         targetService=args.getOrDefault "service")
+
+const dns_block_service = readResource("dnsblock.service")
+
+proc safeNet*(args: StrMap) =
+  overrideService "systemd-resolved",
+    "BindReadOnlyPaths=/var/cache/dnsblock/dnsblock.txt:/etc/hosts:norbind"
+  safeFileUpdate "/etc/systemd/system/dnsblock.service", dns_block_service
+  addTimer "dnsblock", "Update DNS filter weekly", "OnBootSec=1min", "OnUnitActiveSec=1w"
+

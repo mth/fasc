@@ -82,10 +82,12 @@ proc listDir*(path: string): seq[string] =
   for _, subdir in walkDir(path):
     result.add subdir
 
-proc writeFile*(filename: string, content: openarray[string], force = false) =
+proc writeFile*(filename: string, content: openarray[string],
+                force = false, permissions: Mode = 0o644) =
   let (dir, _, _) = filename.splitFile
   createDir dir
   writeFileIfNotExists(filename, content.join("\n"), force)
+  setPermissions(filename, permissions)
 
 proc writeAsUser*(user: UserInfo, filename, content: string,
                   permissions: Mode = 0o644, force = false) =

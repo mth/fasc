@@ -1,0 +1,14 @@
+[Unit]
+Description=DNS filter update
+ConditionACPower=true
+After=network.target network-online.target systemd-networkd.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/curl -Lo everything.txt --etag-compare everything.etag --etag-save everything.etag https://raw.githubusercontent.com/blocklistproject/Lists/master/everything.txt
+ExecStartPost=/usr/bin/sh -c "sed -E 's/^[^# ]+ /0.0.0.0 /; /[#_/]|[ .]-|-[.]|-$/d' < everything.txt | cat /etc/hosts - > dnsblock.txt"
+User=systemd-resolve
+Group=systemd-resolve
+ProtectSystem=strict
+ReadWritePaths=/var/cache/dnsblock
+WorkingDirectory=/var/cache/dnsblock
