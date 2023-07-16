@@ -1,0 +1,11 @@
+[Unit]
+Description=Forces resolved startup
+After=systemd-resolved.service
+PartOf=systemd-resolved.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/getent hosts example.com
+
+[Install]
+WantedBy=systemd-resolved.service

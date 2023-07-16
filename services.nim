@@ -101,12 +101,3 @@ proc socketProxy*(args: StrMap) =
         connectTo=args.nonEmptyParam "connect",
         exitIdleTime=args.getOrDefault("idle-timeout", "10min"),
         targetService=args.getOrDefault "service")
-
-const dns_block_service = readResource("dnsblock.service")
-
-proc safeNet*(args: StrMap) =
-  overrideService "systemd-resolved",
-    "BindReadOnlyPaths=/var/cache/dnsblock/dnsblock.txt:/etc/hosts:norbind"
-  safeFileUpdate "/etc/systemd/system/dnsblock.service", dns_block_service
-  addTimer "dnsblock", "Update DNS filter weekly", "OnBootSec=1min", "OnUnitActiveSec=1w"
-

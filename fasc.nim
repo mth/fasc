@@ -56,6 +56,7 @@ let tasks = {
   "zoom": ("Install zoom", zoomSandbox),
   "idcard": ("Configure ID card", idCard),
   "update-zoom": ("Update zoom install", updateZoom),
+  "safenet": ("Setup DNS blocklists", setupSafeNet),
   #"disable-tracker": ("Disable GNOME tracker", disableTracker),
 }.toTable
 if paramCount() == 0:

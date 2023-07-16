@@ -1,5 +1,5 @@
 import std/[parseutils, sequtils, strformat, strutils, os, posix, tables]
-import utils
+import services, utils
 
 # adding rules is like following:
 # nft add rule inet filter input ip saddr 172.20.0.2 tcp dport 4713 ct state new accept
@@ -25,6 +25,7 @@ proc useResolvedStub() =
     createSymlink stub, resolvConf
 
 proc configureResolved() =
+  addPackageUnless "systemd-resolved", "/lib/systemd/system/systemd-resolved.service"
   enableAndStart "systemd-resolved"
   commitQueue()
   useResolvedStub()
@@ -164,3 +165,21 @@ proc ovpnClient*(args: StrMap) =
     setPermissions("/root/.vpn", 0o700)
     echo "Please copy client.ovpn into /root/.vpn"
   useResolvedStub()
+
+const start_resolved_service = readResource("start-resolved.service")
+const dns_block_service = readResource("dnsblock.service")
+
+proc setupSafeNet*(args: StrMap) =
+  configureResolved()
+  overrideService "systemd-resolved",
+    "BindReadOnlyPaths=/var/cache/dnsblock/dnsblock.txt:/etc/hosts:norbind"
+  
+  safeFileUpdate "/etc/systemd/system/start-resolved.service", start_resolved_service
+  safeFileUpdate "/etc/systemd/system/dnsblock.service", dns_block_service
+  addTimer "dnsblock", "Update DNS filter weekly", "OnBootSec=1min", "OnUnitActiveSec=1w"
+  systemdReload = true
+  enableAndStart "dnsblock.timer", "start-resolved.service"
+  if modifyProperties("/etc/systemd/resolved.conf",
+                      [("DNS", "1.1.1.3"), ("ReadEtcHosts", "yes")], false):
+    commitQueue()
+    runCmd "systemctl", "restart", "systemd-resolved.service"
