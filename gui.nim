@@ -60,5 +60,6 @@ proc installIceWM*(args: StrMap) =
     commitQueue()
     copyFile "/usr/share/icewm/preferences", pref
     discard modifyProperties(pref, [("DesktopBackgroundImage",
-              "/usr/share/desktop-base/active-theme/grub/grub-16x9.png")], false)
+                "/usr/share/desktop-base/active-theme/grub/grub-16x9.png"),
+              ("ModSuperIsCtrlAlt", "1")], false)
     setPermissions(pref, user, 0o644)
