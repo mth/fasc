@@ -105,7 +105,7 @@ proc swayUnit*(args: StrMap) =
       createSymlink("/usr/bin/yt-dlp", ytdlAlias)
     except:
       echo("Cannot link /usr/bin/yt-dlp to ", ytdlAlias)
-  addFirefoxESR()
+  addFirefoxESR true
   # fonts-dejavu? fonts-liberation? fonts-freefont-ttf?
   # yt-dlp is in unstable, causes problems here
   packagesToInstall.add ["sway", "swayidle", "openssh-client", "foot",

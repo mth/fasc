@@ -32,7 +32,7 @@ proc installX11(user: UserInfo) =
     "xserver-xorg-video-intel", "lightdm", "x11-utils", "x11-xserver-utils",
     "mesa-utils", "redshift", "mc", "fonts-unifont"]
   user.commonGuiSetup
-  addFirefoxESR()
+  addFirefoxESR false
 
 proc installLXQT*(args: StrMap) =
   packagesToInstall.add ["lxqt", "libio-stringy-perl", "media-player-info",

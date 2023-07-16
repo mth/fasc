@@ -18,7 +18,7 @@ func pref(key: string, value: bool): string =
   fmt"""pref("{key}", {value});"""
 
 # TODO need to add settings to keep the tab/urlbar narrower
-proc addFirefoxESR*() =
+proc addFirefoxESR*(wayland: bool) =
   writeFile("/etc/firefox-esr/optimize.js", [
     pref("browser.aboutConfig.showWarning", false),
     pref("browser.cache.disk.capacity", 262144),
@@ -57,8 +57,9 @@ proc addFirefoxESR*() =
     pref("media.peerconnection.ice.no_host", true),
     pref("media.peerconnection.ice.proxy_only_if_behind_proxy", true),
     pref("media.hardware-video-decoding.force-enabled", true),
-    pref("widget.wayland_dmabuf_backend.enabled", true),
-    pref("widget.wayland-dmabuf-vaapi.enabled", true),
+    if wayland:
+      pref("widget.wayland_dmabuf_backend.enabled", true),
+      pref("widget.wayland-dmabuf-vaapi.enabled", true),
     pref("widget.content.allow-gtk-dark-theme", true),
     #pref("network.cookie.cookieBehavior", 1),
     pref("network.cookie.lifetimePolicy", 2),
