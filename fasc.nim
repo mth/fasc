@@ -54,7 +54,7 @@ let tasks = {
             19.spaces & "connect=127.0.0.1:2345 [idle-timeout=10min] [service=foobar]",
             socketProxy),
   "zoom": ("Install zoom", zoomSandbox),
-  "idcard": ("Configurue ID card", idCard),
+  "idcard": ("Configure ID card", idCard),
   "update-zoom": ("Update zoom install", updateZoom),
   #"disable-tracker": ("Disable GNOME tracker", disableTracker),
 }.toTable
