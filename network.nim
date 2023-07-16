@@ -173,7 +173,6 @@ proc setupSafeNet*(args: StrMap) =
   configureResolved()
   overrideService "systemd-resolved",
     "BindReadOnlyPaths=/var/cache/dnsblock/dnsblock.txt:/etc/hosts:norbind"
-  
   safeFileUpdate "/etc/systemd/system/start-resolved.service", start_resolved_service
   safeFileUpdate "/etc/systemd/system/dnsblock.service", dns_block_service
   addTimer "dnsblock", "Update DNS filter weekly", "OnBootSec=1min", "OnUnitActiveSec=1w"
