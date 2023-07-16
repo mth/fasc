@@ -52,7 +52,8 @@ proc installIceWM*(args: StrMap) =
   writeAsUser(user, ".icewm/toolbar", icewm_toolbar)
   writeAsUser(user, ".icewm/theme", "Theme=\"Infadel2/default.theme\"\n")
   installDesktopPackages args
-  packagesToInstall.add ["icewm", "mirage", "thunar", "xterm", "moc", "evince", "geany"]
+  packagesToInstall.add ["icewm", "mirage", "thunar", "xterm", "moc", "evince", "geany",
+                         "light-locker"]
   user.installX11
   systemdSleep sleepMinutes
   let pref = user.home / ".icewm/preferences"

@@ -1,5 +1,6 @@
 #!/bin/sh
 
+/usr/bin/light-locker --lock-on-suspend&
 /usr/bin/xmodmap - <<KEYMAP
 clear lock
 keycode 66 = dead_diaeresis dead_tilde bar
