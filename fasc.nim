@@ -22,7 +22,7 @@ let tasks = {
   "wifinet": ("Add WLAN network ssid=<ssid>", wifiNet),
   "ntp": ("Enable timesyncd, optional ntp=<server>", startNTP),
   "icewm": ("Install IceWM desktop", installIceWM),
-  "lxqt": ("Install LXQT desktop", installLXQT),
+  #"lxqt": ("Install LXQT desktop", installLXQT),
   "sway": ("Configure sway desktop startup", swayUnit),
   "swaycfg": ("Configure sway compositor", swayConf),
   "apt": ("Configure APT defaults", configureAPT),
@@ -56,7 +56,7 @@ let tasks = {
   "zoom": ("Install zoom", zoomSandbox),
   "idcard": ("Configurue ID card", idCard),
   "update-zoom": ("Update zoom install", updateZoom),
-  "disable-tracker": ("Disable GNOME tracker", disableTracker),
+  #"disable-tracker": ("Disable GNOME tracker", disableTracker),
 }.toTable
 if paramCount() == 0:
   echo "FAst System Configurator."
