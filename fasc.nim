@@ -10,6 +10,13 @@ func argsToMap(args: seq[string]): StrMap =
 proc showUser(args: StrMap) =
   echo args.userInfo
 
+proc commonSystem(args: StrMap) =
+  configureBash args
+  tuneSystem args
+  startNTP args
+  enableDefaultFirewall args
+  configureALSA args
+
 let tasks = {
   "wlan": ("Configure WLAN client with DHCP", wlan),
   "wifinet": ("Add WLAN network ssid=<ssid>", wifiNet),
@@ -21,6 +28,8 @@ let tasks = {
   "apt": ("Configure APT defaults", configureAPT),
   "apt-all": ("Configure APT defaults and prune extraneous packages",
                 configureAndPruneAPT),
+  "common": ("Alias for configuring bash, tunesys, ntp, firewall and alsa",
+             commonSystem),
   "tunesys": ("Tune system configuration", tuneSystem),
   "hdparm": ("Configure SATA idle timeouts", hdparm),
   "alsa": ("Configure ALSA dmixer", configureALSA),
