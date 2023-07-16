@@ -69,6 +69,7 @@ proc wlanDevice(device: string) =
   network("wlan", "Name=wlp*", "DHCP=yes", "IPv6PrivacyExtensions=true")
   wpa_supplicant(device)
   addPackageUnless("wpasupplicant", "/usr/sbin/wpa_supplicant")
+  addPackageUnless("iw", "/usr/sbin/iw")
   enableAndStart("systemd-networkd.service", device.supplicantService)
 
 iterator findInterfaces(): string =

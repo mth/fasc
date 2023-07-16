@@ -100,11 +100,12 @@ proc configureAndPruneAPT*(args: StrMap) =
   setupUnattendedUpgrades()
 
 proc installDesktopPackages*(args: StrMap) =
-  packagesToInstall.add ["ncal", "bc", "pinfo", "strace", "lsof", "rlwrap", "mc", "curl", "unzip"]
+  packagesToInstall.add ["ncal", "bc", "pinfo", "strace", "lsof", "rlwrap",
+                         "mc", "curl", "unzip", "lm-sensors"]
 
 proc installDesktopUIPackages*(args: StrMap) =
   args.installDesktopPackages
-  packagesToInstall.add ["geeqie", "xdg-utils"]
+  packagesToInstall.add ["geeqie", "xdg-utils", "xmahjongg"]
 
 proc installDevel*(args: StrMap) =
   installDesktopPackages(args)

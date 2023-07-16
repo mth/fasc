@@ -23,6 +23,7 @@ proc commonGuiSetup*(user: UserInfo) =
     # packagesToInstall.add "i965-va-driver"
   else:
     packagesToInstall.add "mesa-va-drivers"
+  packagesToInstall.add ["desktop-base", "policykit-1"]
 
 proc installX11(user: UserInfo) =
   writeAsUser(user, ".Xdefaults", xdefaults)
