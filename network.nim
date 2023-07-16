@@ -12,6 +12,7 @@ flush ruleset
 
 const default_firewall = readResource("nftables.conf")
 const ovpnScript = readResource("ovpn")
+const resolvedServicePath = "/lib/systemd/system/systemd-resolved.service"
 
 # TODO parameter to set DNSStubListenerExtra= 
 #      parameter to set default DNS addresses?
@@ -25,7 +26,7 @@ proc useResolvedStub() =
     createSymlink stub, resolvConf
 
 proc configureResolved() =
-  addPackageUnless "systemd-resolved", "/lib/systemd/system/systemd-resolved.service"
+  addPackageUnless "systemd-resolved", resolvedServicePath
   enableAndStart "systemd-resolved"
   commitQueue()
   useResolvedStub()
@@ -171,10 +172,11 @@ const start_resolved_service = readResource("start-resolved.service")
 const dns_block_service = readResource("dnsblock.service")
 
 proc setupSafeNet*(args: StrMap) =
-  configureResolved()
   let dnsBlockDir = "/var/cache/dnsblock"
-  let resolveUser = userInfo "systemd-resolve"
   createDir dnsBlockDir
+  if not resolvedServicePath.fileExists:
+    configureResolved()
+  let resolveUser = userInfo "systemd-resolve"
   setPermissions dnsBlockDir, resolveUser, 0o750
   overrideService "systemd-resolved",
     "BindReadOnlyPaths=/var/cache/dnsblock/dnsblock.txt:/etc/hosts:norbind"
