@@ -1,4 +1,4 @@
-import strutils, utils, apps, system
+import strutils, utils, apps, apt, system
 
 const font_auto_hinting = readResource("fonts-autohinting.xml")
 const xkb_uml = readResource("uml.xkb")
@@ -35,6 +35,7 @@ proc installX11(user: UserInfo) =
   addFirefoxESR false
 
 proc installLXQT*(args: StrMap) =
+  installDesktopPackages args
   packagesToInstall.add ["lxqt", "libio-stringy-perl", "media-player-info",
     "fonts-hack", "qt5-image-formats-plugins", "qpdfview", "oxygen-icon-theme",
     "gvfs-backends", "gvfs-fuse", "xscreensaver", "p7zip-full", "moc", "qimgv"]
@@ -46,6 +47,7 @@ proc installIceWM*(args: StrMap) =
   writeAsUser(user, ".icewm/startup",
               icewm_startup.replace("SLEEP_SEC", $((sleepMinutes - 2) * 60))
                            .replace("USERNAME", user.user), 0o755)
-  packagesToInstall.add ["icewm", "mirage", "thunar", "xterm", "moc", "evince"]
+  installDesktopPackages args
+  packagesToInstall.add ["icewm", "mirage", "thunar", "xterm", "moc", "evince", "geany"]
   user.installX11
   systemdSleep sleepMinutes

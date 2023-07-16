@@ -31,6 +31,7 @@ let tasks = {
   "ovpn": ("Setup openvpn client", ovpnClient),
   "desktop-packages": ("Install desktop packages", installDesktopPackages),
   "gui-packages": ("Install GUI desktop packages", installDesktopUIPackages),
+  "beginner-devel": ("Install development packages for beginner", beginnerDevel),
   "devel": ("Install development packages", installDevel),
   "showuser": ("Shows user", showUser),
   "nfs": ("Adds NFS mount", nfs),

@@ -19,7 +19,7 @@ func pref(key: string, value: bool): string =
 
 # TODO need to add settings to keep the tab/urlbar narrower
 proc addFirefoxESR*(wayland: bool) =
-  writeFile("/etc/firefox-esr/optimize.js", [
+  var prefs = @[
     pref("browser.aboutConfig.showWarning", false),
     pref("browser.cache.disk.capacity", 262144),
     pref("browser.cache.offline.enable", false),
@@ -57,9 +57,6 @@ proc addFirefoxESR*(wayland: bool) =
     pref("media.peerconnection.ice.no_host", true),
     pref("media.peerconnection.ice.proxy_only_if_behind_proxy", true),
     pref("media.hardware-video-decoding.force-enabled", true),
-    if wayland:
-      pref("widget.wayland_dmabuf_backend.enabled", true),
-      pref("widget.wayland-dmabuf-vaapi.enabled", true),
     pref("widget.content.allow-gtk-dark-theme", true),
     #pref("network.cookie.cookieBehavior", 1),
     pref("network.cookie.lifetimePolicy", 2),
@@ -79,8 +76,12 @@ proc addFirefoxESR*(wayland: bool) =
     pref("privacy.clearOnShutdown.offlineApps", true),
     pref("privacy.firstparty.isolate", true),
     pref("privacy.resistFingerprinting", true),
-    pref("ui.systemUsesDarkTheme", 1),
-  ])
+    pref("ui.systemUsesDarkTheme", 1)
+  ]
+  if wayland:
+    prefs &= pref("widget.wayland_dmabuf_backend.enabled", true)
+    prefs &= pref("widget.wayland-dmabuf-vaapi.enabled", true)
+  writeFile("/etc/firefox-esr/optimize.js", prefs);
   addPackageUnless("firefox-esr", "/usr/bin/firefox-esr")
 
 proc firefoxConfig*(user: UserInfo) =

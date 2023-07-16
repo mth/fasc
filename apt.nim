@@ -108,4 +108,8 @@ proc installDesktopUIPackages*(args: StrMap) =
 
 proc installDevel*(args: StrMap) =
   installDesktopPackages(args)
-  packagesToInstall.add ["build-essential", "git"]
+  packagesToInstall.add ["build-essential", "git", "nim"]
+
+proc beginnerDevel*(args: StrMap) =
+  installDevel args
+  packagesToInstall.add ["scratch", "thonny", "ocaml", "utop", "libgraphics-ocaml-dev"]
