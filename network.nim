@@ -188,6 +188,6 @@ proc setupSafeNet*(args: StrMap) =
   firefoxParanoid()
   if modifyProperties("/etc/systemd/resolved.conf",
                       [("DNS", "1.1.1.3"), ("ReadEtcHosts", "yes")], false):
-    commitQueue()
     runCmd "systemctl", "start", "dnsblock.service"
+    commitQueue()
     runCmd "systemctl", "restart", "systemd-resolved.service"
