@@ -175,7 +175,8 @@ proc setupSafeNet*(args: StrMap) =
   createDir dnsBlockDir
   writeFile(dnsBlockDir & "/hosts.block", [
     "0.0.0.0 youtube.com", "0.0.0.0 www.youtube.com",
-    "0.0.0.0 m.youtube.com", "0.0.0.0 i.ytimg.com"])
+    "0.0.0.0 m.youtube.com", "0.0.0.0 i.ytimg.com",
+    "0.0.0.0 www.reddit.com", "0.0.0.0 old.reddit.com"])
   if not resolvedServicePath.fileExists:
     configureResolved()
   let resolveUser = userInfo "systemd-resolve"
