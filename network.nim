@@ -1,5 +1,5 @@
 import std/[parseutils, sequtils, strformat, strutils, os, posix, tables]
-import services, utils
+import apps, services, utils
 
 # adding rules is like following:
 # nft add rule inet filter input ip saddr 172.20.0.2 tcp dport 4713 ct state new accept
@@ -179,6 +179,7 @@ proc setupSafeNet*(args: StrMap) =
   addTimer "dnsblock", "Update DNS filter weekly", "OnBootSec=1min", "OnUnitActiveSec=1w"
   systemdReload = true
   enableAndStart "dnsblock.timer", "start-resolved.service"
+  firefoxParanoid()
   if modifyProperties("/etc/systemd/resolved.conf",
                       [("DNS", "1.1.1.3"), ("ReadEtcHosts", "yes")], false):
     commitQueue()

@@ -27,6 +27,7 @@ proc addFirefoxESR*(wayland: bool) =
     pref("browser.fixup.alternate.enabled", false),
     pref("browser.formfill.enable", false),
     pref("browser.newtabpage.enhanced", false),
+    pref("browser.contentblocking.category", "strict"),
     pref("browser.privatebrowsing.autostart", true),
     #pref("browser.proton.enabled", false),
     #pref("browser.safebrowsing.malware.enabled", false),
@@ -61,6 +62,7 @@ proc addFirefoxESR*(wayland: bool) =
     #pref("network.cookie.cookieBehavior", 1),
     pref("network.cookie.lifetimePolicy", 2),
     pref("network.dns.disablePrefetch", true),
+    pref("network.prefetch-next", false),
     #pref("network.http.referer.spoofSource", true),
     pref("network.http.referer.trimmingPolicy", 1),
     #pref("network.http.sendRefererHeader", 1),
@@ -83,6 +85,16 @@ proc addFirefoxESR*(wayland: bool) =
     prefs &= pref("widget.wayland-dmabuf-vaapi.enabled", true)
   writeFile("/etc/firefox-esr/optimize.js", prefs);
   addPackageUnless("firefox-esr", "/usr/bin/firefox-esr")
+
+proc firefoxParanoid*() =
+  writeFile("/etc/firefox-esr/paranoid.js", [
+    pref("geo.enabled", false),
+    pref("media.navigator.enabled", false),
+    pref("network.cookie.cookieBehavior", 1),
+    pref("network.cookie.cookieBehavior.pbmode", 1),
+    pref("webgl.disabled", true),
+    pref("dom.event.clipboardevents.enabled", false),
+  ])
 
 proc firefoxConfig*(user: UserInfo) =
     writeAsUser(user, ".mozilla/ff2mpv.py", ff2mpv_script,
