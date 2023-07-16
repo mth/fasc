@@ -168,7 +168,6 @@ proc ovpnClient*(args: StrMap) =
     echo "Please copy client.ovpn into /root/.vpn"
   useResolvedStub()
 
-const start_resolved_service = readResource("start-resolved.service")
 const dns_block_service = readResource("dnsblock.service")
 
 proc setupSafeNet*(args: StrMap) =
@@ -183,12 +182,12 @@ proc setupSafeNet*(args: StrMap) =
   setPermissions dnsBlockDir, resolveUser, 0o750
   overrideService "systemd-resolved",
     "BindReadOnlyPaths=/var/cache/dnsblock/hosts:/etc/hosts:norbind"
-  safeFileUpdate "/etc/systemd/system/start-resolved.service", start_resolved_service
   safeFileUpdate "/etc/systemd/system/dnsblock.service", dns_block_service
   addTimer "dnsblock", "Update DNS filter weekly", "OnBootSec=1min", "OnUnitActiveSec=1w"
   systemdReload = true
   enableAndStart "dnsblock.timer", "start-resolved.service"
   firefoxParanoid()
+  appendRcLocal "/usr/bin/getent hosts example.com&"
   if modifyProperties("/etc/systemd/resolved.conf",
                       [("DNS", "1.1.1.3"), ("ReadEtcHosts", "yes")], false):
     runCmd "systemctl", "start", "dnsblock.service"

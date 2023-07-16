@@ -222,6 +222,12 @@ proc appendMissing*(filename: string, needed: openarray[(string, string)]): bool
 proc appendMissing*(filename: string, needed: varargs[string]): bool =
   appendMissing(filename, needed.toSeq.mapIt(("", it)))
 
+proc appendRcLocal*(needed: varargs[string]) =
+  let rc = "/etc/rc.local"
+  rc.writeFileIfNotExists "#!/bin/sh\n\n", false
+  rc.setPermissions 0o755
+  discard rc.appendMissing needed
+
 proc modifyProperties*(filename: string, update: UpdateMap, comment = '#'): bool =
   var updatedConf: seq[string]
   var updateMap = update
