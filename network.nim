@@ -174,12 +174,15 @@ const dns_block_service = readResource("dnsblock.service")
 proc setupSafeNet*(args: StrMap) =
   let dnsBlockDir = "/var/cache/dnsblock"
   createDir dnsBlockDir
+  writeFile(dnsBlockDir & "/hosts.block", [
+    "0.0.0.0 youtube.com", "0.0.0.0 www.youtube.com",
+    "0.0.0.0 m.youtube.com", "0.0.0.0 i.ytimg.com"])
   if not resolvedServicePath.fileExists:
     configureResolved()
   let resolveUser = userInfo "systemd-resolve"
   setPermissions dnsBlockDir, resolveUser, 0o750
   overrideService "systemd-resolved",
-    "BindReadOnlyPaths=/var/cache/dnsblock/dnsblock.txt:/etc/hosts:norbind"
+    "BindReadOnlyPaths=/var/cache/dnsblock/hosts:/etc/hosts:norbind"
   safeFileUpdate "/etc/systemd/system/start-resolved.service", start_resolved_service
   safeFileUpdate "/etc/systemd/system/dnsblock.service", dns_block_service
   addTimer "dnsblock", "Update DNS filter weekly", "OnBootSec=1min", "OnUnitActiveSec=1w"
