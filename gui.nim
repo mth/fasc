@@ -7,6 +7,7 @@ const icewm_toolbar = readResource("icewm/toolbar")
 const xdefaults = readResource("icewm/Xdefaults")
 const xcompose* = readResource("user/XCompose")
 const gammastep_ini* = readResource("user/gammastep.ini")
+const tearfree = readResource("icewm/20-intel.conf")
 
 proc disableTracker*(args: StrMap) =
   runCmd("systemctl", "--user", "unmask", "tracker-extract-3.service",
@@ -64,3 +65,4 @@ proc installIceWM*(args: StrMap) =
                 "/usr/share/desktop-base/active-theme/grub/grub-16x9.png"),
               ("ModSuperIsCtrlAlt", "1")], false)
     setPermissions(pref, user, 0o644)
+  writeFile "/etc/X11/xorg.conf.d/20-intel.conf", [tearfree]
