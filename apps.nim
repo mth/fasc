@@ -77,10 +77,10 @@ proc addFirefoxESR*(wayland: bool) =
     pref("privacy.clearOnShutdown.history", true),
     pref("privacy.clearOnShutdown.offlineApps", true),
     pref("privacy.firstparty.isolate", true),
-    pref("privacy.resistFingerprinting", true),
     pref("ui.systemUsesDarkTheme", 1)
   ]
   if wayland:
+    prefs &= pref("privacy.resistFingerprinting", true)
     prefs &= pref("widget.wayland_dmabuf_backend.enabled", true)
     prefs &= pref("widget.wayland-dmabuf-vaapi.enabled", true)
   writeFile("/etc/firefox-esr/optimize.js", prefs);
@@ -93,7 +93,6 @@ proc firefoxParanoid*() =
     pref("network.cookie.cookieBehavior", 1),
     pref("network.cookie.cookieBehavior.pbmode", 1),
     pref("webgl.disabled", true),
-    pref("dom.event.clipboardevents.enabled", false),
   ])
 
 proc firefoxConfig*(user: UserInfo) =
