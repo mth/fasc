@@ -226,7 +226,7 @@ proc inMemoryJournal() =
     conf &= [("RuntimeMaxUse", "32M"), ("ForwardToSyslog", "no")]
   else:
     conf &= ("RuntimeMaxUse", "16M")
-  if modifyProperties("/etc/systemd/journald.conf", conf, onlyEmpty=false):
+  if modifyProperties("/etc/systemd/journald.conf", conf):
     runCmd "systemctl", "restart", "systemd-journald.service"
 
 proc tuneSystem*(args: StrMap) =
