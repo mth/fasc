@@ -219,15 +219,22 @@ proc batteryMonitor() =
         onlyEmpty=false):
     runCmd "systemctl", "restart", "sleepd.service"
 
+proc inMemoryJournal() =
+  if modifyProperties("/etc/systemd/journald.conf",
+        [("Storage", "volatile"), ("RuntimeMaxUse", "16M")], onlyEmpty=false):
+    runCmd "systemctl", "restart", "systemd-journald.service"
+
 proc tuneSystem*(args: StrMap) =
   let battery = hasBattery()
   args.sysctls battery
   serviceTimeouts()
   bootConf()
   fstab()
-  safeFileUpdate "/usr/local/sbin/pci-autosuspend", pci_autosuspend, 0o755
-  addService "pci-autosuspend", "Enables PCI devices autosuspend", [],
-             "/usr/local/sbin/pci-autosuspend", "multi-user.target"
+  inMemoryJournal()
+  if listDir("/sys/bus/pci/devices").len > 0:
+    safeFileUpdate "/usr/local/sbin/pci-autosuspend", pci_autosuspend, 0o755
+    addService "pci-autosuspend", "Enables PCI devices autosuspend", [],
+               "/usr/local/sbin/pci-autosuspend", "multi-user.target"
   if battery:
     batteryMonitor()
 
