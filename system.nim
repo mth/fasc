@@ -220,8 +220,13 @@ proc batteryMonitor() =
     runCmd "systemctl", "restart", "sleepd.service"
 
 proc inMemoryJournal() =
-  if modifyProperties("/etc/systemd/journald.conf",
-        [("Storage", "volatile"), ("RuntimeMaxUse", "16M")], onlyEmpty=false):
+  var conf = @[("Storage", "volatile")]
+  let logDev = outputOfCommand("/usr/bin/df", "--output=source", "/var/log")
+  if logDev.len >= 2 and logDev[1].startsWith("/dev/mmcblk"):
+    conf &= [("RuntimeMaxUse", "32M"), ("ForwardToSyslog", "no")]
+  else:
+    conf &= ("RuntimeMaxUse", "16M")
+  if modifyProperties("/etc/systemd/journald.conf", conf, onlyEmpty=false):
     runCmd "systemctl", "restart", "systemd-journald.service"
 
 proc tuneSystem*(args: StrMap) =
