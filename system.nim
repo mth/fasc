@@ -230,6 +230,8 @@ proc inMemoryJournal() =
     runCmd "systemctl", "restart", "systemd-journald.service"
     runCmd "rm", "-rf", "/var/log/journal"
 
+# TODO comment out pam_motd.so from /etc/pam.d/sshd
+
 proc tuneSystem*(args: StrMap) =
   let battery = hasBattery()
   args.sysctls battery
