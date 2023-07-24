@@ -30,6 +30,8 @@ when defined(arm64):
       appendRcLocal cpuFreq("policy0/scaling_governor", "performance"),
         cpuFreq("policy2/scaling_governor", "ondemand"),
         cpuFreq("policy2/scaling_min_freq", "1000000")
+      addPackageUnless "zram-tools", "/etc/default/zramswap"
+      addPackageUnless "patch", "/usr/bin/patch"
       const dtbFile = "/odroid-n2-plus.dtb"
       const postInst = "/etc/kernel/postinst.d/boot-dtb-odroid-n2plus"
       writeFile postInst, [n2plusFixup], true, 0o755
@@ -110,6 +112,11 @@ proc encryptedSwap(): bool =
                               " /dev/random " in crypt):
         return true
 
+proc hasNormalSwap(): bool =
+  for line in lines("/proc/swaps"):
+    if line.startsWith("/dev/") and not line.startsWith("/dev/zram"):
+      return true
+
 # some laptops need psmouse.synaptics_intertouch=1, however its not universal
 proc bootConf() =
   # resume spews errors and delays boot with swap encrypted using random key
@@ -117,7 +124,7 @@ proc bootConf() =
   var initramfs = encryptedSwap() and resume.fileExists and
     modifyProperties(resume, [("RESUME", "none")], false)
   var grubUpdate: UpdateMap
-  if readLines("/proc/swaps", 2).len > 1:
+  if hasNormalSwap():
     grubUpdate["GRUB_CMDLINE_LINUX_DEFAULT"] = addGrubZSwap
     if appendMissing("/etc/initramfs-tools/modules", "lz4hc", "z3fold"):
       echo "Configured zswap"
