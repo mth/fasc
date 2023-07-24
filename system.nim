@@ -35,6 +35,7 @@ when defined(arm64):
                       else: ""
     addPackageUnless "device-tree-compiler", "/usr/bin/dtc"
     if "ODROID-N2Plus" in machineName:
+      echo "Detected Odroid-N2+"
       appendRcLocal cpuFreq("policy0/scaling_governor", "performance"),
         cpuFreq("policy2/scaling_governor", "ondemand"),
         cpuFreq("policy2/scaling_min_freq", "1000000")
