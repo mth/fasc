@@ -1,0 +1,46 @@
+#!/bin/sh
+
+patch_dtb() {
+	patch -fN /tmp/odroid-n2-plus.dts <<'DTB'
+--- meson-g12b-odroid-n2-plus.dts	2023-07-24 00:48:43.484547867 +0300
++++ odroid-n2-plus.dts	2023-07-24 00:55:29.511689953 +0300
+@@ -3123,6 +3123,14 @@
+ 			opp-hz = <0x00 0x6b49d200>;
+ 			opp-microvolt = <0xf4628>;
+ 		};
++		opp-1908000000 {
++			opp-hz = <0 1908000000>;
++			opp-microvolt = <1030000>;
++		};
++		opp-2016000000 {
++			opp-hz = <0 2016000000>;
++			opp-microvolt = <1040000>;
++		};
+ 	};
+ 
+ 	opp-table-1 {
+@@ -3184,6 +3192,14 @@
+ 			opp-hz = <0x00 0x839b6800>;
+ 			opp-microvolt = <0xf6d38>;
+ 		};
++		opp-2304000000 {
++			opp-hz = <0 2304000000>;
++			opp-microvolt = <1030000>;
++		};
++		opp-2400000000 {
++			opp-hz = <0 2400000000>;
++			opp-microvolt = <1040000>;
++		};
+ 	};
+ 
+ 	memory@0 {
+DTB
+}
+
+VERSION="$(readlink /boot/vmlinuz | sed 's/^vmlinuz//')"
+SOURCE_DTB="/mnt/usr/lib/linux-image$VERSION/amlogic/meson-g12b-odroid-n2-plus.dtb"
+TARGET_DTB="/boot/odroid-n2-plus.dtb"
+dtc -qo /tmp/odroid-n2-plus.dts "$SOURCE_DTB" && \
+patch_dtb && dtc -qo "$TARGET_DTB" /tmp/odroid-n2-plus.dts \
+|| cp "$SOURCE_DTB" "$TARGET_DTB"
+rm -f /tmp/odroid-n2-plus.dts

@@ -15,6 +15,25 @@ proc isCPUVendor(vendor: string): bool =
 proc isAMDCPU*(): bool = isCPUVendor("AuthenticAMD")
 proc isIntelCPU*(): bool = isCPUVendor("GenuineIntel")
 
+when defined(arm64):
+  const n2plusFixup = readResource("arm/boot-dtb-odroid-n2plus")
+  proc dtsFixup(): bool =
+    const dtsModel = "/sys/firmware/devicetree/base/model"
+    var machineName = if dtsModel.fileExists:
+                        dtsModel.readFile.strip
+                      else: ""
+    if "ODROID-N2Plus" in machineName:
+      const dtbFile = "/odroid-n2-plus.dtb"
+      const postInst = "/etc/kernel/postinst.d/boot-dtb-odroid-n2plus"
+      writeFile postInst, [n2plusFixup], true, 0o755
+      writeFile "/mnt/grub/custom.cfg", ["echo 'Loading device tree ...'",
+                                         "devicetree " & dtbFile]
+      if not fileExists("/boot" & dtbFile):
+        runCmd postInst
+        return true
+else:
+  proc dtsFixup(): bool = false
+
 proc findPSU(psuType: string): string =
   for psu in sys_psu.listDir:
     if readFile(psu / "type").strip == psuType:
@@ -102,7 +121,8 @@ proc bootConf() =
                       [("MODULES", "dep")], false) or initramfs:
     runCmd("update-initramfs", "-u")
   grubUpdate["GRUB_TIMEOUT"] = stringFunc("3")
-  if modifyProperties("/etc/default/grub", grubUpdate):
+  let updated = modifyProperties("/etc/default/grub", grubUpdate)
+  if dtsFixup() or updated:
     runCmd("update-grub")
 
 proc memTotal*(): int =
