@@ -1,5 +1,5 @@
 import std/[algorithm, os, sequtils, strutils, tables]
-import utils, network, gui, sway, apt, system, sound, shell, nspawn, services, apps, vnc
+import utils, network, gui, sway, apt, system, sound, shell, nspawn, services, apps, vnc, tv
 
 func argsToMap(args: seq[string]): StrMap =
   for arg in args:
@@ -57,6 +57,7 @@ let tasks = {
   "idcard": ("Configure ID card", idCard),
   "update-zoom": ("Update zoom install", updateZoom),
   "safenet": ("Setup DNS blocklists", setupSafeNet),
+  "tv": ("Install weston gui for TV", westonTV),
   #"disable-tracker": ("Disable GNOME tracker", disableTracker),
 }.toTable
 if paramCount() == 0:

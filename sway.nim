@@ -81,9 +81,12 @@ proc runWayland*(userInfo: UserInfo, compositor: string) =
   systemdReload = true
   userInfo.commonGuiSetup
 
-proc configureSway(user: UserInfo, sleepMinutes: int) =
+proc waylandUserConfig*(user: UserInfo) =
   for (file, conf) in user_config:
     writeAsUser(user, file, conf)
+
+proc configureSway(user: UserInfo, sleepMinutes: int) =
+  user.waylandUserConfig
   for (file, conf) in sway_config:
     writeAsUser(user, ".config/sway" / file, conf)
   writeAsUser(user, ".config/sway/idle", swayIdle((sleepMinutes - 2) * 60))
