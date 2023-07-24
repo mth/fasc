@@ -18,14 +18,16 @@ proc disableTracker*(args: StrMap) =
 proc commonGuiSetup*(user: UserInfo) =
   writeFile("/etc/fonts/conf.d/10-autohinting.conf", [font_auto_hinting])
   writeFile("/usr/share/X11/xkb/symbols/uml", @[xkb_uml])
-  runCmd("usermod", "-G",
-    "adm,audio,cdrom,dialout,input,netdev,kvm,video,render,systemd-journal", user.user)
-  if isIntelCPU():
-    packagesToInstall.add "intel-media-va-driver" # newer driver, maybe better?
-    # packagesToInstall.add "i965-va-driver"
-  else:
-    packagesToInstall.add "mesa-va-drivers"
+  var groups = "audio,video,input,render"
+  when not (defined(arm64) or defined(arm)):
+    groups &= "adm,cdrom,dialout,netdev,kvm,systemd-journal"
+    if isIntelCPU():
+      packagesToInstall.add "intel-media-va-driver" # newer driver, maybe better?
+      # packagesToInstall.add "i965-va-driver"
+    else:
+      packagesToInstall.add "mesa-va-drivers"
   packagesToInstall.add ["desktop-base", "policykit-1"]
+  runCmd("usermod", "-G", groups, user.user)
 
 proc installX11(user: UserInfo) =
   writeAsUser(user, ".Xdefaults", xdefaults)
