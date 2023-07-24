@@ -18,6 +18,13 @@ proc isIntelCPU*(): bool = isCPUVendor("GenuineIntel")
 when defined(arm64):
   const n2plusFixup = readResource("arm/boot-dtb-odroid-n2plus")
 
+  proc addWatchDog() =
+    addPackageUnless "watchdog", "/usr/sbin/watchdog"
+    commitQueue()
+    discard modifyProperties("/etc/watchdog.conf", [
+      ("watchdog-device", "/dev/watchdog0"),
+      ("watchdog-timeout", "30")])
+
   func cpuFreq(path, val: string): string =
     "echo " & val & "> /sys/devices/system/cpu/cpufreq/policy2/" & path
 
@@ -26,18 +33,22 @@ when defined(arm64):
     var machineName = if dtsModel.fileExists:
                         dtsModel.readFile.strip
                       else: ""
+    addPackageUnless "device-tree-compiler", "/usr/bin/dtc"
     if "ODROID-N2Plus" in machineName:
       appendRcLocal cpuFreq("policy0/scaling_governor", "performance"),
         cpuFreq("policy2/scaling_governor", "ondemand"),
         cpuFreq("policy2/scaling_min_freq", "1000000")
+      appendMissing "/etc/modules", ["meson-ir", "ir_rc5_decoder", "meson_gxbb_wdt"]
       addPackageUnless "zram-tools", "/etc/default/zramswap"
       addPackageUnless "patch", "/usr/bin/patch"
+      addWatchDog()
       const dtbFile = "/odroid-n2-plus.dtb"
       const postInst = "/etc/kernel/postinst.d/boot-dtb-odroid-n2plus"
       writeFile postInst, [n2plusFixup], true, 0o755
       writeFile "/mnt/grub/custom.cfg", ["echo 'Loading device tree ...'",
                                          "devicetree " & dtbFile]
       if not fileExists("/boot" & dtbFile):
+        commitQueue()
         runCmd postInst
         return true
 else:
