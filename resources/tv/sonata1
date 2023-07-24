@@ -1,0 +1,4 @@
+#!/bin/sh
+
+/usr/bin/pkill '^sonata$'
+exec /usr/bin/sonata "$@"

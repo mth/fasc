@@ -1,0 +1,12 @@
+#!/bin/sh
+
+OPT=
+if [ "$1" = "bw" ]; then
+	OPT="+set fs_game brainworks"
+	shift
+fi
+AA_EXEC=
+if [ -x /usr/bin/aa-exec ]; then
+	AA_EXEC="-p /usr/bin/aa-exec ioquake3"
+fi
+cd /usr/lib/ioquake3 && $AA_EXEC /usr/lib/ioquake3/ioquake3 $OPT "$@"

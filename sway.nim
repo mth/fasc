@@ -30,7 +30,7 @@ proc defaultLocale(): string =
   if result.len == 0:
     result = "C"
 
-proc runWayland(userInfo: UserInfo, compositor: string) =
+proc runWayland*(userInfo: UserInfo, compositor: string) =
   let user = userInfo.user
   let gid = userInfo.gid
   const maxMemLimit = 0x100000000 # 4GB
