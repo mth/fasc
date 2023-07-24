@@ -17,12 +17,19 @@ proc isIntelCPU*(): bool = isCPUVendor("GenuineIntel")
 
 when defined(arm64):
   const n2plusFixup = readResource("arm/boot-dtb-odroid-n2plus")
+
+  func cpuFreq(path, val: string): string =
+    "echo " & val & "> /sys/devices/system/cpu/cpufreq/policy2/" & path
+
   proc dtsFixup(): bool =
     const dtsModel = "/sys/firmware/devicetree/base/model"
     var machineName = if dtsModel.fileExists:
                         dtsModel.readFile.strip
                       else: ""
     if "ODROID-N2Plus" in machineName:
+      appendRcLocal cpuFreq("policy0/scaling_governor", "performance"),
+        cpuFreq("policy2/scaling_governor", "ondemand"),
+        cpuFreq("policy2/scaling_min_freq", "1000000")
       const dtbFile = "/odroid-n2-plus.dtb"
       const postInst = "/etc/kernel/postinst.d/boot-dtb-odroid-n2plus"
       writeFile postInst, [n2plusFixup], true, 0o755
