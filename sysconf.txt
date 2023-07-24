@@ -68,3 +68,5 @@ profiles
 -----
 Alpine setup?
 
+-----
+https://aur.archlinux.org/packages/widevine-aarch64
