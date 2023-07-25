@@ -67,6 +67,8 @@ proc addRaspbian() =
             "https://archive.raspberrypi.org/debian/raspberrypi.gpg.key",
             "https://archive.raspberrypi.org/debian/", ("*", -1), ("libwidevinecdm0", 500)
 
+# TODO use chromium:armhf chromium-sandbox:armhf
+
 proc westonTV*(args: StrMap) =
   let user = args.userInfo
   user.waylandUserConfig
@@ -77,8 +79,8 @@ proc westonTV*(args: StrMap) =
     createSymlink("/opt/WidevineCdm", user.home / widevine_link)
   user.runWayland "/usr/bin/weston"
   addRaspbian()
-  packagesToInstall.add ["weston", "openssh-client", "foot", "celluloid", "mpv",
-                         "sonata", "geeqie", "fonts-terminus-otb", "mpd"]
+  packagesToInstall.add ["weston", "openssh-client", "foot", "celluloid", "mpv", "mpd",
+                         "sonata", "python3-pkg-resources", "geeqie", "fonts-terminus-otb"]
   #user.vivaldi
   user.installMpd # commits queue
   for (path, content, mode) in util_files:
