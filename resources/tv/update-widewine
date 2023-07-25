@@ -1,0 +1,34 @@
+#!/bin/sh -eu
+
+MNTPNT=/opt/google/ChromeOSRecovery
+
+# Find a URL to a suitable armhf ChromeOS recovery image
+# CHROMEOS_URL="$(curl -s https://dl.google.com/dl/edgedl/chromeos/recovery/recovery.conf | grep -A11 CB5-312T | sed -n 's/^url=//p')"
+CHROMEOS_URL="$(curl -s https://dl.google.com/dl/edgedl/chromeos/recovery/recovery.conf | grep -A11 C101PA | sed -n 's/^url=//p')"
+
+echo "Downloading $CHROMEOS_URL"
+
+# Fetch the recovery image (2Gb+ on disk after download)
+curl -L "$CHROMEOS_URL" | zcat > "$MNTPNT.img"
+
+# Note the next free loop device in a variable
+LOOPD="$(losetup -f)"
+
+cleanup_umount() {
+  umount "$MNTPNT"
+  losetup -d "$LOOPD"
+  rm -f "$MNTPNT.img"
+}
+
+# If root, we can mount silently (no popup windows after mount)
+losetup -Pf "$MNTPNT.img"
+mount -o ro "${LOOPD}p3" "$MNTPNT"
+
+trap cleanup_umount EXIT
+
+# Copy over files and make manifest
+install -Dm644 "$MNTPNT"/opt/google/chrome/libwidevinecdm.so /opt/WidevineCdm/_platform_specific/linux_arm/libwidevinecdm.so
+WVVER="$(grep -Eaom1 '([0-9]+\.){3}[0-9]+' /opt/WidevineCdm/_platform_specific/linux_arm/libwidevinecdm.so)"
+WVMGR="$(echo $WVVER | cut -d. -f1)"
+WVMIN="$(echo $WVVER | cut -d. -f2)"
+echo "{\"version\":\"$WVVER\",\"x-cdm-codecs\":\"vp8,vp9.0,avc1,av01\",\"x-cdm-host-versions\":\"$WVMIN\",\"x-cdm-interface-versions\":\"$WVMIN\",\"x-cdm-module-versions\":\"$WVMGR\"}" > /opt/WidevineCdm/manifest.json

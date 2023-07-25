@@ -2,8 +2,10 @@ import sway, sound, utils, std/[os, posix, strformat, strutils]
 
 const weston_ini = readResource("tv/weston.ini")
 const util_files = [
+  ("/usr/local/bin/cputemp", readResource("tv/cputemp"), 0o755),
   ("/usr/local/bin/sonata1", readResource("tv/sonata1"), 0o755),
   ("/usr/local/bin/odroid-amixer", readResource("tv/odroid-amixer"), 0o755),
+  ("/usr/local/sbin/update-widevine", readResource("tv/update-widevine"), 0o700),
   ("/usr/local/share/pixmaps/celluloid-32x32.png", readResource("tv/celluloid-32x32.png"), 0o644),
   ("/usr/local/share/pixmaps/geeqie-32x32.png", readResource("tv/geeqie-32x32.png"), 0o644),
   ("/usr/local/share/pixmaps/sonata-32x32.png", readResource("tv/sonata-32x32.png"), 0o644),
