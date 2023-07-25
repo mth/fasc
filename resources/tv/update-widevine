@@ -1,6 +1,7 @@
 #!/bin/sh -eu
 
 MNTPNT=/opt/google/ChromeOSRecovery
+mkdir -p "$MNTPNT"
 
 # Find a URL to a suitable armhf ChromeOS recovery image
 # CHROMEOS_URL="$(curl -s https://dl.google.com/dl/edgedl/chromeos/recovery/recovery.conf | grep -A11 CB5-312T | sed -n 's/^url=//p')"
