@@ -54,12 +54,18 @@ proc addRepo(name, arch, suites, keyUrl, repoUrl: string,
                   &"Pin-Priority: {priority}"]
       writeFile fmt"/etc/apt/preferences.d/{name}", prefs
 
-proc addXbian() =
+#proc addXbian() =
+#  when defined(arm64):
+#    runCmd "dpkg", "--add-architecture", "armhf"
+#    addRepo "xbian", "armhf", &"stable armv7l-{codename()}",
+#            "http://apt.xbian.org/xbian.gpg.key", "http://apt.xbian.org/",
+#            ("*", -1), ("libc6", 600)
+proc addRaspbian() =
   when defined(arm64):
     runCmd "dpkg", "--add-architecture", "armhf"
-    addRepo "xbian", "armhf", &"stable armv7l-{codename()}",
-            "http://apt.xbian.org/xbian.gpg.key", "http://apt.xbian.org/",
-            ("*", -1), ("libc6", 600)
+    addRepo "raspbian", "armhf", "bullseye main",
+            "https://archive.raspberrypi.org/debian/raspberrypi.gpg.key",
+            "https://archive.raspberrypi.org/debian/", ("*", -1), ("libwidevinecdm0", 500)
 
 proc westonTV*(args: StrMap) =
   let user = args.userInfo
@@ -69,7 +75,7 @@ proc westonTV*(args: StrMap) =
   user.createParentDirs widevine_link
   createSymlink("/opt/WidevineCdm", user.home / widevine_link)
   user.runWayland "/usr/bin/weston"
-  addXbian()
+  addRaspbian()
   packagesToInstall.add ["weston", "openssh-client", "foot", "celluloid", "mpv",
                          "sonata", "geeqie", "fonts-terminus-otb", "mpd"]
   #user.vivaldi
