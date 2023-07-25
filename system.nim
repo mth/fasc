@@ -20,7 +20,7 @@ when defined(arm64):
 
   proc compatible*(what: string): bool =
     const dtsc = "/sys/firmware/devicetree/base/compatible"
-    return dtsc.fileExists and what in dtsModel.readFile
+    return dtsc.fileExists and what in dtsc.readFile
 
   proc addWatchDog() =
     addPackageUnless "watchdog", "/usr/sbin/watchdog"
@@ -44,7 +44,7 @@ when defined(arm64):
       appendRcLocal cpuFreq("policy0/scaling_governor", "performance"),
         cpuFreq("policy2/scaling_governor", "ondemand"),
         cpuFreq("policy2/scaling_min_freq", "1000000")
-      appendMissing "/etc/modules", ["meson-ir", "ir_rc5_decoder", "meson_gxbb_wdt"]
+      discard appendMissing("/etc/modules", ["meson-ir", "ir_rc5_decoder", "meson_gxbb_wdt"])
       addPackageUnless "patch", "/usr/bin/patch"
       addWatchDog()
       const dtbFile = "/odroid-n2-plus.dtb"
