@@ -4,6 +4,9 @@ const weston_ini = readResource("tv/weston.ini")
 const util_files = [
   ("/usr/local/bin/sonata1", readResource("tv/sonata1"), 0o755),
   ("/usr/local/bin/odroid-amixer", readResource("tv/odroid-amixer"), 0o755),
+  ("/usr/local/share/pixmaps/celluloid-32x32.png", readResource("tv/celluloid-32x32.png"), 0o644),
+  ("/usr/local/share/pixmaps/geeqie-32x32.png", readResource("tv/geeqie-32x32.png"), 0o644),
+  ("/usr/local/share/pixmaps/sonata-32x32.png", readResource("tv/sonata-32x32.png"), 0o644),
 ]
 
 proc codename(): string =
