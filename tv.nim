@@ -23,7 +23,8 @@ proc vivaldi(user: UserInfo) =
       ["Package: *", "Pin: origin \"archive.raspberrypi.org\"", "Pin-Priority: -1"]
     setPermissions vivaldi_list, 0o644
     runCmd "apt-get", "update"
-    packagesToInstall.add ["vivaldi-stable", "libwidevinecdm0"]
+    packagesToInstall.add ["chromium-browser", "libwidevinecdm0"]
+    # packagesToInstall.add ["vivaldi-stable", "libwidevinecdm0"]
     const symlink = ".local/lib/libwidevinecdm.so"
     user.createParentDirs symlink
     createSymlink("/opt/WidevineCdm", user.home / symlink)
