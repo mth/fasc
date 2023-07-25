@@ -73,7 +73,8 @@ proc westonTV*(args: StrMap) =
   writeAsUser user, ".config/weston.ini", weston_ini
   const widevine_link = ".local/lib/libwidevinecdm.so"
   user.createParentDirs widevine_link
-  createSymlink("/opt/WidevineCdm", user.home / widevine_link)
+  if not symlinkExists(user.home / widevine_link):
+    createSymlink("/opt/WidevineCdm", user.home / widevine_link)
   user.runWayland "/usr/bin/weston"
   addRaspbian()
   packagesToInstall.add ["weston", "openssh-client", "foot", "celluloid", "mpv",
