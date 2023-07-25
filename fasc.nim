@@ -1,5 +1,6 @@
 import std/[algorithm, os, sequtils, strutils, tables]
-import utils, network, gui, sway, apt, system, sound, shell, nspawn, services, apps, vnc, tv
+import utils, network, gui, sway, apt, system, sound, shell, nspawn, services, apps, vnc
+import tv
 
 func argsToMap(args: seq[string]): StrMap =
   for arg in args:
