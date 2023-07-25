@@ -77,7 +77,7 @@ proc safeFileUpdate*(filename, content: string, permissions: Mode = 0o644) =
   setPermissions(tmpFile, permissions)
   moveFile(tmpFile, filename)
 
-proc writeFileIfNotExists*(filename, content: string; force: bool) =
+proc writeFileIfNotExists(filename, content: string; force: bool) =
   if not force and filename.fileExists:
     echo fmt"Retaining existing {filename}"
   else:
@@ -95,13 +95,16 @@ proc writeFile*(filename: string, content: openarray[string],
   writeFileIfNotExists(filename, content.join("\n"), force)
   setPermissions(filename, permissions)
 
-proc writeAsUser*(user: UserInfo, filename, content: string,
-                  permissions: Mode = 0o644, force = false) =
+proc createParentDirs*(user: UserInfo, filename: string) =
   for part in filename.parentDirs(fromRoot = true, inclusive = false):
     var absolute = user.home / part
     absolute.removeSuffix '/'
     if not absolute.existsOrCreateDir:
       setPermissions(absolute, user, 0o755)
+
+proc writeAsUser*(user: UserInfo, filename, content: string,
+                  permissions: Mode = 0o644, force = false) =
+  createParentDirs(user, filename)
   let absolute = user.home / filename
   if force:
     safeFileUpdate(absolute, content, permissions)
