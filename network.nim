@@ -133,7 +133,11 @@ proc enableDefaultFirewall*(args: StrMap) =
       echo "Not a default Debian /etc/nftables.conf, not modifying"
       return
   echo "Setting up default firewall"
-  writeFile(confFile, nft_prefix & default_firewall)
+  when defined(arm) or defined(arm64):
+    let rules = "tcp dport 22 iifname eth0 ct state new accept\n\t\t"
+  else:
+    let rules = ""
+  writeFile(confFile, nft_prefix & default_firewall.replace("${RULES}", rules))
   discard chmod(confFile, 0o755)
   enableAndStart("nftables.service")
 
