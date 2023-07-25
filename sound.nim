@@ -19,7 +19,7 @@ proc sharedPulseAudio*(args: StrMap) =
                 else: ""
   let cardId = args.getOrDefault("card", "0")
   packagesToInstall.add ["alsa-utils", "pulseaudio"]
-  commitQueue()
+  aptInstallNow()
   writeFile("/etc/pulse/default.pa", [default_pa.replace("${CARD}", cardId)], true)
   discard modifyProperties("/etc/pulse/daemon.conf",
             [("allow-module-loading", "no"),
@@ -38,7 +38,7 @@ proc sharedPulseAudio*(args: StrMap) =
 
 proc installMpd*(user: UserInfo) =
   packagesToInstall.add "mpd"
-  commitQueue()
+  aptInstallNow()
   safeFileUpdate "/etc/mpd.conf", mpd_conf
   var service = @[
     "User=mpd",

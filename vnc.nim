@@ -3,7 +3,7 @@ import utils, services
 
 proc installVncServer*(args: StrMap) =
   packagesToInstall.add ["tigervnc-standalone-server", "icewm"]
-  commitQueue()
+  aptInstallNow()
   let userInfo = args.userInfo
   let display = args.getOrDefault("display", "2").strip(chars={':'})
   let listenProxy = args.getOrDefault "proxy"

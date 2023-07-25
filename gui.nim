@@ -61,7 +61,7 @@ proc installIceWM*(args: StrMap) =
   systemdSleep sleepMinutes
   let pref = user.home / ".icewm/preferences"
   if not pref.fileExists:
-    commitQueue()
+    aptInstallNow()
     copyFile "/usr/share/icewm/preferences", pref
     discard modifyProperties(pref, [("DesktopBackgroundImage",
                 "/usr/share/desktop-base/active-theme/grub/grub-16x9.png"),

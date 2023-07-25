@@ -118,6 +118,6 @@ proc swayUnit*(args: StrMap) =
     packagesToInstall.add ["brightnessctl", "brightness-udev"]
   const vimfmPath = "/usr/share/applications/vimfm.desktop"
   if not vimfmPath.fileExists:
-    commitQueue()
+    aptInstallNow()
     vimfmPath.writeFileSynced vimfm_desktop
     runCmd("update-mime")

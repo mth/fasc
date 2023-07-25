@@ -9,6 +9,7 @@ var packagesToInstall*: seq[string]
 var enableUnits*: seq[string]
 var startUnits*:  seq[string]
 var systemdReload*: bool
+var aptUpdate*: bool
 
 const resourceDir = currentSourcePath().parentDir / "resources"
 
@@ -155,6 +156,9 @@ proc outputOfCommand*(inputString, command: string;
 proc aptInstallNow*(packages: varargs[string]) =
   packagesToInstall.add packages
   if packagesToInstall.len > 0:
+    if aptUpdate:
+      runCmd "apt-get", "update"
+      aptUpdate = false
     runCmd("apt-get", @["install", "-y", "--no-install-recommends"] & packagesToInstall)
     packagesToInstall.reset
 
@@ -286,5 +290,5 @@ proc sudoNoPasswd*(user: UserInfo, envKeep: string, paths: varargs[string]) =
       rules &= ("Defaults!" & path & ' ', "env_keep=\"" & envKeep & '"')
     rules &= ("", user.user & " ALL=(root:root) NOPASSWD: " & path)
   addPackageUnless("sudo", "/usr/bin/sudo")
-  commitQueue()
+  aptInstallNow()
   discard appendMissing("/etc/sudoers", rules)

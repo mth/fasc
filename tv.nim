@@ -11,12 +11,12 @@ const util_files = [
   ("/usr/local/share/pixmaps/sonata-32x32.png", readResource("tv/sonata-32x32.png"), 0o644),
 ]
 
-#proc codename(): string =
-#  for line in lines("/etc/os-release"):
-#    if line.startsWith "VERSION_CODENAME=":
-#      return line[17..^1]
-#  return "bookworm"
-#
+proc codename(): string =
+  for line in lines("/etc/os-release"):
+    if line.startsWith "VERSION_CODENAME=":
+      return line[17..^1]
+  return "bookworm"
+
 #proc vivaldi(user: UserInfo) =
 #  const vivaldi_list = "/etc/apt/sources.list.d/vivaldi.list"
 #  if not vivaldi_list.fileExists:
@@ -35,14 +35,29 @@ const util_files = [
 
 # wget -O - http://apt.xbian.org/xbian.gpg.key | gpg --dearmor > /usr/share/keyrings/xbian-archive-keyring.gpg
 
-proc addKeyring(name, url: string) =
-  let target = "/usr/share/keyrings/" & name & "-archive-keyring.gpg"
-  if not target.fileExists:
-    let gpgKey = outputOfCommand("", "wget", "-qO", "-", url)
-    discard outputOfCommand(gpgKey, "gpg", "--dearmor", "-o", target)
+proc addRepo(name, arch, suites, keyUrl, repoUrl: string,
+             preferences: varargs[(string, int)]) =
+  let keyring = fmt"/usr/share/keyrings/{name}-archive-keyring.gpg"
+  if not keyring.fileExists:
+    let gpgKey = outputOfCommand("", "wget", "-qO", "-", keyUrl)
+    discard outputOfCommand(gpgKey.join("\n"), "gpg", "--dearmor", "-o", keyring)
+  let source = fmt"/etc/apt/sources.list.d/{name}.list"
+  if not source.fileExists:
+    writeFileSynced source, &"deb [signed-by={keyring} arch={arch}] {repoUrl} {suites}\n"
+    aptUpdate = true
+    if preferences.len > 0:
+      let urlParts = repoUrl.split '/'
+      var prefs: seq[string]
+      for (package, priority) in preferences:
+        prefs &= [&"Package: {package}",
+                  &"Pin: origin \"{urlParts[2]}\"",
+                  &"Pin-Priority: {priority}"]
+      writeFile fmt"/etc/apt/preferences.d/{name}", prefs
 
 proc addXbian() =
-  addKeyring "xbian", "http://apt.xbian.org/xbian.gpg.key"
+  addRepo "xbian", "armhf", &"stable armv7l-{codename()}",
+          "http://apt.xbian.org/xbian.gpg.key", "http://apt.xbian.org/",
+          ("*", -1), ("libc6", 900)
 
 proc westonTV*(args: StrMap) =
   let user = args.userInfo
@@ -52,6 +67,7 @@ proc westonTV*(args: StrMap) =
   user.createParentDirs widevine_link
   createSymlink("/opt/WidevineCdm", user.home / widevine_link)
   user.runWayland "/usr/bin/weston"
+  addXbian()
   packagesToInstall.add ["weston", "openssh-client", "foot", "celluloid", "mpv",
                          "sonata", "geeqie", "fonts-terminus-otb", "mpd"]
   #user.vivaldi

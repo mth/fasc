@@ -24,7 +24,7 @@ when defined(arm64):
 
   proc addWatchDog() =
     addPackageUnless "watchdog", "/usr/sbin/watchdog"
-    commitQueue()
+    aptInstallNow()
     discard modifyProperties("/etc/watchdog.conf", [
       ("watchdog-device", "/dev/watchdog0"),
       ("watchdog-timeout", "30")])
@@ -54,7 +54,7 @@ when defined(arm64):
       writeFile "/grub/custom.cfg", ["echo 'Loading device tree ...'",
                                          "devicetree " & dtbFile]
       if not fileExists("/boot" & dtbFile):
-        commitQueue()
+        aptInstallNow()
         runCmd postInst
         return true
 else:
@@ -265,7 +265,7 @@ proc hdparm*(args: StrMap) =
 
 proc batteryMonitor() =
   packagesToInstall.add "sleepd"
-  commitQueue()
+  aptInstallNow()
   if modifyProperties("/etc/default/sleepd",
         [("PARAMS", "\"-b 2 -u 0 -c 30 -I -s '/usr/bin/systemctl suspend'\"")],
         onlyEmpty=false):
