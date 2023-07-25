@@ -1,7 +1,11 @@
 import std/[strformat, strutils, tables]
 import services, system, utils
 
-const asoundrc = readResource("asound.conf")
+when defined(arm64):
+  const asoundrc = readResource("tv/asound.conf")
+else:
+  const asoundrc = readResource("asound.conf")
+
 const default_pa = readResource("default.pa")
 const mpd_conf = readResource("tv/mpd.conf")
 
