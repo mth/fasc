@@ -66,11 +66,13 @@ proc installFirmware() =
 # XXX removing ifupdown should be network modules job
 proc defaultPrune(additionalRemove: varargs[string]) =
   var remove = @["avahi-autoipd", "debian-faq", "discover", "doc-debian",
-        "ifupdown", "installation-report", "isc-dhcp-client", "isc-dhcp-common",
+        "installation-report", "isc-dhcp-client", "isc-dhcp-common",
         "liblockfile-bin", "nano", "netcat-traditional", "reportbug",
         "task-english", "task-laptop", "tasksel", "tasksel-data",
         "telnet", "vim-tiny", "vim-common"]
   remove.add additionalRemove
+  when not (defined(arm) or defined(arm64)):
+    packagesToInstall.add "ifupdown"
   packagesToInstall.add ["elvis-tiny", "netcat-openbsd", "psmisc"]
   prunePackages(packagesToInstall, remove)
   packagesToInstall.reset
