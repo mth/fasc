@@ -30,7 +30,7 @@ when defined(arm64):
       ("watchdog-timeout", "30")])
 
   func cpuFreq(path, val: string): string =
-    "echo " & val & "> /sys/devices/system/cpu/cpufreq/policy2/" & path
+    "echo " & val & "> /sys/devices/system/cpu/cpufreq/" & path
 
   proc dtsFixup(): bool =
     const dtsModel = "/sys/firmware/devicetree/base/model"
