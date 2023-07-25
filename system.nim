@@ -50,7 +50,7 @@ when defined(arm64):
       const dtbFile = "/odroid-n2-plus.dtb"
       const postInst = "/etc/kernel/postinst.d/boot-dtb-odroid-n2plus"
       writeFile postInst, [n2plusFixup], true, 0o755
-      writeFile "/mnt/grub/custom.cfg", ["echo 'Loading device tree ...'",
+      writeFile "/grub/custom.cfg", ["echo 'Loading device tree ...'",
                                          "devicetree " & dtbFile]
       if not fileExists("/boot" & dtbFile):
         commitQueue()
@@ -272,7 +272,7 @@ proc batteryMonitor() =
 
 proc inMemoryJournal() =
   var conf = @[("Storage", "volatile")]
-  let logDev = outputOfCommand("df", "--output=source", "/var/log")
+  let logDev = outputOfCommand("", "df", "--output=source", "/var/log")
   if logDev.len >= 2 and logDev[1].startsWith("/dev/mmcblk"):
     conf &= [("RuntimeMaxUse", "32M"), ("ForwardToSyslog", "no")]
   else:
