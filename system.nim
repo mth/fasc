@@ -49,7 +49,8 @@ when defined(arm64):
       addWatchDog()
       const dtbFile = "/odroid-n2-plus.dtb"
       const postInst = "/etc/kernel/postinst.d/boot-dtb-odroid-n2plus"
-      writeFile postInst, [n2plusFixup], true, 0o755
+      writeFile postInst, [n2plusFixup], false, 0o755
+      #writeFile postInst, [n2plusFixup], true, 0o755
       writeFile "/grub/custom.cfg", ["echo 'Loading device tree ...'",
                                          "devicetree " & dtbFile]
       if not fileExists("/boot" & dtbFile):

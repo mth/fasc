@@ -91,7 +91,9 @@ proc prunePackages*(addPackages: openarray[string],
   let packageMap = readStatus()
   let initialDead = packageMap.autoRemoveSet
   let defaultAuto = toHashSet ["libs", "oldlibs", "perl", "python"]
-  let protect = toHashSet ["libc6", "perl", "python3", "qtwayland5"]
+  var protect = toHashSet ["libc6", "perl", "python3", "qtwayland5"]
+  when defined(arm64) or defined(arm):
+    protect.incl "ifupdown"
 
   # Should mark all removePackages and non-required libraries as auto
   var addPackageSet = addPackages.toHashSet
