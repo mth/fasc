@@ -38,13 +38,13 @@ when defined(arm64):
                         dtsModel.readFile.strip
                       else: ""
     addPackageUnless "device-tree-compiler", "/usr/bin/dtc"
+    addPackageUnless "zram-tools", "/etc/default/zramswap"
     if "ODROID-N2Plus" in machineName:
       echo "Detected Odroid-N2+"
       appendRcLocal cpuFreq("policy0/scaling_governor", "performance"),
         cpuFreq("policy2/scaling_governor", "ondemand"),
         cpuFreq("policy2/scaling_min_freq", "1000000")
       appendMissing "/etc/modules", ["meson-ir", "ir_rc5_decoder", "meson_gxbb_wdt"]
-      addPackageUnless "zram-tools", "/etc/default/zramswap"
       addPackageUnless "patch", "/usr/bin/patch"
       addWatchDog()
       const dtbFile = "/odroid-n2-plus.dtb"
