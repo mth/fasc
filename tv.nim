@@ -59,7 +59,7 @@ proc addXbian() =
     runCmd "dpkg", "--add-architecture", "armhf"
     addRepo "xbian", "armhf", &"stable armv7l-{codename()}",
             "http://apt.xbian.org/xbian.gpg.key", "http://apt.xbian.org/",
-            ("*", -1), ("libc6", 900)
+            ("*", -1), ("libc6", 600)
 
 proc westonTV*(args: StrMap) =
   let user = args.userInfo
