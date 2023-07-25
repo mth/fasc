@@ -33,6 +33,17 @@ const util_files = [
     #writeAsUser user, ".config/vivaldi/WidevineCdm/latest-component-updated-widevine-cdm",
     #            """{"Path":"/opt/WidevineCdm/chromium"}"""
 
+# wget -O - http://apt.xbian.org/xbian.gpg.key | gpg --dearmor > /usr/share/keyrings/xbian-archive-keyring.gpg
+
+proc addKeyring(name, url: string) =
+  let target = "/usr/share/keyrings/" & name & "-archive-keyring.gpg"
+  if not target.fileExists:
+    let gpgKey = outputOfCommand("", "wget", "-qO", "-", url)
+    discard outputOfCommand(gpgKey, "gpg", "--dearmor", "-o", target)
+
+proc addXbian() =
+  addKeyring "xbian", "http://apt.xbian.org/xbian.gpg.key"
+
 proc westonTV*(args: StrMap) =
   let user = args.userInfo
   user.waylandUserConfig
