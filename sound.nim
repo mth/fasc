@@ -1,8 +1,9 @@
 import std/[strformat, strutils, tables]
-import services, utils
+import services, system, utils
 
 const asoundrc = readResource("asound.conf")
 const default_pa = readResource("default.pa")
+const mpd_conf = readResource("tv/mpd.conf")
 
 proc configureALSA*(args: StrMap) =
   # CARD should be configurable by argument
@@ -30,3 +31,16 @@ proc sharedPulseAudio*(args: StrMap) =
           connectTo=fmt"/run/user/{mainUID}/pulse/native",
           exitIdleTime="1min", targetService="",
           description="Pulseaudio socket proxy")
+
+proc installMpd*(user: UserInfo) =
+  packagesToInstall.add "mpd"
+  commitQueue()
+  safeFileUpdate "/etc/mpd.conf", mpd_conf
+  var service = @[
+    "User=mpd",
+    "Group=" & user.group,
+    "SupplementaryGroups=audio"
+  ]
+  if compatible("s922x"):
+    service &= "CPUAffinity=0 1" # use economy cores
+  overrideService "mpd.service", {s_sandbox, s_allow_devices, s_allow_netlink}, service

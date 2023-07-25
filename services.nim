@@ -2,7 +2,11 @@ import std/[os, strutils, tables]
 import utils
 
 type ServiceFlags* = enum
+  s_no_new_priv,
   s_sandbox,
+  s_allow_devices,
+  s_allow_netlink,
+  s_call_filter,
   s_overwrite
 
 func descriptionOfName(name, description: string): string =
@@ -17,6 +21,40 @@ proc addTimer*(name, description: string, options: varargs[string]) =
   let unitName = name & ".timer"
   writeFile("/etc/systemd/system" / unitName, timer)
   enableAndStart(unitName)
+
+proc setProperties(service: var seq[string], flags: set[ServiceFlags]) =
+  if s_sandbox in flags or s_no_new_priv in flags:
+    service &= [
+      "CapabilityBoundingSet=~CAP_SYS_ADMIN",
+      "MemoryDenyWriteExecute=true",
+      "NoNewPrivileges=yes",
+      "SecureBits=nonroot-locked",
+    ]
+  if s_sandbox in flags:
+    service &= [
+      "ProtectSystem=strict",
+      "PrivateTmp=true",
+      "ProtectControlGroups=yes",
+      "ProtectKernelLogs=true",
+      "ProtectKernelLogs=true",
+      "ProtectKernelModules=yes",
+      "ProtectKernelTunables=yes",
+      "ProtectProc=invisible",
+      "RestrictNamespaces=yes",
+      "RestrictRealtime=yes",
+      "RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX",
+    ]
+    if s_allow_netlink in flags:
+      service &= " AF_NETLINK"
+    if not (s_allow_devices in flags):
+      service &= "PrivateDevices=true"
+  if s_call_filter in flags:
+    service &= [
+      "SystemCallArchitectures=native",
+      "SystemCallFilter=@system-service"
+    ]
+    when defined(arm):
+      service &= " 270"
 
 proc addService*(name, description: string, depends: openarray[string],
                  exec: string, install="", flags: set[ServiceFlags] = {},
@@ -37,13 +75,7 @@ proc addService*(name, description: string, depends: openarray[string],
   if serviceType != "":
     service &= "Type=" & serviceType
   service &= "ExecStart=" & exec
-  if s_sandbox in flags:
-    service &= [
-      "CapabilityBoundingSet=~CAP_SYS_ADMIN",
-      "MemoryDenyWriteExecute=true",
-      "NoNewPrivileges=yes",
-      "SecureBits=nonroot-locked",
-    ]
+  service.setProperties flags
   service.add options
   if install != "":
     service.add ["", "[Install]", "WantedBy=" & install]
@@ -53,9 +85,12 @@ proc addService*(name, description: string, depends: openarray[string],
   if install != "":
     enableAndStart serviceName
 
-proc overrideService*(name: string, properties: varargs[string]) =
+proc overrideService*(name: string, flags: set[ServiceFlags],
+                      properties: varargs[string]) =
   let override = "/etc/systemd/system/" & name & ".service.d/override.conf"
-  writeFile(override, @["[Service]"] & @properties)
+  var content = @["[Service]"] & @properties
+  content.setProperties flags
+  writeFile(override, content)
   systemdReload = true
 
 proc proxy*(proxy, listen, bindTo, connectTo, exitIdleTime, targetService: string,
@@ -90,7 +125,7 @@ proc proxy*(proxy, listen, bindTo, connectTo, exitIdleTime, targetService: strin
     options.add "PrivateNetwork=yes"
   addService(socketParam[0], descriptionStr, [targetService, socketName],
     "/usr/lib/systemd/systemd-socket-proxyd --exit-idle-time=" &
-      exitIdleTime & ' ' & connectTo, "", {s_sandbox, s_overwrite}, options)
+      exitIdleTime & ' ' & connectTo, "", {s_no_new_priv, s_overwrite}, options)
   enableAndStart socketName
   systemdReload = true
 

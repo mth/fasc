@@ -18,6 +18,10 @@ proc isIntelCPU*(): bool = isCPUVendor("GenuineIntel")
 when defined(arm64):
   const n2plusFixup = readResource("arm/boot-dtb-odroid-n2plus")
 
+  proc compatible*(what: string): bool =
+    const dtsc = "/sys/firmware/devicetree/base/compatible"
+    return dtsc.fileExists and what in dtsModel.readFile
+
   proc addWatchDog() =
     addPackageUnless "watchdog", "/usr/sbin/watchdog"
     commitQueue()
@@ -53,6 +57,7 @@ when defined(arm64):
         runCmd postInst
         return true
 else:
+  proc compatible*(what: string): bool = false
   proc dtsFixup(): bool = false
 
 proc findPSU(psuType: string): string =

@@ -181,7 +181,7 @@ proc setupSafeNet*(args: StrMap) =
     configureResolved()
   let resolveUser = userInfo "systemd-resolve"
   setPermissions dnsBlockDir, resolveUser, 0o750
-  overrideService "systemd-resolved",
+  overrideService "systemd-resolved", {},
     "BindReadOnlyPaths=/var/cache/dnsblock/hosts:/etc/hosts:norbind"
   safeFileUpdate "/etc/systemd/system/dnsblock.service", dns_block_service
   addTimer "dnsblock", "Update DNS filter weekly", "OnBootSec=1min", "OnUnitActiveSec=1w"

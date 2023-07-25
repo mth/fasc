@@ -26,6 +26,12 @@ proc nonEmptyParam*(params: StrMap, key: string): string =
     echo fmt"Expected parameter {key}=<{key}>"
     quit 1
 
+func group*(user: UserInfo): string =
+  let group = getgrgid(user.gid)
+  if group == nil:
+    return $user.gid
+  return $group.gr_name
+
 proc enableAndStart*(units: varargs[string]) =
   for unit in units:
     enableUnits.add unit
