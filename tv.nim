@@ -55,6 +55,7 @@ proc addRepo(name, arch, suites, keyUrl, repoUrl: string,
       writeFile fmt"/etc/apt/preferences.d/{name}", prefs
 
 proc addXbian() =
+  runCmd "dpkg", "--add-architecture", "armhf"
   addRepo "xbian", "armhf", &"stable armv7l-{codename()}",
           "http://apt.xbian.org/xbian.gpg.key", "http://apt.xbian.org/",
           ("*", -1), ("libc6", 900)
