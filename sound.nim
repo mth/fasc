@@ -47,4 +47,4 @@ proc installMpd*(user: UserInfo) =
   ]
   if compatible("s922x"):
     service &= ("CPUAffinity=", "0 1") # use economy cores
-  overrideService "mpd.service", {s_sandbox, s_allow_devices, s_allow_netlink}, service
+  overrideService "mpd.service", {s_sandbox, s_allow_netlink}, service

@@ -4,7 +4,7 @@ import utils
 type ServiceFlags* = enum
   s_no_new_priv,
   s_sandbox,
-  s_allow_devices,
+  s_private_dev,
   s_allow_netlink,
   s_call_filter,
   s_overwrite
@@ -45,7 +45,7 @@ proc properties(flags: set[ServiceFlags]): seq[(string, string)] =
     ]
     if s_allow_netlink in flags:
       result[^1][1] &= " AF_NETLINK"
-    if not (s_allow_devices in flags):
+    if s_private_dev in flags:
       result &= ("PrivateDevices=", "true")
   if s_call_filter in flags:
     result &= [
@@ -102,8 +102,8 @@ proc secureService*(args: StrMap) =
   var props = @[("ReadWritePaths=", args.getOrDefault("rw", "/run/" & service))]
   if "syscall" in args:
     flags.incl s_call_filter
-  if "allow_dev" in args:
-    flags.incl s_allow_devices
+  if "private_dev" in args:
+    flags.incl s_private_dev
   if "allow_netlink" in args:
     flags.incl s_allow_netlink
   if "01" in args:
