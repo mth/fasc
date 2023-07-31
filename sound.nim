@@ -41,10 +41,10 @@ proc installMpd*(user: UserInfo) =
   aptInstallNow()
   safeFileUpdate "/etc/mpd.conf", mpd_conf
   var service = @[
-    "User=mpd",
-    "Group=" & user.group,
-    "SupplementaryGroups=audio"
+    ("User=", "mpd"),
+    ("Group=", user.group),
+    ("SupplementaryGroups=", "audio"),
   ]
   if compatible("s922x"):
-    service &= "CPUAffinity=0 1" # use economy cores
+    service &= ("CPUAffinity=", "0 1") # use economy cores
   overrideService "mpd.service", {s_sandbox, s_allow_devices, s_allow_netlink}, service

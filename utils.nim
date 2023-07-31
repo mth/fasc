@@ -212,16 +212,18 @@ proc userInfo*(param: StrMap): UserInfo =
     echo e.msg
     quit 1
 
-proc appendMissing*(filename: string, needed: openarray[(string, string)]): bool =
+proc appendMissing*(filename: string, needed: openarray[(string, string)],
+                    create = false): bool =
   var addLines = @needed
-  for line in lines(filename):
-    var idx = addLines.len
-    while idx > 0:
-      idx.dec
-      let (prefix, addLine) = addLines[idx]
-      if (if prefix.len != 0: line.startsWith prefix
-          else: line == addLine):
-        addLines.delete idx
+  if not create or filename.fileExists:
+    for line in lines(filename):
+      var idx = addLines.len
+      while idx > 0:
+        idx.dec
+        let (prefix, addLine) = addLines[idx]
+        if (if prefix.len != 0: line.startsWith prefix
+            else: line == addLine):
+          addLines.delete idx
   if addLines.len == 0:
     return false
   var f = open(filename, fmAppend)

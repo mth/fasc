@@ -54,6 +54,7 @@ let tasks = {
   "proxy": ("proxy=name[:owner[:group[:mode]]] listen=1234 [bind=host0]\n" &
             19.spaces & "connect=127.0.0.1:2345 [idle-timeout=10min] [service=foobar]",
             socketProxy),
+  "secure": ("service=name syscall allow_dev allow_netlink 01", secureService),
   "zoom": ("Install zoom", zoomSandbox),
   "idcard": ("Configure ID card", idCard),
   "update-zoom": ("Update zoom install", updateZoom),

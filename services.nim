@@ -22,39 +22,38 @@ proc addTimer*(name, description: string, options: varargs[string]) =
   writeFile("/etc/systemd/system" / unitName, timer)
   enableAndStart(unitName)
 
-proc setProperties(service: var seq[string], flags: set[ServiceFlags]) =
+proc properties(flags: set[ServiceFlags]): seq[(string, string)] =
   if s_sandbox in flags or s_no_new_priv in flags:
-    service &= [
-      "CapabilityBoundingSet=~CAP_SYS_ADMIN",
-      "MemoryDenyWriteExecute=true",
-      "NoNewPrivileges=yes",
-      "SecureBits=nonroot-locked",
+    result &= [
+      ("CapabilityBoundingSet=", "~CAP_SYS_ADMIN"),
+      ("MemoryDenyWriteExecute=", "true"),
+      ("NoNewPrivileges=", "yes"),
+      ("SecureBits=", "nonroot-locked"),
     ]
   if s_sandbox in flags:
-    service &= [
-      "ProtectSystem=strict",
-      "PrivateTmp=true",
-      "ProtectControlGroups=yes",
-      "ProtectKernelLogs=true",
-      "ProtectKernelLogs=true",
-      "ProtectKernelModules=yes",
-      "ProtectKernelTunables=yes",
-      "ProtectProc=invisible",
-      "RestrictNamespaces=yes",
-      "RestrictRealtime=yes",
-      "RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX",
+    result &= [
+      ("ProtectSystem=", "strict"),
+      ("PrivateTmp=", "true"),
+      ("ProtectControlGroups=", "yes"),
+      ("ProtectKernelLogs=", "true"),
+      ("ProtectKernelModules=", "yes"),
+      ("ProtectKernelTunables=", "yes"),
+      ("ProtectProc=", "invisible"),
+      ("RestrictNamespaces=", "yes"),
+      ("RestrictRealtime=", "yes"),
+      ("RestrictAddressFamilies=", "AF_INET AF_INET6 AF_UNIX"),
     ]
     if s_allow_netlink in flags:
-      service &= " AF_NETLINK"
+      result[^1][1] &= " AF_NETLINK"
     if not (s_allow_devices in flags):
-      service &= "PrivateDevices=true"
+      result &= ("PrivateDevices=", "true")
   if s_call_filter in flags:
-    service &= [
-      "SystemCallArchitectures=native",
-      "SystemCallFilter=@system-service"
+    result &= [
+      ("SystemCallArchitectures=", "native"),
+      ("SystemCallFilter=", "@system-service"),
     ]
     when defined(arm):
-      service &= " 270"
+      result[^1][1] &= " 270"
 
 proc addService*(name, description: string, depends: openarray[string],
                  exec: string, install="", flags: set[ServiceFlags] = {},
@@ -75,7 +74,9 @@ proc addService*(name, description: string, depends: openarray[string],
   if serviceType != "":
     service &= "Type=" & serviceType
   service &= "ExecStart=" & exec
-  service.setProperties flags
+  for (key, value) in flags.properties:
+    service &= key
+    service &= value
   service.add options
   if install != "":
     service.add ["", "[Install]", "WantedBy=" & install]
@@ -86,12 +87,26 @@ proc addService*(name, description: string, depends: openarray[string],
     enableAndStart serviceName
 
 proc overrideService*(name: string, flags: set[ServiceFlags],
-                      properties: varargs[string]) =
+                      properties: varargs[(string, string)]) =
   let override = "/etc/systemd/system/" & name & ".service.d/override.conf"
-  var content = @["[Service]"] & @properties
-  content.setProperties flags
-  writeFile(override, content)
-  systemdReload = true
+  var content = @[("", "[Service]")] & @properties
+  content &= flags.properties
+  if appendMissing(override, content, true):
+    systemdReload = true
+
+proc secureService*(args: StrMap) =
+  let service = args.nonEmptyParam "service"
+  var flags = {s_sandbox}
+  var props = @[("ReadWritePaths=", args.getOrDefault("rw", "/run/" & service))]
+  if "syscall" in args:
+    flags.incl s_call_filter
+  if "allow_dev" in args:
+    flags.incl s_allow_devices
+  if "allow_netlink" in args:
+    flags.incl s_allow_netlink
+  if "01" in args:
+    props &= ("CPUAffinity=", "0 1")
+  overrideService service, flags, props
 
 proc proxy*(proxy, listen, bindTo, connectTo, exitIdleTime, targetService: string,
             description = "") =
