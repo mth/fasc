@@ -88,9 +88,11 @@ proc addService*(name, description: string, depends: openarray[string],
 
 proc overrideService*(name: string, flags: set[ServiceFlags],
                       properties: varargs[(string, string)]) =
-  let override = "/etc/systemd/system/" & name & ".service.d/override.conf"
+  let dir = "/etc/systemd/system/" & name & ".service.d"
+  let override = dir / "override.conf"
   var content = @[("", "[Service]")] & @properties
   content &= flags.properties
+  createDir dir
   if appendMissing(override, content, true):
     systemdReload = true
 
