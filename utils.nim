@@ -215,7 +215,10 @@ proc userInfo*(param: StrMap): UserInfo =
 proc appendMissing*(filename: string, needed: openarray[(string, string)],
                     create = false): bool =
   var addLines = @needed
-  if not create or filename.fileExists:
+  var f: File
+  if create and not filename.fileExists:
+    f = open(filename, fmWrite)
+  else:
     for line in lines(filename):
       var idx = addLines.len
       while idx > 0:
@@ -224,9 +227,9 @@ proc appendMissing*(filename: string, needed: openarray[(string, string)],
         if (if prefix.len != 0: line.startsWith prefix
             else: line == addLine):
           addLines.delete idx
-  if addLines.len == 0:
-    return false
-  var f = open(filename, fmAppend)
+    if addLines.len == 0:
+      return false
+    f = open(filename, fmAppend)
   defer: f.close
   for (prefix, line) in addLines:
     f.writeLine(prefix & line)
