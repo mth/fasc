@@ -53,7 +53,7 @@ proc properties(flags: set[ServiceFlags]): seq[(string, string)] =
       ("SystemCallFilter=", "@system-service"),
     ]
     when defined(arm):
-      result[^1][1] &= " 270"
+      result[^1][1] &= " arm_fadvise64_64"
 
 proc addService*(name, description: string, depends: openarray[string],
                  exec: string, install="", flags: set[ServiceFlags] = {},
