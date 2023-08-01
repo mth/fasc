@@ -2,6 +2,7 @@
 
 . /usr/share/grub/grub-mkconfig_lib
 LATEST="`version_find_latest /boot/vmlinuz-*-arm64|sed 's%^.*/vmlinuz-%%'`"
+# FIXME fasc calls the script without arguments, that NOP here
 [ "$1" = "$LATEST" ] || exit 0
 
 patch_dtb() {
