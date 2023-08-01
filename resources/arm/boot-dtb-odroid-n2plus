@@ -1,5 +1,9 @@
 #!/bin/sh
 
+. /usr/share/grub/grub-mkconfig_lib
+LATEST="`version_find_latest /boot/vmlinuz-*-arm64|sed 's%^.*/vmlinuz-%%'`"
+[ "$1" = "$LATEST" ] || exit 0
+
 patch_dtb() {
 	patch -fN /tmp/odroid-n2-plus.dts <<'DTB'
 --- meson-g12b-odroid-n2-plus.dts	2023-07-24 00:48:43.484547867 +0300
@@ -37,9 +41,9 @@ patch_dtb() {
 DTB
 }
 
-VERSION="$(readlink /boot/vmlinuz | sed 's/^vmlinuz//')"
-SOURCE_DTB="/mnt/usr/lib/linux-image$VERSION/amlogic/meson-g12b-odroid-n2-plus.dtb"
+SOURCE_DTB="/usr/lib/linux-image-$LATEST/amlogic/meson-g12b-odroid-n2-plus.dtb"
 TARGET_DTB="/boot/odroid-n2-plus.dtb"
+echo "Creating $TARGET_DTB from $SOURCE_DTB"
 dtc -qo /tmp/odroid-n2-plus.dts "$SOURCE_DTB" && \
 patch_dtb && dtc -qo "$TARGET_DTB" /tmp/odroid-n2-plus.dts \
 || cp "$SOURCE_DTB" "$TARGET_DTB"
