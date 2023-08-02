@@ -27,6 +27,9 @@ proc useResolvedStub() =
 
 proc configureResolved() =
   addPackageUnless "systemd-resolved", resolvedServicePath
+  aptInstallNow()
+  discard modifyProperties("/etc/systemd/resolved.conf", [("DNSSEC", "allow-downgrade"),
+            ("ReadEtcHosts", "yes"), ("LLMNR", "no"), ("MulticastDNS", "no")])
   enableAndStart "systemd-resolved"
   commitQueue()
   useResolvedStub()
