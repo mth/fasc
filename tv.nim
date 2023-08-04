@@ -79,7 +79,7 @@ proc westonTV*(args: StrMap) =
     createSymlink("/opt/WidevineCdm", user.home / widevine_link)
   user.runWayland "/usr/bin/weston"
   addRaspbian()
-  packagesToInstall.add ["weston", "openssh-client", "foot", "celluloid", "mpv", "mpd", "mpc",
+  packagesToInstall.add ["weston", "openssh-client", "celluloid", "mpv", "mpd", "mpc",
                          "sonata", "python3-pkg-resources", "geeqie", "fonts-terminus-otb"]
   #user.vivaldi
   user.installMpd # commits queue
