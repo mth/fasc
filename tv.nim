@@ -84,7 +84,7 @@ proc westonTV*(args: StrMap) =
   addRaspbian()
   packagesToInstall.add ["weston", "openssh-client", "celluloid", "mpv", "mpd", "mpc",
                          "sonata", "python3-pkg-resources", "geeqie", "fonts-terminus-otb",
-                         "ir-keytable", "triggerhappy"]
+                         "ir-keytable", "triggerhappy", "webext-ublock-origin-chromium"]
   #user.vivaldi
   user.installMpd # commits queue
   for (path, content, mode) in util_files:
