@@ -1,4 +1,4 @@
-import std/[strformat, strutils, tables]
+import std/[strformat, strutils, tables, posix]
 import services, system, utils
 
 when defined(arm64):
@@ -47,4 +47,16 @@ proc installMpd*(user: UserInfo) =
   ]
   if compatible("s922x"):
     service &= ("CPUAffinity=", "0 1") # use economy cores
-  overrideService "mpd.service", {s_sandbox, s_allow_netlink}, service
+  overrideService "mpd.service", {s_sandbox}, service
+  overrideService "mpd.socket", {},
+    ("ExecStartPre=", "/usr/bin/install -m 755 -o mpd -g audio -d /run/mpd"),
+    ("SocketUser=", "mpd"), ("SocketGroup=", "audio"), ("SocketMode=", "0660")
+  const fifo = "/var/lib/mpd/keep-alsa-open"
+  if mkfifo(fifo, 0o600) == -1:
+    echo fmt"({fifo}) failed: {strerror(errno)}"
+    quit 1
+  runCmd "chown", "mpd:audio", fifo
+  addService "alsa-open", "Keeps ALSA device open", ["sound.target"],
+    fmt"/usr/bin/aplay -t raw -f dat {fifo}", "multi-user.target", {}, [
+      fmt"ExecStop=/usr/bin/dd if=/dev/zero of=/var/lib/mpd/{fifo} bs=4 count=1",
+      "User=mpd", "Group=tv", "SupplementaryGroups=audio"], "simple"
