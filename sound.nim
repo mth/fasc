@@ -59,4 +59,4 @@ proc installMpd*(user: UserInfo) =
   addService "alsa-open", "Keeps ALSA device open", ["sound.target"],
     fmt"/usr/bin/aplay -t raw -f dat {fifo}", "multi-user.target", {}, [
       fmt"ExecStop=/usr/bin/dd if=/dev/zero of=/var/lib/mpd/{fifo} bs=4 count=1",
-      "User=mpd", "Group=tv", "SupplementaryGroups=audio"], "simple"
+      "User=mpd", fmt"Group={user.group}", "SupplementaryGroups=audio"], "simple"
