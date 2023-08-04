@@ -9,6 +9,9 @@ const util_files = [
   ("/usr/local/share/pixmaps/celluloid-32x32.png", readResource("tv/celluloid-32x32.png"), 0o644),
   ("/usr/local/share/pixmaps/geeqie-32x32.png", readResource("tv/geeqie-32x32.png"), 0o644),
   ("/usr/local/share/pixmaps/sonata-32x32.png", readResource("tv/sonata-32x32.png"), 0o644),
+  ("/lib/udev/rc_keymaps/vestel_rc_4862.toml", readResource("tv/vestel_rc_4862.toml"), 0o644),
+  ("/etc/rc_maps.cfg", readResource("tv/rc_maps.cfg"), 0o644),
+  ("/etc/triggerhappy/triggers.d/mpd.conf", readResource("tv/mpd-triggers.conf"), 0o644),
 ]
 
 proc codename(): string =
@@ -80,7 +83,8 @@ proc westonTV*(args: StrMap) =
   user.runWayland "/usr/bin/weston"
   addRaspbian()
   packagesToInstall.add ["weston", "openssh-client", "celluloid", "mpv", "mpd", "mpc",
-                         "sonata", "python3-pkg-resources", "geeqie", "fonts-terminus-otb"]
+                         "sonata", "python3-pkg-resources", "geeqie", "fonts-terminus-otb",
+                         "ir-keytable", "triggerhappy"]
   #user.vivaldi
   user.installMpd # commits queue
   for (path, content, mode) in util_files:
