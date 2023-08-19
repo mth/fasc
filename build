@@ -3,7 +3,7 @@
 set -e
 
 if [ "$1" = "musl" ] || [ "$1" = "tiny" ]; then
-	nim c -d:musl fasc.nim && strip --strip-all fasc
+	nim c -d:musl --gc:markAndSweep fasc.nim && strip --strip-all fasc
 	if [ "$1" = "tiny" ]; then
 		strip --strip-all fasc
 		upx -9 fasc
@@ -11,4 +11,4 @@ if [ "$1" = "musl" ] || [ "$1" = "tiny" ]; then
 	exit 0
 fi
 
-nim c fasc.nim
+nim c --gc:markAndSweep fasc.nim
