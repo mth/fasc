@@ -32,7 +32,7 @@ proc commonGuiSetup*(user: UserInfo) =
 proc installX11(user: UserInfo) =
   writeAsUser(user, ".Xdefaults", xdefaults)
   writeAsUser(user, ".XCompose", xcompose)
-  writeAsUser(user, ".config/redshift.conf", gammastep_ini.replace("wayland", "xrandr"))
+  writeAsUser(user, ".config/redshift.conf", gammastep_ini.replace("wayland", "randr"))
   packagesToInstall.add ["xserver-xorg", "xserver-xorg-input-evdev",
     "xserver-xorg-video-intel", "lightdm", "x11-utils", "x11-xserver-utils",
     "mesa-utils", "redshift", "mc", "fonts-unifont"]
