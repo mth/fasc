@@ -300,6 +300,8 @@ proc tuneSystem*(args: StrMap) =
 
 proc startNTP*(args: StrMap) =
   let ntpServer = args.getOrDefault ""
+  addPackageUnless("systemd-timesyncd",
+                   "/lib/systemd/system/systemd-timesyncd.service")
   if ntpServer == "":
     enableAndStart "systemd-timesyncd.service" # gets server from DHCP
   elif modifyProperties("/etc/systemd/timesyncd.conf", [("NTP", ntpServer)]):
