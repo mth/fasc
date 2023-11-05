@@ -20,7 +20,7 @@ proc commonGuiSetup*(user: UserInfo) =
   writeFile("/usr/share/X11/xkb/symbols/uml", @[xkb_uml])
   var groups = "audio,video,input,render"
   when not (defined(arm64) or defined(arm)):
-    groups &= "adm,cdrom,dialout,netdev,kvm,systemd-journal"
+    groups &= ",adm,cdrom,dialout,netdev,kvm,systemd-journal"
     if isIntelCPU():
       packagesToInstall.add "intel-media-va-driver" # newer driver, maybe better?
       # packagesToInstall.add "i965-va-driver"
