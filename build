@@ -11,4 +11,4 @@ if [ "$1" = "musl" ] || [ "$1" = "tiny" ]; then
 	exit 0
 fi
 
-nim c --gc:markAndSweep fasc.nim
+nim c --gc:none fasc.nim

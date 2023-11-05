@@ -11,6 +11,8 @@ type Package = ref object
   important: bool
   required: bool
   autoInstall: bool
+  checking: bool
+
 
 iterator packageFields(fileName: string): TableRef[string, string] =
   let f = open(fileName)
@@ -64,7 +66,11 @@ proc readStatus(): Table[string, Package] =
       package.autoInstall = true
 
 func wouldBeRemoved(package: Package): bool =
-  return package.autoInstall and package.dependedBy.allIt(it.wouldBeRemoved)
+  if package.checking:
+    return true
+  package.checking = true
+  result = package.autoInstall and package.dependedBy.allIt(it.wouldBeRemoved)
+  package.checking = false
 
 func traceRecommends(trace: Package, packages: Table[string, Package],
                      recommended: var HashSet[string]) =
