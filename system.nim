@@ -263,6 +263,8 @@ proc hdparm*(args: StrMap) =
       writeFile(hdparmConf, conf, true)
       runCmd(hdparmAPM, "resume")
 
+# TODO https://unix.stackexchange.com/questions/161863/auto-hibernate-with-udev-rule
+# https://unix.stackexchange.com/questions/161863/auto-hibernate-with-udev-rule
 proc batteryMonitor() =
   packagesToInstall.add "sleepd"
   aptInstallNow()
