@@ -2,7 +2,7 @@ import std/[strformat, strutils, tables]
 import utils, services
 
 proc installVncServer*(args: StrMap) =
-  packagesToInstall.add ["tigervnc-standalone-server", "icewm"]
+  packagesToInstall.add ["tigervnc-standalone-server", "tigervnc-tools", "icewm"]
   aptInstallNow()
   let userInfo = args.userInfo
   let display = args.getOrDefault("display", "2").strip(chars={':'})
