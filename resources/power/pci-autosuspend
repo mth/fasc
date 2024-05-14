@@ -1,5 +1,7 @@
 #!/bin/sh
 
+echo powersave > /sys/module/pcie_aspm/parameters/policy
+
 cd /sys/bus/pci/devices && for dev in *; do
 	[ "$dev" = "0000:00:00.0" ] || echo auto > "$dev/power/control"
 done
