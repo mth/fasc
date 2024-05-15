@@ -25,6 +25,9 @@ proc preferences(release: string, priority: int) =
    ], true)
 
 proc aptConf() =
+  if not isDebian():
+    echo "APT is for Debian"
+    quit 1
   writeFile("/etc/apt/apt.conf.d/90disable-recommends",
     ["APT::Install-Recommends false;\n"])
   writeFile("/etc/apt/apt.conf", [default_apt_conf])
