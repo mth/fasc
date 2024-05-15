@@ -11,7 +11,8 @@ flush ruleset
 """
 
 const default_firewall = readResource("nftables.conf")
-const ovpnScript = readResource("ovpn")
+const ovpnScript = readResource("vpn/ovpn")
+const ovpnUpdateResolved = readResource("vpn/update-systemd-resolved")
 const resolvedServicePath = "/lib/systemd/system/systemd-resolved.service"
 
 # TODO parameter to set DNSStubListenerExtra= 
@@ -169,8 +170,8 @@ proc ovpnClient*(args: StrMap) =
   const killVPNPath = "/usr/local/bin/kill-vpn"
   writeFile(ovpnPath, [ovpnScript])
   writeFile(killVPNPath, kill_vpn)
-  if not fileExists("/etc/openvpn/update-systemd-resolved"):
-    packagesToInstall.add ["openvpn", "openvpn-systemd-resolved"]
+  writeFile("/etc/openvpn/update-systemd-resolved", [ovpnUpdateResolved], permissions=0o755)
+  addPackageUnless "openvpn", "/usr/sbin/openvpn"
   enableAndStart "systemd-resolved"
   if user.uid == 0:
     setPermissions(ovpnPath, 0o750)
