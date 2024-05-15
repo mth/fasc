@@ -154,8 +154,7 @@ proc enableDefaultFirewall*(args: StrMap) =
   else:
     let rules = ""
   writeFile(confFile, nft_prefix & default_firewall.replace("${RULES}", rules))
-  if isFedora():
-    setPermissions(confFile, 0o755)
+  setPermissions(confFile, 0o755)
   enableAndStart("nftables.service")
 
 const kill_vpn = """#!/bin/sh
