@@ -1,4 +1,4 @@
-import std/[parseutils, sequtils, strformat, strutils, os, posix, tables]
+import std/[parseutils, sequtils, strformat, strutils, os, tables]
 import apps, services, utils
 
 # adding rules is like following:
@@ -142,7 +142,8 @@ proc wifiNet*(args: StrMap) =
 # nft list ruleset
 # man nft /Add, change, delete a table.
 proc enableDefaultFirewall*(args: StrMap) =
-  const confFile = "/etc/nftables.conf"
+  let confFile = if isFedora(): "/etc/sysconfig/nftables.conf"
+                 else: "/etc/nftables.conf"
   for line in lines(confFile):
     if line.endsWith(" accept") or line.endsWith(" drop"):
       echo "Not a default Debian /etc/nftables.conf, not modifying"
@@ -153,7 +154,8 @@ proc enableDefaultFirewall*(args: StrMap) =
   else:
     let rules = ""
   writeFile(confFile, nft_prefix & default_firewall.replace("${RULES}", rules))
-  discard chmod(confFile, 0o755)
+  if isFedora():
+    setPermissions(confFile, 0o755)
   enableAndStart("nftables.service")
 
 const kill_vpn = """#!/bin/sh
