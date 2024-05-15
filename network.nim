@@ -70,7 +70,7 @@ func supplicantService(iface: string): string =
 
 proc wlanDevice(device: string) =
   echo fmt"Configuring WLAN device {device} for DHCP"
-  network("wlan", "Name=wlp*", "DHCP=yes", "IPv6PrivacyExtensions=true", "DNSSEC=allow-downgrade")
+  network("wlan", "Name=*", "Type=wlan", "DHCP=yes", "IPv6PrivacyExtensions=true", "DNSSEC=allow-downgrade")
   wpa_supplicant(device)
   addPackageUnless("wpasupplicant", "/usr/sbin/wpa_supplicant")
   addPackageUnless("iw", "/usr/sbin/iw")
