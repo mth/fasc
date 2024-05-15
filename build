@@ -2,8 +2,10 @@
 
 set -e
 
+OPTS="--gc:none --warning:GcMem:off"
+
 if [ "$1" = "musl" ] || [ "$1" = "tiny" ]; then
-	nim c -d:musl --gc:markAndSweep fasc.nim && strip --strip-all fasc
+	nim c -d:musl $OPTS fasc.nim && strip --strip-all fasc
 	if [ "$1" = "tiny" ]; then
 		strip --strip-all fasc
 		upx -9 fasc
@@ -11,4 +13,4 @@ if [ "$1" = "musl" ] || [ "$1" = "tiny" ]; then
 	exit 0
 fi
 
-nim c --gc:none fasc.nim
+nim c $OPTS fasc.nim

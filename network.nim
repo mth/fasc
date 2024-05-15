@@ -81,7 +81,7 @@ iterator findInterfaces(): string =
     yield extractFilename(path)
 
 func isWireless(iface: string): bool =
-  iface.startsWith("wlp")
+  iface.startsWith("wlp") or dirExists("/sys/class/net" & iface & "wireless")
 
 proc isInterfaceUp(iface: string): bool =
   readFile(fmt"/sys/class/net/{iface}/operstate") == "up"
