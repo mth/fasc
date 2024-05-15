@@ -59,22 +59,28 @@ proc ensureSupplicantConf() =
     "p2p_disabled=1"
   ])
 
-proc wpa_supplicant(device: string) =
+func supplicantService(iface: string): string =
+  fmt"wpa_supplicant@{iface}.service"
+
+proc wlanNetwork() =
+  network("wlan", "Name=*", "Type=wlan", "DHCP=yes", "IPv6PrivacyExtensions=true", "DNSSEC=allow-downgrade")
+  addPackageUnless("iw", "/usr/sbin/iw")
+
+proc wpaSupplicant(device: string) =
+  echo fmt"Configuring WLAN device {device} for DHCP"
+  wlanNetwork()
   ensureSupplicantConf()
   let conf_link = fmt"/etc/wpa_supplicant/wpa_supplicant-{device}.conf"
   discard tryRemoveFile(conf_link)
   createSymlink("wpa_supplicant.conf", conf_link)
-
-func supplicantService(iface: string): string =
-  fmt"wpa_supplicant@{iface}.service"
-
-proc wlanDevice(device: string) =
-  echo fmt"Configuring WLAN device {device} for DHCP"
-  network("wlan", "Name=*", "Type=wlan", "DHCP=yes", "IPv6PrivacyExtensions=true", "DNSSEC=allow-downgrade")
-  wpa_supplicant(device)
   addPackageUnless("wpasupplicant", "/usr/sbin/wpa_supplicant")
-  addPackageUnless("iw", "/usr/sbin/iw")
   enableAndStart("systemd-networkd.service", device.supplicantService)
+
+proc iwd() =
+  echo "Adding iwd and systemd-networkd WLAN configuration"
+  wlanNetwork()
+  addPackageUnless("iwd", "/usr/bin/iwctl")
+  enableAndStart("systemd-networkd.socket", "iwd.service")
 
 iterator findInterfaces(): string =
   for kind, path in walkDir("/sys/class/net"):
@@ -99,7 +105,10 @@ proc wlan*(args: StrMap) =
   var devices: seq[string]
   for net in findInterfaces():
     if net.isWireless:
-      wlanDevice(net)
+      if "supplicant" in args:
+        wpaSupplicant(net)
+      else:
+        iwd()
       configureResolved()
       return
     devices.add net

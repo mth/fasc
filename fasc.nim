@@ -19,7 +19,7 @@ proc commonSystem(args: StrMap) =
   configureALSA args
 
 let tasks = {
-  "wlan": ("Configure WLAN client with DHCP", wlan),
+  "wlan": ("Configure WLAN client with DHCP [supplicant]", wlan),
   "wifinet": ("Add WLAN network ssid=<ssid>", wifiNet),
   "ntp": ("Enable timesyncd, optional ntp=<server>", startNTP),
   "icewm": ("Install IceWM desktop", installIceWM),
