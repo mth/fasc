@@ -99,7 +99,7 @@ proc safeFileUpdate*(filename, content: string, permissions: Mode = 0o644) =
   setPermissions(tmpFile, permissions)
   moveFile(tmpFile, filename)
 
-proc writeFileIfNotExists(filename, content: string; force: bool) =
+proc writeFileIfNotExists(filename, content: string; force = false) =
   if not force and filename.fileExists:
     echo fmt"Retaining existing {filename}"
   else:
@@ -129,10 +129,10 @@ proc writeAsUser*(user: UserInfo, filename, content: string,
   createParentDirs(user, filename)
   let absolute = user.home / filename
   if force:
-    safeFileUpdate(absolute, content, permissions)
+    safeFileUpdate absolute, content, permissions
   else:
-    writeFileIfNotExists(absolute, content, false)
-  setPermissions(absolute, user, permissions)
+    writeFileIfNotExists absolute, content
+  setPermissions absolute, user, permissions
 
 proc runCmd(exitOnError: bool, command: string, args: openarray[string]) =
   let process = startProcess(command, "", args, nil, {poParentStreams, poUsePath})
@@ -267,7 +267,7 @@ proc appendMissing*(filename: string, needed: varargs[string]): bool =
 
 proc appendRcLocal*(needed: varargs[string]) =
   let rc = "/etc/rc.local"
-  rc.writeFileIfNotExists "#!/bin/sh\n\n", false
+  rc.writeFileIfNotExists "#!/bin/sh\n\n"
   rc.setPermissions 0o755
   discard rc.appendMissing needed
 

@@ -28,7 +28,9 @@ proc useResolvedStub() =
 proc configureResolved() =
   addPackageUnless "systemd-resolved", resolvedServicePath
   aptInstallNow()
-  discard modifyProperties("/etc/systemd/resolved.conf", [("DNSSEC", "allow-downgrade"),
+  const resolvedConf = "/etc/systemd/resolved.conf"
+  writeFile resolvedConf, ["[Resolve]\n"]
+  discard modifyProperties(resolvedConf, [("DNSSEC", "allow-downgrade"),
             ("ReadEtcHosts", "yes"), ("LLMNR", "no"), ("MulticastDNS", "no")])
   enableAndStart "systemd-resolved"
   commitQueue()
@@ -63,7 +65,7 @@ func supplicantService(iface: string): string =
   fmt"wpa_supplicant@{iface}.service"
 
 proc wlanNetwork() =
-  network("wlan", "Name=*", "Type=wlan", "DHCP=yes", "IPv6PrivacyExtensions=true", "DNSSEC=allow-downgrade")
+  network("wlan", "Name=*\nType=wlan", "DHCP=yes", "IPv6PrivacyExtensions=true", "DNSSEC=allow-downgrade")
   addPackageUnless("iw", "/usr/sbin/iw")
 
 proc wpaSupplicant(device: string) =
@@ -87,7 +89,7 @@ iterator findInterfaces(): string =
     yield extractFilename(path)
 
 proc isWireless(iface: string): bool =
-  iface.startsWith("wlp") or dirExists("/sys/class/net" & iface & "wireless")
+  iface.startsWith("wlp") or dirExists("/sys/class/net" / iface / "wireless")
 
 proc isInterfaceUp(iface: string): bool =
   readFile(fmt"/sys/class/net/{iface}/operstate") == "up"
