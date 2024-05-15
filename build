@@ -2,12 +2,12 @@
 
 set -e
 
-OPTS="--gc:none --warning:GcMem:off"
+OPTS="--gc:none --warning:GcMem:off -d:release"
 
 if [ "$1" = "musl" ] || [ "$1" = "tiny" ]; then
 	nim c -d:musl $OPTS fasc.nim && strip --strip-all fasc
 	if [ "$1" = "tiny" ]; then
-		strip --strip-all fasc
+		# strip --strip-all fasc
 		upx -9 fasc
 	fi
 	exit 0
