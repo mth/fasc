@@ -290,7 +290,8 @@ proc tuneSystem*(args: StrMap) =
   let battery = hasBattery()
   args.sysctls battery
   serviceTimeouts()
-  bootConf()
+  if isDebian():
+    bootConf()
   fstab()
   inMemoryJournal()
   if listDir("/sys/bus/pci/devices").len > 0:

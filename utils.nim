@@ -10,8 +10,29 @@ var enableUnits*: seq[string]
 var startUnits*:  seq[string]
 var systemdReload*: bool
 var aptUpdate*: bool
+var distroDetected = false
+var hasDebianVersion = false
+var hasFedoraRelease = false
 
 const resourceDir = currentSourcePath().parentDir / "resources"
+
+let fedoraPackageMap = [
+  ("mingipakinimi", "mingiteinepakinimi"),
+].toTable
+
+proc detectDistro() =
+  if not distroDetected:
+    hasDebianVersion = fileExists("/etc/debian_version")
+    hasFedoraRelease = fileExists("/usr/lib/fedora-release")
+    distroDetected = true
+
+proc isDebian*(): bool =
+  detectDistro()
+  return hasDebianVersion 
+
+proc isFedora*(): bool =
+  detectDistro()
+  return hasFedoraRelease
 
 proc readResource*(filename: string): string =
   readFile(resourceDir / filename)
@@ -156,10 +177,17 @@ proc outputOfCommand*(inputString, command: string;
 proc aptInstallNow*(packages: varargs[string]) =
   packagesToInstall.add packages
   if packagesToInstall.len > 0:
-    if aptUpdate:
+    if aptUpdate and isDebian():
       runCmd "apt-get", "update"
       aptUpdate = false
-    runCmd("apt-get", @["install", "-y", "--no-install-recommends"] & packagesToInstall)
+    if isFedora():
+      for i in 0..<packagesToInstall.len:
+        let name = packagesToInstall[i]
+        if name in fedoraPackageMap:
+          packagesToInstall[i] = fedoraPackageMap[name]
+      runCmd("dnf", @["-y", "install"] & packagesToInstall & "--setopt=install_weak_deps=False")
+    else:
+      runCmd("apt-get", @["install", "-y", "--no-install-recommends"] & packagesToInstall)
     packagesToInstall.reset
 
 proc commitQueue*() =

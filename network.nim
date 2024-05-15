@@ -86,7 +86,7 @@ iterator findInterfaces(): string =
   for kind, path in walkDir("/sys/class/net"):
     yield extractFilename(path)
 
-func isWireless(iface: string): bool =
+proc isWireless(iface: string): bool =
   iface.startsWith("wlp") or dirExists("/sys/class/net" & iface & "wireless")
 
 proc isInterfaceUp(iface: string): bool =
