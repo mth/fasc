@@ -2,7 +2,7 @@
 
 set -e
 
-OPTS="--mm:none --warning:GcMem:off -d:release"
+OPTS="--mm:none --threads:off --warning:GcMem:off -d:release"
 
 if [ "$1" = "musl" ] || [ "$1" = "tiny" ]; then
 	nim c -d:musl $OPTS fasc.nim && strip --strip-all fasc
