@@ -8,6 +8,11 @@ const run_firefox_script = readResource("user/firefox.sh")
 const ff2mpv_script = readResource("ff2mpv/ff2mpv.py")
 const ff2mpv_host = readResource("ff2mpv/ff2mpv.json")
 
+proc writeFirefoxPrefs(name: string, prefs: varargs[string]) =
+  let dir = if isDebian(): "/etc/firefox-esr"
+            else: "/etc/firefox/pref"
+  writeFile dir / name, prefs
+
 func pref(key, value: string): string =
   fmt"""pref("{key}", {(value.escape)});"""
 
@@ -83,11 +88,11 @@ proc addFirefoxESR*(wayland: bool) =
     prefs &= pref("privacy.resistFingerprinting", true)
     prefs &= pref("widget.wayland_dmabuf_backend.enabled", true)
     prefs &= pref("widget.wayland-dmabuf-vaapi.enabled", true)
-  writeFile("/etc/firefox-esr/optimize.js", prefs);
+  writeFirefoxPrefs("optimize.js", prefs);
   addPackageUnless("firefox-esr", "/usr/bin/firefox-esr")
 
 proc firefoxParanoid*() =
-  writeFile("/etc/firefox-esr/paranoid.js", [
+  writeFirefoxPrefs("paranoid.js", [
     pref("geo.enabled", false),
     pref("media.navigator.enabled", false),
     pref("network.cookie.cookieBehavior", 1),
