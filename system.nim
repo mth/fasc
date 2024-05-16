@@ -75,6 +75,10 @@ proc hasProcess(exePath: string): bool =
         readSymlink(subdir / "exe") == exePath:
       return true
 
+proc udevReload(subsystem: string) =
+  runCmd "udevadm", "control", "--reload-rules"
+  runCmd "udevadm", "trigger", fmt"--attr-match=subsystem={subsystem}"
+
 proc propset*(args: StrMap) =
   let file = args.nonEmptyParam("config")
   var properties = args
@@ -180,7 +184,7 @@ proc fstab*(tmpfs = true) =
   var hasSwap = false
   var fstab = readFStab(mounts, hasSwap)
   let originalLen = fstab.len
-  if tmpfs and "/tmp" notin mounts:
+  if tmpfs and not isFedora() and "/tmp" notin mounts:
     let mem = memTotal()
     if mem >= 2048:
       var tmpfs = "tmpfs\t/tmp\ttmpfs\tnosuid"
@@ -197,7 +201,7 @@ proc fstab*(tmpfs = true) =
     fstab.add(&"/dev/disk/usbdrive1\t/y\tvfat\tnoauto,user")
     writeFileSynced("/etc/udev/rules.d/85-usb-storage-alias.rules",
       """KERNEL=="sd?1" SUBSYSTEM=="block" SUBSYSTEMS=="usb" SYMLINK+="disk/usbdrive1"""")
-    runCmd("systemctl", "restart", "udev")
+    udevReload "block"
   if fstab.len != originalLen:
     safeFileUpdate("/etc/fstab", fstab.join("\n") & "\n")
   # TODO if no swap, add zswap
@@ -270,8 +274,7 @@ proc batteryMonitor(useUdev: bool) =
                          "ATTR{capacity}==\"[0-3]\", RUN+=\"/usr/bin/systemctl suspend\""
   if useUdev or isFedora():
     writeFile "/etc/udev/rules.d/99-lowbat.rules", [udevLowBattery]
-    runCmd "udevadm", "control", "--reload-rules"
-    runCmd "udevadm", "trigger", "--attr-match=subsystem=power_supply"
+    udevReload "power_supply"
   else:
     packagesToInstall.add "sleepd"
     aptInstallNow()
