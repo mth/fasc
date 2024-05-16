@@ -66,7 +66,8 @@ proc findPSU(psuType: string): string =
     if readFile(psu / "type").strip == psuType:
       return psu
 
-proc hasBattery*(): bool = findPSU(batteryType).len != 0
+proc batteryCount(): int = findPSU(batteryType).len
+proc hasBattery*(): bool = batteryCount() != 0
 
 proc hasProcess(exePath: string): bool =
   for kind, subdir in walkDir("/proc"):
@@ -263,15 +264,20 @@ proc hdparm*(args: StrMap) =
       writeFile(hdparmConf, conf, true)
       runCmd(hdparmAPM, "resume")
 
-# TODO https://unix.stackexchange.com/questions/161863/auto-hibernate-with-udev-rule
 # https://wiki.archlinux.org/title/laptop#suspend_on_low_battery_level
-proc batteryMonitor() =
-  packagesToInstall.add "sleepd"
-  aptInstallNow()
-  if modifyProperties("/etc/default/sleepd",
-        [("PARAMS", "\"-b 2 -u 0 -c 30 -I -s '/usr/bin/systemctl suspend'\"")],
-        onlyEmpty=false):
-    runCmd "systemctl", "restart", "sleepd.service"
+proc batteryMonitor(useUdev: bool) =
+  const udevLowBattery = "SUBSYSTEM==\"power_supply\", ATTR{status}==\"Discharging\", " &
+                         "ATTR{capacity}==\"[0-3]\", RUN+=\"/usr/bin/systemctl suspend\""
+  if useUdev or isFedora():
+    writeFile "/etc/udev/rules.d/99-lowbat.rules", [udevLowBattery]
+    runCmd "udevadm", "control", "--reload-rules"
+  else:
+    packagesToInstall.add "sleepd"
+    aptInstallNow()
+    if modifyProperties("/etc/default/sleepd",
+          [("PARAMS", "\"-b 2 -u 0 -c 30 -I -s '/usr/bin/systemctl suspend'\"")],
+          onlyEmpty=false):
+      runCmd "systemctl", "restart", "sleepd.service"
 
 proc inMemoryJournal() =
   var conf = @[("Storage", "volatile")]
@@ -287,8 +293,8 @@ proc inMemoryJournal() =
 # TODO comment out pam_motd.so from /etc/pam.d/sshd
 
 proc tuneSystem*(args: StrMap) =
-  let battery = hasBattery()
-  args.sysctls battery
+  let batteries = batteryCount()
+  args.sysctls(batteries != 0)
   serviceTimeouts()
   if isDebian():
     bootConf()
@@ -298,8 +304,8 @@ proc tuneSystem*(args: StrMap) =
     safeFileUpdate "/usr/local/sbin/pci-autosuspend", pci_autosuspend, 0o755
     addService "pci-autosuspend", "Enables PCI devices autosuspend", [],
                "/usr/local/sbin/pci-autosuspend", "multi-user.target"
-  if battery:
-    batteryMonitor()
+  if batteries != 0:
+    batteryMonitor(batteries == 1)
 
 proc startNTP*(args: StrMap) =
   let ntpServer = args.getOrDefault ""
