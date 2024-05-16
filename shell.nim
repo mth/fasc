@@ -7,6 +7,7 @@ const dot_bashrc = readResource("user/bashrc")
 const debian_bashrc_header = "# ~/.bashrc: executed by bash(1) for non-login shells."
 const upload_cam_script = readResource("user/upload-cam")
 const upload_cam_desktop = readResource("user/upload-cam.desktop")
+const helix = readResource("user/helix.toml")
 
 proc configureUserBash(user: UserInfo) =
   let bashrc = user.home / ".bashrc"
@@ -18,6 +19,7 @@ proc configureUserBash(user: UserInfo) =
     discard # non-existent .bashrc isn't a problem
   echo("Replacing ", bashrc)
   writeFile(bashrc, dot_bashrc)
+  user.writeAsUser(".config/helix/config.toml", helix)
 
 proc configureBash*(args: StrMap) =
   echo "Replacing /etc/bash.bashrc"

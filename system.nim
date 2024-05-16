@@ -264,7 +264,7 @@ proc hdparm*(args: StrMap) =
       runCmd(hdparmAPM, "resume")
 
 # TODO https://unix.stackexchange.com/questions/161863/auto-hibernate-with-udev-rule
-# https://unix.stackexchange.com/questions/161863/auto-hibernate-with-udev-rule
+# https://wiki.archlinux.org/title/laptop#suspend_on_low_battery_level
 proc batteryMonitor() =
   packagesToInstall.add "sleepd"
   aptInstallNow()

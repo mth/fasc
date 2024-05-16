@@ -1,0 +1,22 @@
+# https://github.com/helix-editor/helix/wiki/Migrating-from-Vim
+# https://theari.dev/blog/enhanced-helix-config/
+
+# theme = "bogster"
+theme = "papercolor-dark"
+
+[editor]
+bufferline = "multiple"
+rulers = [110]
+true-color = false
+undercurl = true
+
+[editor.cursor-shape]
+insert = "bar"
+normal = "block"
+select = "underline"
+
+[keys.normal]
+"C-tab" = "goto_next_buffer"
+"C-S-tab" = "goto_previous_buffer"
+"A-." = "goto_next_buffer"
+"A-," = "goto_previous_buffer"
