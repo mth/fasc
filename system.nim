@@ -271,6 +271,7 @@ proc batteryMonitor(useUdev: bool) =
   if useUdev or isFedora():
     writeFile "/etc/udev/rules.d/99-lowbat.rules", [udevLowBattery]
     runCmd "udevadm", "control", "--reload-rules"
+    runCmd "udevadm", "trigger", "--attr-match=subsystem=power_supply"
   else:
     packagesToInstall.add "sleepd"
     aptInstallNow()
