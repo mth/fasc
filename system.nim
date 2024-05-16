@@ -210,19 +210,26 @@ proc defaultSleepMinutes*(): int =
   if hasBattery(): 7
   else: 15
 
+proc createModifyProperties(filename: string, section: string,
+                            update: varargs[(string, string)]): bool =
+  if not filename.fileExists:
+    writeFile filename, [section]
+  modifyProperties filename, update
+
 proc serviceTimeouts() =
   for filename in ["/etc/systemd/system.conf", "/etc/systemd/user.conf"]:
-    if modifyProperties(filename, [("DefaultTimeoutStartSec", "15s"),
-                                   ("DefaultTimeoutStopSec", "10s")]):
+    if createModifyProperties(filename, "[Manager]",
+        ("DefaultTimeoutStartSec", "15s"), ("DefaultTimeoutStopSec", "10s")):
       systemdReload = true
 
 proc systemdSleep*(sleepMinutes: int) =
   # sway loses display output on logind restart
-  if modifyProperties("/etc/systemd/logind.conf",
-      [("IdleAction", "suspend"), ("IdleActionSec", fmt"{sleepMinutes}min")]) and
+  if createModifyProperties("/etc/systemd/logind.conf", "[Login]",
+      ("IdleAction", "suspend"), ("IdleActionSec", fmt"{sleepMinutes}min")) and
      not hasProcess("/usr/bin/sway"):
     runCmd("systemctl", "restart", "systemd-logind.service")
-  if modifyProperties("/etc/systemd/sleep.conf", [("AllowSuspendThenHibernate", "no")]):
+  if createModifyProperties("/etc/systemd/sleep.conf", "[Sleep]",
+                            ("AllowSuspendThenHibernate", "no")):
     systemdReload = true
 
 const hdparmConf = "/etc/hdparm.conf"
@@ -290,7 +297,7 @@ proc inMemoryJournal() =
     conf &= [("RuntimeMaxUse", "32M"), ("ForwardToSyslog", "no")]
   else:
     conf &= ("RuntimeMaxUse", "16M")
-  if modifyProperties("/etc/systemd/journald.conf", conf):
+  if createModifyProperties("/etc/systemd/journald.conf", "[Journal]", conf):
     runCmd "systemctl", "restart", "systemd-journald.service"
     runCmd "rm", "-rf", "/var/log/journal"
 
@@ -317,7 +324,7 @@ proc startNTP*(args: StrMap) =
                    "/lib/systemd/system/systemd-timesyncd.service")
   if ntpServer == "":
     enableAndStart "systemd-timesyncd.service" # gets server from DHCP
-  elif modifyProperties("/etc/systemd/timesyncd.conf", [("NTP", ntpServer)]):
+  elif createModifyProperties("/etc/systemd/timesyncd.conf", "[Time]", ("NTP", ntpServer)):
     runCmd("systemctl", "restart", "systemd-timesyncd.service")
     enableUnits.add "systemd-timesyncd.service"
 
