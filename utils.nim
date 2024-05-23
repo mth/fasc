@@ -22,6 +22,10 @@ let fedoraPackageMap = [
   ("fonts-terminus-otb", ""),
   ("brightness-udev", ""),
   ("libnss3-tools", "nss-tools"),
+  ("intel-media-va-driver", "libva-intel-media-driver"),
+  ("nim", ""),
+  ("xmahjongg", "gnome-mahjongg"),
+  ("build-essential", "gcc"),
 ].toTable
 
 proc detectDistro() =
@@ -336,4 +340,4 @@ proc updateMime*() =
     runCmd "update-mime-database /usr/share/mime"
   else:
     runCmd "update-mime"
-  
+ 

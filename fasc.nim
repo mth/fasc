@@ -32,8 +32,8 @@ let tasks = {
   "sway": ("Configure sway desktop startup", swayUnit),
   "swaycfg": ("Configure sway compositor", swayConf),
   "apt": ("Configure APT defaults", configureAPT),
-  "apt-all": ("Configure APT defaults and prune extraneous packages",
-                configureAndPruneAPT),
+  "prune": ("Configure APT/DNF defaults and prune extraneous packages",
+                configureAndPrunePackages),
   "common": (common_descr, commonSystem),
   "tunesys": ("Tune system configuration", tuneSystem),
   "hdparm": ("Configure SATA idle timeouts", hdparm),
@@ -72,7 +72,7 @@ if paramCount() == 0:
   echo ""
   echo "Commands:"
   for key in tasks.keys.toSeq.sorted:
-    if not isFedora() or not key.startsWith("apt"):
+    if not isFedora() or key != "apt":
       let (description, _) = tasks[key]
       echo("  ", key.alignLeft(16), ' ', description)
   quit()

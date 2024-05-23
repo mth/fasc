@@ -93,7 +93,7 @@ proc configureAPT*(args: StrMap) =
     setPermissions(path, 0o755)
   mandbUpdate()
 
-proc configureAndPruneAPT*(args: StrMap) =
+proc configureAndPruneAPT(args: StrMap) =
   configureAPT(args)
   installFirmware()
   packagesToInstall.add ["systemd-cron", "unattended-upgrades"]
@@ -104,17 +104,43 @@ proc configureAndPruneAPT*(args: StrMap) =
   systemdReload = true
   setupUnattendedUpgrades()
 
+proc configureAndPruneDNF(args: StrMap) =
+  let installed = outputOfCommand("", "rpm", "-qa")
+  discard modifyProperties("/etc/dnf/dnf.conf", [
+            ("install_weak_deps", "False"),
+            ("max_parallel_downloads", "8"),
+            ("fastestmirror", "True"),
+            ("deltarpm", "True"),
+            ("deltarpm_percentage", "30")])
+  var preserve = @["ctags", "openvpn", "tigervnc-server-minimal", "usermode",
+                   "nss-tools", "gdb", "nftables"]
+  for i in countdown(preserve.len - 1, 0):
+    if preserve[i] notin installed:
+      preserve.delete i
+  runCmd("dnf", @["mark", "install"] & preserve)
+  runCmd("dnf", "install", "-y", "fuse-sshfs")
+  runCmd("dnf", "remove", "NetworkManager", "avahi", "chrony", "firewalld", "udisks2", "gssproxy")
+
+proc configureAndPrunePackages*(args: StrMap) =
+  if isDebian():
+    args.configureAndPruneAPT
+  elif isFedora():
+    args.configureAndPruneDNF
+
 proc installDesktopPackages*(args: StrMap) =
-  packagesToInstall.add ["ncal", "bc", "pinfo", "strace", "lsof", "rlwrap",
-                         "mc", "curl", "unzip", "lm-sensors"]
+  if isDebian():
+    packagesToInstall.add ["mc", "ncal"]
+  packagesToInstall.add ["ncal", "bc", "pinfo", "strace", "lsof", "rlwrap", "curl", "unzip"]
 
 proc installDesktopUIPackages*(args: StrMap) =
   args.installDesktopPackages
+  if isFedora():
+    packagesToInstall.add "flatpak"
   packagesToInstall.add ["geeqie", "xdg-utils", "xmahjongg"]
 
 proc installDevel*(args: StrMap) =
   installDesktopPackages(args)
-  packagesToInstall.add ["build-essential", "git", "nim"]
+  packagesToInstall.add ["build-essential", "make", "git", "nim"]
 
 proc beginnerDevel*(args: StrMap) =
   installDevel args
