@@ -118,7 +118,6 @@ proc configureAndPruneDNF(args: StrMap) =
     if preserve[i] notin installed:
       preserve.delete i
   runCmd("dnf", @["mark", "install"] & preserve)
-  runCmd("dnf", "install", "-y", "fuse-sshfs")
   runCmd("dnf", "remove", "NetworkManager", "avahi", "chrony", "firewalld", "udisks2", "gssproxy")
 
 proc configureAndPrunePackages*(args: StrMap) =
@@ -131,6 +130,8 @@ proc installDesktopPackages*(args: StrMap) =
   if isDebian():
     packagesToInstall.add ["mc", "ncal"]
   packagesToInstall.add ["ncal", "bc", "pinfo", "strace", "lsof", "rlwrap", "curl", "unzip"]
+  if isFedora():
+    packagesToInstall.add "fuse-sshfs"
 
 proc installDesktopUIPackages*(args: StrMap) =
   args.installDesktopPackages
