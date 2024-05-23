@@ -24,7 +24,9 @@ exec exec swayidle -w \
 """
 
 proc defaultLocale(): string =
-  for line in lines("/etc/default/locale"):
+  let conf = if isDebian(): "/etc/default/locale"
+             else: "/etc/locale.conf"
+  for line in lines(conf):
     let strippedLine = line.strip
     if strippedLine.startsWith "LANG=":
       result = strippedLine[5..^1].strip(chars = {'"'})
@@ -41,6 +43,10 @@ proc runWayland*(userInfo: UserInfo, compositor: string) =
   var memLimit = memTotal().int64 * 0x300
   if memLimit < minMemLimit or memLimit > maxMemLimit:
     memLimit = maxMemLimit
+  var compositor = compositor
+  # weird hack for SELinux
+  if isFedora():
+    compositor = "/usr/bin/sh -c \"exec " & compositor & '"'
   var service = [
     "[Unit]",
     "Description=Runs wayland desktop",

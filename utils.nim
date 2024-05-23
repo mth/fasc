@@ -23,6 +23,8 @@ let fedoraPackageMap = [
   ("brightness-udev", ""),
   ("libnss3-tools", "nss-tools"),
   ("intel-media-va-driver", "libva-intel-media-driver"),
+  ("xwayland", "xorg-x11-server-Xwayland"),
+  ("qtwayland5", ""),
   ("nim", ""),
   ("xmahjongg", "gnome-mahjongg"),
   ("build-essential", "gcc"),
@@ -337,7 +339,7 @@ proc sudoNoPasswd*(user: UserInfo, envKeep: string, paths: varargs[string]) =
 
 proc updateMime*() =
   if isFedora():
-    runCmd "update-mime-database /usr/share/mime"
+    runCmd "update-mime-database", "/usr/share/mime"
   else:
     runCmd "update-mime"
  
