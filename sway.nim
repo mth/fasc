@@ -1,9 +1,11 @@
 import std/[strformat, strutils, os]
 import utils, apps, gui, system
 
+const foot_ini = readResource("user/foot.ini");
+
 const user_config = [
   (".XCompose", xcompose),
-  (".config/foot/foot.ini", readResource("user/foot.ini")),
+  (".config/waybar/config.jsonc", readResource("user/waybar.jsonc")),
   (".config/mpv/mpv.conf", readResource("user/mpv.conf")),
   (".config/gammastep/config.ini", gammastep_ini)
 ]
@@ -84,6 +86,10 @@ proc runWayland*(userInfo: UserInfo, compositor: string) =
 proc waylandUserConfig*(user: UserInfo) =
   for (file, conf) in user_config:
     writeAsUser(user, file, conf)
+  var foot = foot_ini
+  if not isDebian():
+    foot = foot.replace("=Terminus:size=12,", "=")
+  writeAsUser(user, ".config/foot/foot.ini", foot)
 
 proc configureSway(user: UserInfo, sleepMinutes: int) =
   user.waylandUserConfig
