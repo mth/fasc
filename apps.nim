@@ -17,7 +17,7 @@ proc firefoxDebianize*(config: string, bin = false): string =
 
 proc writeFirefoxPrefs(name: string, prefs: varargs[string]) =
   let dir = if isDebian(): "/etc/firefox-esr"
-            else: "/etc/firefox/pref"
+            else: "/usr/lib64/firefox/browser/defaults/preferences"
   writeFile dir / name, prefs
 
 func pref(key, value: string): string =
