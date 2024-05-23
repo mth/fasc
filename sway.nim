@@ -126,4 +126,4 @@ proc swayUnit*(args: StrMap) =
   if not vimfmPath.fileExists:
     aptInstallNow()
     vimfmPath.writeFileSynced vimfm_desktop
-    runCmd("update-mime")
+    updateMime()

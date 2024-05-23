@@ -17,7 +17,11 @@ var hasFedoraRelease = false
 const resourceDir = currentSourcePath().parentDir / "resources"
 
 let fedoraPackageMap = [
-  ("mingipakinimi", "mingiteinepakinimi"),
+  ("openssh-client", "openssh-clients"),
+  ("fonts-unifont", "unifont-ttf-fonts"),
+  ("fonts-terminus-otb", ""),
+  ("brightness-udev", ""),
+  ("libnss3-tools", "nss-tools"),
 ].toTable
 
 proc detectDistro() =
@@ -181,10 +185,14 @@ proc aptInstallNow*(packages: varargs[string]) =
       runCmd "apt-get", "update"
       aptUpdate = false
     if isFedora():
-      for i in 0..<packagesToInstall.len:
+      for i in countdown(packagesToInstall.len - 1, 0):
         let name = packagesToInstall[i]
         if name in fedoraPackageMap:
-          packagesToInstall[i] = fedoraPackageMap[name]
+          let pkg = fedoraPackageMap[name]
+          if pkg != "":
+            packagesToInstall[i] = pkg
+          else:
+            packagesToInstall.delete i
       runCmd("dnf", @["-y", "install"] & packagesToInstall & "--setopt=install_weak_deps=False")
     else:
       runCmd("apt-get", @["install", "-y", "--no-install-recommends"] & packagesToInstall)
@@ -319,6 +327,13 @@ proc sudoNoPasswd*(user: UserInfo, envKeep: string, paths: varargs[string]) =
     if envKeep.len != 0:
       rules &= ("Defaults!" & path & ' ', "env_keep=\"" & envKeep & '"')
     rules &= ("", user.user & " ALL=(root:root) NOPASSWD: " & path)
-  addPackageUnless("sudo", "/usr/bin/sudo")
+  addPackageUnless "sudo", "/usr/bin/sudo"
   aptInstallNow()
   discard appendMissing("/etc/sudoers", rules)
+
+proc updateMime*() =
+  if isFedora():
+    runCmd "update-mime-database /usr/share/mime"
+  else:
+    runCmd "update-mime"
+  
