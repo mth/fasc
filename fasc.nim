@@ -72,8 +72,9 @@ if paramCount() == 0:
   echo ""
   echo "Commands:"
   for key in tasks.keys.toSeq.sorted:
-    let (description, _) = tasks[key]
-    echo("  ", key.alignLeft(16), ' ', description)
+    if not isFedora() or not key.startsWith("apt"):
+      let (description, _) = tasks[key]
+      echo("  ", key.alignLeft(16), ' ', description)
   quit()
 
 if not (paramStr(1) in tasks):
