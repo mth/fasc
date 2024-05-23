@@ -16,7 +16,12 @@ proc commonSystem(args: StrMap) =
   tuneSystem args
   startNTP args
   enableDefaultFirewall args
-  configureALSA args
+  if isDebian():
+    configureALSA args
+
+var common_descr = "Alias for configuring bash, tunesys, ntp, firewall"
+if isDebian():
+  common_descr &= " and ALSA"
 
 let tasks = {
   "wlan": ("Configure WLAN client with DHCP [supplicant]", wlan),
@@ -29,8 +34,7 @@ let tasks = {
   "apt": ("Configure APT defaults", configureAPT),
   "apt-all": ("Configure APT defaults and prune extraneous packages",
                 configureAndPruneAPT),
-  "common": ("Alias for configuring bash, tunesys, ntp, firewall and alsa",
-             commonSystem),
+  "common": (common_descr, commonSystem),
   "tunesys": ("Tune system configuration", tuneSystem),
   "hdparm": ("Configure SATA idle timeouts", hdparm),
   "alsa": ("Configure ALSA dmixer", configureALSA),
