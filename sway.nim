@@ -85,7 +85,7 @@ proc runWayland*(userInfo: UserInfo, compositor: string) =
 
 proc waylandUserConfig*(user: UserInfo) =
   for (file, conf) in user_config:
-    writeAsUser(user, file, conf)
+    writeAsUser(user, file, firefoxDebianize(conf))
   var foot = foot_ini
   if not isDebian():
     foot = foot.replace("=Terminus:size=12,", "=")
@@ -114,7 +114,7 @@ proc swayUnit*(args: StrMap) =
       createSymlink("/usr/bin/yt-dlp", ytdlAlias)
     except:
       echo("Cannot link /usr/bin/yt-dlp to ", ytdlAlias)
-  addFirefoxESR true
+  addFirefox true
   # fonts-dejavu? fonts-liberation? fonts-freefont-ttf?
   # yt-dlp is in unstable, causes problems here
   packagesToInstall.add ["sway", "swayidle", "openssh-client", "foot",

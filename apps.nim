@@ -8,6 +8,13 @@ const run_firefox_script = readResource("user/firefox.sh")
 const ff2mpv_script = readResource("ff2mpv/ff2mpv.py")
 const ff2mpv_host = readResource("ff2mpv/ff2mpv.json")
 
+proc firefoxDebianize*(config: string, bin = false): string =
+  result = config
+  if isDebian():
+    result = config.replace("\"org.mozilla.firefox\"", "\"Firefox-esr\"")
+    if bin:
+      result = result.replace("/usr/bin/firefox", "/usr/bin/firefox-esr")
+
 proc writeFirefoxPrefs(name: string, prefs: varargs[string]) =
   let dir = if isDebian(): "/etc/firefox-esr"
             else: "/etc/firefox/pref"
@@ -23,7 +30,7 @@ func pref(key: string, value: bool): string =
   fmt"""pref("{key}", {value});"""
 
 # TODO need to add settings to keep the tab/urlbar narrower
-proc addFirefoxESR*(wayland: bool) =
+proc addFirefox*(wayland: bool) =
   var prefs = @[
     pref("browser.aboutConfig.showWarning", false),
     pref("browser.cache.disk.capacity", 262144),
@@ -89,7 +96,10 @@ proc addFirefoxESR*(wayland: bool) =
     prefs &= pref("widget.wayland_dmabuf_backend.enabled", true)
     prefs &= pref("widget.wayland-dmabuf-vaapi.enabled", true)
   writeFirefoxPrefs("optimize.js", prefs);
-  addPackageUnless("firefox-esr", "/usr/bin/firefox-esr")
+  if isDebian():
+    addPackageUnless("firefox-esr", "/usr/bin/firefox-esr")
+  else:
+    addPackageUnless("firefox", "/usr/bin/firefox")
 
 proc firefoxParanoid*() =
   writeFirefoxPrefs("paranoid.js", [
@@ -105,7 +115,8 @@ proc firefoxConfig*(user: UserInfo) =
                 permissions = 0o755, force = true)
     writeAsUser(user, ".mozilla/native-messaging-hosts/ff2mpv.json",
                 ff2mpv_host.replace("HOME", user.home), force = true)
-    writeAsUser(user, ".config/sway/firefox.sh", run_firefox_script,
+    writeAsUser(user, ".config/sway/firefox.sh",
+                firefoxDebianize(run_firefox_script, true),
                 permissions = 0o755, force = true)
 
 proc idCard*(args: StrMap) =
