@@ -119,7 +119,10 @@ proc configureAndPruneDNF(args: StrMap) =
       preserve.delete i
   runCmd("dnf", @["mark", "install"] & preserve)
   runCmd("dnf", "remove", "NetworkManager", "PackageKit", "PackageKit-glib",
-         "avahi", "audit", "chrony", "firewalld", "udisks2", "gssproxy", "upower")
+         "avahi", "audit", "chrony", "firewalld", "udisks2", "gssproxy", "upower",
+         "teamd", "python3-firewall", "sssd-client", "tracker")
+  if isIntelCPU():
+    runCmd "dnf", "remove", "amd-ucode-firmware", "amd-gpu-firmware"
 
 proc configureAndPrunePackages*(args: StrMap) =
   if isDebian():
