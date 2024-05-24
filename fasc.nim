@@ -49,6 +49,7 @@ let tasks = {
   "devel": ("Install development packages", installDevel),
   "showuser": ("Shows user", showUser),
   "nfs": ("Adds NFS mount", nfs),
+  "rpmfusion": ("Configures RPM fusion", configureRPMFusion),
   "upload-cam": ("upload-cam script rsync-to=host:/path [rsync-args=...]", uploadCam),
   "propset": ("set properties in config=/file/path", propset),
   "install-fasc": ("Install FASC into nspawn container machine=target", installFASC),
@@ -72,7 +73,8 @@ if paramCount() == 0:
   echo ""
   echo "Commands:"
   for key in tasks.keys.toSeq.sorted:
-    if not isFedora() or key != "apt":
+    if not (isFedora() and key == "apt" or
+            not isFedora() and key == "rpmfusion"):
       let (description, _) = tasks[key]
       echo("  ", key.alignLeft(16), ' ', description)
   quit()

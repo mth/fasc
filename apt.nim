@@ -126,6 +126,18 @@ proc configureAndPrunePackages*(args: StrMap) =
   elif isFedora():
     args.configureAndPruneDNF
 
+proc configureRPMFusion*(args: StrMap) =
+  let ver = outputOfCommand("", "rpm", "-E", "%fedora")
+  runCmd "dnf", "install",
+    fmt"https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-{ver}.noarch.rpm",
+    fmt"https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-{ver}.noarch.rpm"
+  runCmd "dnf", "config-manager", "--enable", "fedora-cisco-openh264"
+  runCmd "dnf", "swap", "ffmpeg-free", "ffmpeg", "--allowerasing"
+  if isIntelCPU():
+    packagesToInstall.add "intel-media-driver"
+  elif isAMDCPU():
+    runCmd "dnf", "swap", "mesa-va-drivers", "mesa-va-drivers-freeworld"
+
 proc installDesktopPackages*(args: StrMap) =
   if isDebian():
     packagesToInstall.add ["mc", "ncal"]
