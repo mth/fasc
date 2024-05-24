@@ -100,10 +100,8 @@ proc waylandUserConfig*(user: UserInfo) =
 proc configureSway(user: UserInfo, sleepMinutes: int) =
   user.waylandUserConfig
   for (file, conf) in sway_config:
-    var content = conf
-    if file == "windows":
-      content = firefoxDebianize(content)
-    elif file == "config":
+    var content = firefoxDebianize(conf)
+    if file == "config":
       if isFedora():
         content = content.replace("\ninclude bar\n", "\ninclude waybar\n")
         let inc = "include /usr/share/sway/config.d"
