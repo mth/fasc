@@ -10,6 +10,8 @@ set $blank_time 300
 input * xkb_layout uml,ee
 input * xkb_options grp:ctrls_toggle
 output * bg #103800 solid_color
+#output * bg /usr/share/backgrounds/default.png fill
+#output * scale 1.2
 
 default_border pixel
 client.focused #4c7899 #285577 #ffffff #2e9ef4 #daa520
@@ -24,14 +26,8 @@ bindsym $mod+g exec /usr/games/xmahjongg
 bindsym Pause exec swaylock -f -c 000000
 bindsym ctrl+Print exec XDG_SCREENSHOTS_DIR=/tmp/downloads exec grimshot save area
 bindsym mod5+Print exec XDG_SCREENSHOTS_DIR=/tmp/downloads exec grimshot save active
-bindsym XF86MonBrightnessUp exec brightnessctl -q s +2%
-bindsym XF86MonBrightnessDown exec brightnessctl -q -n30 s 2%-
-bindsym XF86AudioRaiseVolume exec amixer set Master 2+
-bindsym XF86AudioLowerVolume exec amixer set Master 2-
-bindsym XF86AudioMute exec amixer set Master toggle
-bindsym XF86AudioMicMute exec amixer set Mic toggle
 
-exec exec foot -s
+# exec exec foot -s
 exec exec gammastep -m wayland
 
 include windows
@@ -40,4 +36,3 @@ include idle
 include bar
 include touchpad
 include /etc/sway/config.d/*
-include /usr/share/sway/config.d/50-rules-*

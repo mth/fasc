@@ -91,7 +91,7 @@ proc runWayland*(userInfo: UserInfo, compositor: string) =
 
 proc waylandUserConfig*(user: UserInfo) =
   for (file, conf) in user_config:
-    writeAsUser(user, file, firefoxDebianize(conf))
+    writeAsUser(user, file, conf)
   var foot = foot_ini
   if not isDebian():
     foot = foot.replace("=Terminus:size=12,", "=")
@@ -100,7 +100,17 @@ proc waylandUserConfig*(user: UserInfo) =
 proc configureSway(user: UserInfo, sleepMinutes: int) =
   user.waylandUserConfig
   for (file, conf) in sway_config:
-    writeAsUser(user, ".config/sway" / file, conf)
+    var content = conf
+    if file == "windows":
+      content = firefoxDebianize(content)
+    elif file == "config":
+      if isFedora():
+        content = content.replace("\ninclude bar\n", "\ninclude waybar\n")
+        let inc = "include /usr/share/sway/config.d"
+        content &= &"{inc}/50-rules-*\n{inc}/*brightness.conf\n{inc}/*volume.conf\n"
+      else:
+        content &= &"include xf86bindings\n"
+    writeAsUser(user, ".config/sway" / file, content)
   writeAsUser(user, ".config/sway/idle", swayIdle((sleepMinutes - 2) * 60))
   user.firefoxConfig
 
