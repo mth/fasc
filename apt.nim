@@ -128,7 +128,7 @@ proc configureAndPrunePackages*(args: StrMap) =
     args.configureAndPruneDNF
 
 proc configureRPMFusion*(args: StrMap) =
-  let ver = outputOfCommand("", "rpm", "-E", "%fedora")
+  let ver = outputOfCommand("", "rpm", "-E", "%fedora")[0]
   runCmd "dnf", "install",
     fmt"https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-{ver}.noarch.rpm",
     fmt"https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-{ver}.noarch.rpm"
