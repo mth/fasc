@@ -141,3 +141,5 @@ proc swayUnit*(args: StrMap) =
     aptInstallNow()
     vimfmPath.writeFileSynced vimfm_desktop
     updateMime()
+  if fileExists("/usr/lib/systemd/system/sddm.service"):
+    runCmd "systemctl", "disable", "sddm.service"
