@@ -118,7 +118,8 @@ proc configureAndPruneDNF(args: StrMap) =
     if preserve[i] notin installed:
       preserve.delete i
   runCmd("dnf", @["mark", "install"] & preserve)
-  runCmd("dnf", "remove", "NetworkManager", "avahi", "chrony", "firewalld", "udisks2", "gssproxy")
+  runCmd("dnf", "remove", "NetworkManager", "PackageKit", "PackageKit-glib",
+         "avahi", "audit", "chrony", "firewalld", "udisks2", "gssproxy", "upower")
 
 proc configureAndPrunePackages*(args: StrMap) =
   if isDebian():

@@ -317,6 +317,11 @@ proc tuneSystem*(args: StrMap) =
                "/usr/local/sbin/pci-autosuspend", "multi-user.target"
   if batteries != 0:
     batteryMonitor(batteries == 1)
+  if isFedora():
+    runCmd "systemctl", "disable", "--now", "systemd-userdbd.socket",
+           "systemd-userdbd.service", "systemd-homed.service"
+    runCmd "systemctl", "mask", "systemd-homed.service", "systemd-homed-activate.service"
+    systemdReload = true
 
 proc startNTP*(args: StrMap) =
   let ntpServer = args.getOrDefault ""
