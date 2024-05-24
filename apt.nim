@@ -105,7 +105,7 @@ proc configureAndPruneAPT(args: StrMap) =
   setupUnattendedUpgrades()
 
 proc configureAndPruneDNF(args: StrMap) =
-  let installed = outputOfCommand("", "rpm", "-qa")
+  let installed = outputOfCommand("", "rpm", "-qa", "--queryformat", "%{NAME}\\n")
   discard modifyProperties("/etc/dnf/dnf.conf", [
             ("install_weak_deps", "False"),
             ("max_parallel_downloads", "8"),
