@@ -321,7 +321,8 @@ proc tuneSystem*(args: StrMap) =
     runCmd "systemctl", "disable", "--now", "systemd-userdbd.socket",
            "systemd-userdbd.service", "systemd-homed.service"
     runCmd "systemctl", "mask", "systemd-homed.service", "systemd-homed-activate.service"
-    systemdReload = true
+  addTimer "fstrim", "Discard unused filesystem blocks once a hour", "OnBootSec=1h", "OnUnitInactiveSec=1h"
+  systemdReload = true
 
 proc startNTP*(args: StrMap) =
   let ntpServer = args.getOrDefault ""
