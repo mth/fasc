@@ -21,7 +21,7 @@ mkdir -m 700 -p /run/ovpn/tmp
 	--down-pre --dev tun0vpn --chroot /run/ovpn --user proxy --group proxy
 echo "Waiting for VPN starting up..."
 
-while ! /bin/ip route | /bin/grep -q ' via .* dev tun0vpn '; do
+while ! ip route | /bin/grep -q ' via .* dev tun0vpn '; do
         if ! pidof openvpn > /dev/null; then
                 echo "OpenVPN startup failed."
                 exit 1
@@ -30,6 +30,6 @@ while ! /bin/ip route | /bin/grep -q ' via .* dev tun0vpn '; do
 done
 
 echo "VPN is up."
-/bin/ip route del 172.16.0.0/13 || /bin/ip route del 172.16.0.0/12
+ip route del 172.16.0.0/13 || ip route del 172.16.0.0/12
 /usr/bin/resolvectl flush-caches
 exit 0

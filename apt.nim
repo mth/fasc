@@ -145,7 +145,7 @@ proc configureRPMFusion*(args: StrMap) =
 proc installDesktopPackages*(args: StrMap) =
   if isDebian():
     packagesToInstall.add ["mc", "ncal"]
-  packagesToInstall.add ["ncal", "bc", "pinfo", "strace", "lsof", "rlwrap", "curl", "unzip"]
+  packagesToInstall.add ["bc", "pinfo", "strace", "lsof", "rlwrap", "curl", "unzip"]
   if isFedora():
     packagesToInstall.add "fuse-sshfs"
 
@@ -157,7 +157,7 @@ proc installDesktopUIPackages*(args: StrMap) =
 
 proc installDevel*(args: StrMap) =
   installDesktopPackages(args)
-  packagesToInstall.add ["build-essential", "make", "git", "nim"]
+  packagesToInstall.add ["build-essential", "git", "nim"]
 
 proc beginnerDevel*(args: StrMap) =
   installDevel args

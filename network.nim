@@ -180,7 +180,8 @@ proc ovpnClient*(args: StrMap) =
     commitQueue()
   else:
     user.sudoNoPasswd "", ovpnPath, killVPNPath
-  runCmd "systemctl", "disable", "--now", "openvpn"
+  if fileExists("/lib/systemd/system/openvpn.service"):
+    runCmd "systemctl", "disable", "--now", "openvpn"
   if not fileExists("/root/.vpn/client.ovpn"):
     createDir("/root/.vpn")
     setPermissions("/root/.vpn", 0o700)

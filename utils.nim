@@ -26,6 +26,7 @@ let fedoraPackageMap = [
   ("xwayland", "xorg-x11-server-Xwayland"),
   ("qtwayland5", ""),
   ("nim", ""),
+  ("git", "git-core"),
   ("xmahjongg", "gnome-mahjongg"),
   ("build-essential", "gcc"),
 ].toTable
