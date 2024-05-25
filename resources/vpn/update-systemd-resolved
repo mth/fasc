@@ -27,6 +27,7 @@
 DBUS_DEST="org.freedesktop.resolve1"
 DBUS_NODE="/org/freedesktop/resolve1"
 SCRIPT_NAME="${BASH_SOURCE[0]##*/}"
+PATH="/usr/bin:/usr/sbin:/bin"
 
 log() {
 	logger -s -t "$SCRIPT_NAME" "$@"
