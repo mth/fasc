@@ -169,7 +169,9 @@ proc ovpnClient*(args: StrMap) =
     user = userInfo args
   const ovpnPath = "/usr/local/bin/ovpn"
   const killVPNPath = "/usr/local/bin/kill-vpn"
-  writeFile(ovpnPath, [ovpnScript])
+  let runAs = if isDebian(): "proxy"
+              else: "openvpn" 
+  writeFile(ovpnPath, [ovpnScript.replace("USER", runAs)])
   writeFile(killVPNPath, kill_vpn)
   writeFile("/etc/openvpn/update-systemd-resolved", [ovpnUpdateResolved], permissions=0o755)
   addPackageUnless "openvpn", "/usr/sbin/openvpn"
