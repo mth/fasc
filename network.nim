@@ -32,8 +32,7 @@ proc configureResolved() =
   const resolvedConf = "/etc/systemd/resolved.conf"
   writeFile resolvedConf, ["[Resolve]\n"]
   discard modifyProperties(resolvedConf, [("DNSSEC", "allow-downgrade"),
-            ("ReadEtcHosts", "yes"), ("LLMNR", "no"), ("MulticastDNS", "no"),
-            ("ResolveUnicastSingleLabel", "yes")])
+            ("ReadEtcHosts", "yes"), ("LLMNR", "no"), ("MulticastDNS", "no")])
   enableAndStart "systemd-resolved"
   commitQueue()
   useResolvedStub()
@@ -67,7 +66,8 @@ func supplicantService(iface: string): string =
   fmt"wpa_supplicant@{iface}.service"
 
 proc wlanNetwork() =
-  network("wlan", "Name=*\nType=wlan", "DHCP=yes", "IPv6PrivacyExtensions=true", "DNSSEC=allow-downgrade")
+  network("wlan", "Name=*\nType=wlan", "DHCP=yes", "IPv6PrivacyExtensions=true", "DNSSEC=allow-downgrade",
+          "[DHCPv4]", "UseDomains=true")
   addPackageUnless("iw", "/usr/sbin/iw")
 
 proc wpaSupplicant(device: string) =
