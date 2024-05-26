@@ -37,6 +37,21 @@ proc configureResolved() =
   commitQueue()
   useResolvedStub()
 
+proc netdev(unit, kind: string) =
+  writeFile fmt"/etc/systemd/network/{unit}.netdev", [
+    "[NetDev]",
+    "Name=" & unit,
+    "Kind=" & kind
+  ]
+
+proc networkdBridge*(name, address: string) =
+  writeFile fmt"/etc/systemd/network/{name}.network", [
+    "[Match]", "Name=" & name,
+    "[Network]", "Address=" & address
+  ]
+  netdev name, "bridge"
+  runCmd "systemctl", "restart", "systemd-networkd"
+
 proc network(unit, match: string, options: varargs[string]) =
   var net = @[
     "[Match]",

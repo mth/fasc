@@ -1,5 +1,5 @@
 import std/[strformat, os, tables]
-import services, utils
+import network, services, utils
 
 # CAP_CHOWN Make arbitrary changes to file UIDs and GIDs (see chown(2)).
 # CAP_DAC_OVERRIDE Bypass file read, write, and execute permission checks.
@@ -27,9 +27,9 @@ import services, utils
 # CAP_SYS_CHROOT Use chroot(2); change mount namespaces using setns(2).
 # CAP_SYS_TTY_CONFIG Use vhangup(2); employ various privileged ioctl(2) operations on virtual terminals.
 
-func nspawnConf(host: string): string = fmt"""
+func nspawnConf(host, network: string): string = fmt"""
 [Network]
-VirtualEthernet=yes
+{network}
 
 [Exec]
 Hostname={host}
@@ -40,25 +40,29 @@ Capability=CAP_IPC_LOCK
 DropCapability=CAP_AUDIT_CONTROL CAP_AUDIT_READ CAP_AUDIT_WRITE CAP_BLOCK_SUSPEND CAP_BPF CAP_CHECKPOINT_RESTORE CAP_LINUX_IMMUTABLE CAP_MAC_ADMIN CAP_MAC_OVERRIDE CAP_NET_BROADCAST CAP_PERFMON CAP_SYS_BOOT CAP_SYS_MODULE CAP_SYS_NICE CAP_SYS_PACCT CAP_SYS_PTRACE CAP_SYS_RAWIO CAP_SYS_RESOURCE CAP_SYS_TIME CAP_SYSLOG CAP_WAKE_ALARM
 """
 
-proc createNSpawn(name: string, pulse = false) =
-  var conf = nspawnConf(name)
+proc createNSpawn(name, address: string, pulse = false) =
+  let bridge = "br-vnet0"
+  networkdBridge bridge, address
+  var conf = nspawnConf(name, "Bridge=" & bridge)
   if pulse:
     conf &= "\n[Files]\nBind=/run/pulse.native\n"
-    proxy "pulse-proxy:pulse:pulse-access:0660", "/run/pulse.native", bindTo="",
-          "/run/user/1000/pulse/native", "1min", targetService="",
-          "Pulseaudio socket proxy service"
+    let def = if isFedora(): "pulse-proxy:pipewire:audio:0660"
+              else: "pulse-proxy:pulse:pulse-access:0660"
+    proxy def, "/run/pulse.native", bindTo="", "/run/user/1000/pulse/native",
+          "1min", targetService="", "Pulseaudio socket proxy service"
   writeFile fmt"/etc/systemd/nspawn/{name}.nspawn", [conf]
   addPackageUnless "systemd-container", "/usr/bin/systemd-nspawn"
   # TODO run machinectl
 
 proc addNSpawn*(args: StrMap) =
   let name = args.nonEmptyParam "machine"
+  let address = args.getOrDefault("bridge", "172.20.0.1/24")
   let pulse = "pulse-proxy" in args
   let init = "/var/lib/machines" / name / "sbin/init"
   if not init.fileExists:
     echo fmt"Missing {init}"
     quit 1
-  createNSpawn name, pulse
+  createNSpawn name, address, pulse
 
 func runOnScriptSource(command, machine, remoteCommand: string): string = fmt"""
 #!/bin/sh
