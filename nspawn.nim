@@ -1,4 +1,4 @@
-import std/[strformat, os, tables]
+import std/[strformat, os, strutils, tables]
 import network, services, utils
 
 # CAP_CHOWN Make arbitrary changes to file UIDs and GIDs (see chown(2)).
@@ -52,7 +52,11 @@ proc createNSpawn(name, address: string, pulse = false) =
           "1min", targetService="", "Pulseaudio socket proxy service"
   writeFile fmt"/etc/systemd/nspawn/{name}.nspawn", [conf]
   addPackageUnless "systemd-container", "/usr/bin/systemd-nspawn"
-  # TODO run machinectl
+  let resolvedConf = "/etc/systemd/resolved.conf"
+  if not resolvedConf.fileExists:
+    writeFile resolvedConf, "[Resolve]\n"
+  if modifyProperties(resolvedConf, [("DNSStubListenerExtra", address.split('/', 2)[0])]):
+    runCmd "systemctl", "restart", "systemd-resolved"
 
 proc addNSpawn*(args: StrMap) =
   let name = args.nonEmptyParam "machine"
