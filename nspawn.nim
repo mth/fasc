@@ -31,6 +31,7 @@ func nspawnConf(host: string): string = fmt"""
 [Exec]
 Hostname={host}
 Boot=on
+PrivateUsers=pick
 NoNewPrivileges=true
 Capability=CAP_IPC_LOCK
 DropCapability=CAP_AUDIT_CONTROL CAP_AUDIT_READ CAP_AUDIT_WRITE CAP_BLOCK_SUSPEND CAP_BPF CAP_CHECKPOINT_RESTORE CAP_LINUX_IMMUTABLE CAP_MAC_ADMIN CAP_MAC_OVERRIDE CAP_NET_BROADCAST CAP_PERFMON CAP_SYS_BOOT CAP_SYS_MODULE CAP_SYS_NICE CAP_SYS_PACCT CAP_SYS_PTRACE CAP_SYS_RAWIO CAP_SYS_RESOURCE CAP_SYS_TIME CAP_SYSLOG CAP_WAKE_ALARM
@@ -43,7 +44,8 @@ proc createNspawn(name: string, pulse = false) =
     proxy "pulse-proxy:pulse:pulse-access:0660", "/run/pulse.native", bindTo="",
           "/run/user/1000/pulse/native", "1min", targetService="",
           "Pulseaudio socket proxy service"
-  writeFile fmt"/etc/systemd/nspawn/{name}.nspawn", [conf] 
+  writeFile fmt"/etc/systemd/nspawn/{name}.nspawn", [conf]
+  addPackageUnless "systemd-container", "/usr/bin/systemd-nspawn"
   # TODO run machinectl
 
 func runOnScriptSource(command, machine, remoteCommand: string): string = fmt"""
