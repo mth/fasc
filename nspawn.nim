@@ -28,6 +28,9 @@ import services, utils
 # CAP_SYS_TTY_CONFIG Use vhangup(2); employ various privileged ioctl(2) operations on virtual terminals.
 
 func nspawnConf(host: string): string = fmt"""
+[Network]
+VirtualEthernet=yes
+
 [Exec]
 Hostname={host}
 Boot=on
