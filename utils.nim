@@ -110,22 +110,23 @@ proc safeFileUpdate*(filename, content: string, permissions: Mode = 0o644) =
   setPermissions(tmpFile, permissions)
   moveFile(tmpFile, filename)
 
-proc writeFileIfNotExists(filename, content: string; force = false) =
+proc writeFileIfNotExists(filename, content: string; force = false): bool {.discardable.} =
   if not force and filename.fileExists:
     echo fmt"Retaining existing {filename}"
   else:
     echo fmt"Created {filename}"
     filename.writeFileSynced content
+    return true
 
 proc listDir*(path: string): seq[string] =
   for _, subdir in walkDir(path):
     result.add subdir
 
 proc writeFile*(filename: string, content: openarray[string],
-                force = false, permissions: Mode = 0o644) =
+                force = false, permissions: Mode = 0o644): bool {.discardable.} =
   let (dir, _, _) = filename.splitFile
   createDir dir
-  writeFileIfNotExists(filename, content.join("\n"), force)
+  result = writeFileIfNotExists(filename, content.join("\n"), force)
   setPermissions(filename, permissions)
 
 proc createParentDirs*(user: UserInfo, filename: string) =
