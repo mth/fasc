@@ -140,7 +140,9 @@ proc proxy*(proxy, listen, bindTo, connectTo, exitIdleTime, targetService: strin
   var options = @["PrivateTmp=yes"]
   if listen.startsWith("/") and connectTo.startsWith("/"):
     options.add "PrivateNetwork=yes"
-  addService(socketParam[0], descriptionStr, [targetService, socketName],
+  let requires = if targetService != "": @[targetService, socketName]
+                 else: @[socketName]
+  addService(socketParam[0], descriptionStr, requires,
     "/usr/lib/systemd/systemd-socket-proxyd --exit-idle-time=" &
       exitIdleTime & ' ' & connectTo, "", {s_no_new_priv, s_overwrite}, options)
   enableAndStart socketName
