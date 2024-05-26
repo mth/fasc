@@ -32,7 +32,8 @@ proc configureResolved() =
   const resolvedConf = "/etc/systemd/resolved.conf"
   writeFile resolvedConf, ["[Resolve]\n"]
   discard modifyProperties(resolvedConf, [("DNSSEC", "allow-downgrade"),
-            ("ReadEtcHosts", "yes"), ("LLMNR", "no"), ("MulticastDNS", "no")])
+            ("ReadEtcHosts", "yes"), ("LLMNR", "no"), ("MulticastDNS", "no"),
+            ("ResolveUnicastSingleLabel", "yes")])
   enableAndStart "systemd-resolved"
   commitQueue()
   useResolvedStub()
