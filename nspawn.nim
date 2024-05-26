@@ -40,7 +40,7 @@ Capability=CAP_IPC_LOCK
 DropCapability=CAP_AUDIT_CONTROL CAP_AUDIT_READ CAP_AUDIT_WRITE CAP_BLOCK_SUSPEND CAP_BPF CAP_CHECKPOINT_RESTORE CAP_LINUX_IMMUTABLE CAP_MAC_ADMIN CAP_MAC_OVERRIDE CAP_NET_BROADCAST CAP_PERFMON CAP_SYS_BOOT CAP_SYS_MODULE CAP_SYS_NICE CAP_SYS_PACCT CAP_SYS_PTRACE CAP_SYS_RAWIO CAP_SYS_RESOURCE CAP_SYS_TIME CAP_SYSLOG CAP_WAKE_ALARM
 """
 
-proc createNspawn(name: string, pulse = false) =
+proc createNSpawn(name: string, pulse = false) =
   var conf = nspawnConf(name)
   if pulse:
     conf &= "\n[Files]\nBind=/run/pulse.native\n"
@@ -50,6 +50,15 @@ proc createNspawn(name: string, pulse = false) =
   writeFile fmt"/etc/systemd/nspawn/{name}.nspawn", [conf]
   addPackageUnless "systemd-container", "/usr/bin/systemd-nspawn"
   # TODO run machinectl
+
+proc addNSpawn*(args: StrMap) =
+  let name = args.nonEmptyParam "machine"
+  let pulse = "pulse-proxy" in args
+  let init = "/var/lib/machines" / name / "sbin/init"
+  if not init.fileExists:
+    echo fmt"Missing {init}"
+    quit 1
+  createNSpawn name, pulse
 
 func runOnScriptSource(command, machine, remoteCommand: string): string = fmt"""
 #!/bin/sh
