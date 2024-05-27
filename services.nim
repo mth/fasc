@@ -1,4 +1,4 @@
-import std/[os, strutils, tables]
+import std/[os, strformat, strutils, tables]
 import utils
 
 type ServiceFlags* = enum
@@ -68,18 +68,17 @@ proc addService*(name, description: string, depends: openarray[string],
         depString &= ".service"
   var service = @["[Unit]", "Description=" & description]
   if depString != "":
-    service &= "Requires=" & depString
-    service &= "After=" & depString
+    service &= fmt"Requires={depString}"
+    service &= fmt"After={depString}"
   service.add ["", "[Service]"]
   if serviceType != "":
-    service &= "Type=" & serviceType
-  service &= "ExecStart=" & exec
+    service &= fmt"Type={serviceType}"
+  service &= fmt"ExecStart={exec}"
   for (key, value) in flags.properties:
-    service &= key
-    service &= value
+    service &= (key & value)
   service.add options
   if install != "":
-    service.add ["", "[Install]", "WantedBy=" & install]
+    service.add ["", "[Install]", fmt"WantedBy={install}"]
   service.add ""
   let serviceName = name & ".service"
   writeFile("/etc/systemd/system" / serviceName, service, s_overwrite in flags)
@@ -124,16 +123,16 @@ proc proxy*(proxy, listen, bindTo, connectTo, exitIdleTime, targetService: strin
     socket.add "After=network-online.target"
   socket.add ["",
     "[Socket]",
-    "ListenStream=" & listen,
+    fmt"ListenStream={listen}"
   ]
   if bindTo != "":
-    socket &= "BindToDevice=" & bindTo
+    socket &= fmt"BindToDevice={bindTo}"
   if socketParam.len > 1:
-    socket &= "SocketUser=" & socketParam[1]
+    socket &= fmt"SocketUser={socketParam[1]}"
   if socketParam.len > 2:
-    socket &= "SocketGroup=" & socketParam[2]
+    socket &= fmt"SocketGroup={socketParam[2]}"
   if socketParam.len > 3:
-    socket &= "SocketMode=" & socketParam[3]
+    socket &= fmt"SocketMode={socketParam[3]}"
 
   socket &= ["", "[Install]", "WantedBy=sockets.target", ""]
   writeFile("/etc/systemd/system" / socketName, socket, force=true)
@@ -144,7 +143,7 @@ proc proxy*(proxy, listen, bindTo, connectTo, exitIdleTime, targetService: strin
                  else: @[socketName]
   addService(socketParam[0], descriptionStr, requires,
     "/usr/lib/systemd/systemd-socket-proxyd --exit-idle-time=" &
-      exitIdleTime & ' ' & connectTo, "", {s_no_new_priv, s_overwrite}, options)
+    exitIdleTime & ' ' & connectTo, "", {s_no_new_priv, s_overwrite}, options)
   enableAndStart socketName
   systemdReload = true
 
