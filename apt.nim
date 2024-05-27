@@ -119,7 +119,7 @@ proc configureAndPruneDNF(args: StrMap) =
       preserve.delete i
   runCmd("dnf", @["mark", "install"] & preserve)
   runCmd("dnf", "remove", "NetworkManager", "PackageKit", "PackageKit-glib",
-         "avahi", "audit", "chrony", "firewalld", "udisks2", "gssproxy", "upower",
+         "avahi", "chrony", "firewalld", "udisks2", "gssproxy", "upower",
          "teamd", "python3-firewall", "sssd-client", "tracker",
          "virtualbox-guest-additions")
   if isIntelCPU():
