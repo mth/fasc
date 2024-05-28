@@ -24,7 +24,8 @@ proc configureUserBash(user: UserInfo) =
   if isDebian():
     writeFile(bashrc, dot_bashrc)
   else:
-    writeFile(bashrc, dot_bashrc.replace("&& return\n", "&& return\n. /etc/bash.bashrc\n"))
+    writeFile(bashrc, dot_bashrc.replace("&& return\n", "&& return\n. /etc/bash.bashrc\n") &
+                      "alias ncal='cal -v'\n")
   user.writeAsUser(".config/helix/config.toml", helix)
 
 proc configureBash*(args: StrMap) =
