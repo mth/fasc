@@ -121,7 +121,7 @@ proc configureAndPruneDNF(args: StrMap) =
   runCmd("dnf", "remove", "NetworkManager", "PackageKit", "PackageKit-glib",
          "avahi", "chrony", "firewalld", "udisks2", "gssproxy", "upower",
          "teamd", "python3-firewall", "sssd-client", "tracker",
-         "virtualbox-guest-additions")
+         "virtualbox-guest-additions", "open-vm-tools", "open-vm-tools-desktop")
   if isIntelCPU():
     runCmd "dnf", "remove", "amd-ucode-firmware", "amd-gpu-firmware"
 
