@@ -32,7 +32,7 @@ let tasks = {
   "sway": ("Configure sway desktop startup", swayUnit),
   "swaycfg": ("Configure sway compositor", swayConf),
   "apt": ("Configure APT defaults", configureAPT),
-  "prune": ("Configure APT/DNF defaults and prune extraneous packages",
+  "prune": ("Configure APT/DNF defaults and prune extraneous packages [retain=a,b]",
                 configureAndPrunePackages),
   "common": (common_descr, commonSystem),
   "tunesys": ("Tune system configuration", tuneSystem),

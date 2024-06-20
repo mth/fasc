@@ -67,7 +67,7 @@ proc installFirmware() =
     packagesToInstall.add ["firmware-amd-graphics", "amd64-microcode"]
 
 # XXX removing ifupdown should be network modules job
-proc defaultPrune(additionalRemove: varargs[string]) =
+proc defaultPrune(extraProtect: openarray[string], additionalRemove: varargs[string]) =
   var remove = @["avahi-autoipd", "debian-faq", "discover", "doc-debian",
         "installation-report", "isc-dhcp-client", "isc-dhcp-common",
         "liblockfile-bin", "nano", "netcat-traditional", "reportbug",
@@ -77,7 +77,7 @@ proc defaultPrune(additionalRemove: varargs[string]) =
   when not (defined(arm) or defined(arm64)):
     packagesToInstall.add "ifupdown"
   packagesToInstall.add ["elvis-tiny", "netcat-openbsd", "psmisc"]
-  prunePackages(packagesToInstall, remove)
+  prunePackages(packagesToInstall, remove, extraProtect)
   packagesToInstall.reset
 
 proc configureAPT*(args: StrMap) =
@@ -97,7 +97,8 @@ proc configureAndPruneAPT(args: StrMap) =
   configureAPT(args)
   installFirmware()
   packagesToInstall.add ["systemd-cron", "unattended-upgrades"]
-  defaultPrune("anacron", "cron")
+  let extraProtect = args.getOrDefault("retain").split(',')
+  defaultPrune(extraProtect, "anacron", "cron")
   const anacronTimer = "/etc/systemd/system/anacron.timer"
   if anacronTimer.readSymlink == "/dev/null":
     discard anacronTimer.tryRemoveFile
@@ -120,8 +121,11 @@ proc configureAndPruneDNF(args: StrMap) =
   runCmd("dnf", @["mark", "install"] & preserve)
   runCmd("dnf", "remove", "NetworkManager", "PackageKit", "PackageKit-glib",
          "avahi", "chrony", "firewalld", "udisks2", "gssproxy", "upower",
-         "teamd", "python3-firewall", "sssd-client", "tracker",
-         "virtualbox-guest-additions", "open-vm-tools", "open-vm-tools-desktop")
+         "teamd", "python3-firewall", "sssd-client", "tracker", "bash-color-prompt",
+         "virtualbox-guest-additions", "open-vm-tools", "open-vm-tools-desktop",
+         "brcmfmac-firmware", "cirrus-audio-firmware", "libertas-firmware",
+         "nvidia-gpu-firmware", "nxpwireless-firmware", "tiwilink-firmware")
+  echo "You could also remove atheros-firmware and mt7xxx-firmware"
   if isIntelCPU():
     runCmd "dnf", "remove", "amd-ucode-firmware", "amd-gpu-firmware"
 
