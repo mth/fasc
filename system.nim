@@ -290,6 +290,11 @@ proc batteryMonitor(useUdev: bool) =
           onlyEmpty=false):
       runCmd "systemctl", "restart", "sleepd.service"
 
+proc limitBattery() =
+  addService "battery-limit", "Limit battery max charge", [],
+    "/bin/sh -c 'for bat in /sys/class/power_supply/BAT*/charge_{stop_threshold,control_end_threshold}; do echo 90 > $bat; done'",
+    "multi-user.target", serviceType="oneshot"
+
 proc inMemoryJournal() =
   var conf = @[("Storage", "volatile")]
   let logDev = outputOfCommand("", "df", "--output=source", "/var/log")
@@ -314,9 +319,11 @@ proc tuneSystem*(args: StrMap) =
   if listDir("/sys/bus/pci/devices").len > 0:
     safeFileUpdate "/usr/local/sbin/pci-autosuspend", pci_autosuspend, 0o755
     addService "pci-autosuspend", "Enables PCI devices autosuspend", [],
-               "/usr/local/sbin/pci-autosuspend", "multi-user.target"
+               "/usr/local/sbin/pci-autosuspend", "multi-user.target",
+               serviceType="oneshot"
   if batteries != 0:
     batteryMonitor(batteries == 1)
+    limitBattery()
   if isFedora():
     runCmd "systemctl", "disable", "--now", "systemd-userdbd.socket",
            "systemd-userdbd.service", "systemd-homed.service"
