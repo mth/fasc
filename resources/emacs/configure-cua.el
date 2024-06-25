@@ -1,4 +1,6 @@
-(cua-mode t)                   ; Ctrl-XCV for cut, copy and paste
+(global-tab-line-mode) ; show buffer tabs
+
+(cua-mode t) ; Ctrl-XCV for cut, copy and paste
 (setq cua-auto-tabify-rectangles nil) ; Don't tabify after rectangle commands
 (transient-mark-mode 1) ; standard selection-highlighting
 

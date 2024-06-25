@@ -1,5 +1,3 @@
-(global-tab-line-mode) ; show buffer tabs
-
 (add-hook 'after-init-hook 'global-company-mode)
 (setq company-idle-delay 0.5)          ; Smaller delay in showing suggestion
 (setq company-minimum-prefix-length 2) ; Show suggestions after 2 characters
