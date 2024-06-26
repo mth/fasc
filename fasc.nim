@@ -66,6 +66,7 @@ let tasks = {
   "update-zoom": ("Update zoom install", updateZoom),
   "safenet": ("Setup DNS blocklists", setupSafeNet),
   "tv": ("Install weston gui for TV", westonTV),
+  "merlin": ("Setup emacs with tuareg mode and merlin using opam", installMerlin),
   #"disable-tracker": ("Disable GNOME tracker", disableTracker),
 }.toTable
 if paramCount() == 0:

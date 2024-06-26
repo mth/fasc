@@ -1,5 +1,10 @@
-import std/[os, posix, strformat, strutils, tables]
+import std/[os, posix, sequtils, strformat, strutils, tables]
 import utils, system
+
+const emacsConf = readResource("emacs/emacs.el")
+const emacsModules = ["configure-cua.el", "configure-company.el",
+                      "configure-merlin.el", "merlin-eldoc.el"].mapIt(
+                      (it, readResource("emacs/" & it)))
 
 const sandbox_sh = readResource("sandbox.sh")
 const zoom_url = "https://zoom.us/client/latest/zoom_x86_64.tar.xz"
@@ -111,13 +116,13 @@ proc firefoxParanoid*() =
   ])
 
 proc firefoxConfig*(user: UserInfo) =
-    writeAsUser(user, ".mozilla/ff2mpv.py", ff2mpv_script,
-                permissions = 0o755, force = true)
-    writeAsUser(user, ".mozilla/native-messaging-hosts/ff2mpv.json",
-                ff2mpv_host.replace("HOME", user.home), force = true)
-    writeAsUser(user, ".config/sway/firefox.sh",
-                firefoxDebianize(run_firefox_script, true),
-                permissions = 0o755, force = true)
+  writeAsUser(user, ".mozilla/ff2mpv.py", ff2mpv_script,
+              permissions = 0o755, force = true)
+  writeAsUser(user, ".mozilla/native-messaging-hosts/ff2mpv.json",
+              ff2mpv_host.replace("HOME", user.home), force = true)
+  writeAsUser(user, ".config/sway/firefox.sh",
+              firefoxDebianize(run_firefox_script, true),
+              permissions = 0o755, force = true)
 
 proc idCard*(args: StrMap) =
   let user = args.userInfo
@@ -173,3 +178,29 @@ proc zoomSandbox*(args: StrMap) =
 
 proc updateZoom*(args: StrMap) =
   userInfo("zoom").downloadZoom args
+
+proc isWayland(user: UserInfo): bool =
+  fileExists(fmt"/run/user/{user.uid}/wayland-1") or fileExists("/usr/bin/Xwayland")
+
+proc installEmacs(user: UserInfo) =
+  if user.isWayland and isDebian():
+    packagesToInstall &= "emacs-pgtk"
+  else:
+    packagesToInstall &= "emacs"
+  packagesToInstall &= "elpa-company"
+  for (name, content) in emacsModules:
+    writeAsUser user, ".local/emacs-lisp" / name, content
+  writeAsUser user, ".emacs", emacsConf
+
+proc installMerlin*(args: StrMap) =
+  let user = args.userInfo
+  user.installEmacs
+  packagesToInstall &= ["elpa-tuareg", "opam"]
+  commitQueue()
+  if fileExists("/usr/bin/ocamlopt") and isDebian():
+    runCmd "apt-get", "purge", "ocaml"
+  if fileExists("/usr/bin/utop") and isDebian():
+    runCmd "apt-get", "purge", "utop"
+  if not fileExists(user.home / ".opam/opam-init/init.sh"):
+    user.runCmd true, "opam", "init", "--shell-setup"
+  user.runCmd true, "opam", "install", "graphics", "utop", "merlin"
