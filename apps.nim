@@ -3,7 +3,8 @@ import utils, system
 
 const emacsConf = readResource("emacs/emacs.el")
 const emacsModules = ["configure-cua.el", "configure-company.el",
-                      "configure-merlin.el", "merlin-eldoc.el"].mapIt(
+                      "configure-merlin.el", "merlin-eldoc.el",
+                      "configure-utop.el"].mapIt(
                       (it, readResource("emacs/" & it)))
 const duneMinimalExec = readResource("emacs/dune-minimal-executable")
 

@@ -4,3 +4,4 @@
 (require 'configure-cua)
 (require 'configure-company)
 (require 'configure-merlin)
+; (require 'configure-utop)
