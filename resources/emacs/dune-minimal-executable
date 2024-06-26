@@ -1,0 +1,24 @@
+#!/bin/sh
+
+not_exists() {
+	if [ -e "$1" ]; then
+		echo "You already have '$1'"
+		exit 1
+	fi
+}
+
+if [ -z "$1" ]; then
+	echo "$0 executable-name"
+	exit 1
+fi
+
+not_exists dune-project
+not_exists dune
+
+echo "(lang dune 3.0)" > dune-project 
+cat > dune <<DUNE
+(executable
+  (name $1)
+  ; (libraries graphics)
+  )
+DUNE

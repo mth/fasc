@@ -5,6 +5,7 @@ const emacsConf = readResource("emacs/emacs.el")
 const emacsModules = ["configure-cua.el", "configure-company.el",
                       "configure-merlin.el", "merlin-eldoc.el"].mapIt(
                       (it, readResource("emacs/" & it)))
+const duneMinimalExec = readResource("emacs/dune-minimal-executable")
 
 const sandbox_sh = readResource("sandbox.sh")
 const zoom_url = "https://zoom.us/client/latest/zoom_x86_64.tar.xz"
@@ -204,3 +205,4 @@ proc installMerlin*(args: StrMap) =
   if not fileExists(user.home / ".opam/opam-init/init.sh"):
     user.runCmd true, "opam", "init", "--shell-setup"
   user.runCmd true, "opam", "install", "graphics", "utop", "merlin"
+  writeAsUser user, "bin/dune-minimal-executable", duneMinimalExec, 0o755
