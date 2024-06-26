@@ -197,7 +197,7 @@ proc installEmacs(user: UserInfo) =
 proc installMerlin*(args: StrMap) =
   let user = args.userInfo
   user.installEmacs
-  packagesToInstall &= ["elpa-tuareg", "opam"]
+  packagesToInstall &= ["elpa-tuareg", "opam", "libx11-dev", "pkgconf"]
   commitQueue()
   if fileExists("/usr/bin/ocamlopt") and isDebian():
     runCmd "apt-get", "purge", "ocaml"
