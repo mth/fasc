@@ -17,8 +17,8 @@ not_exists dune
 
 echo "(lang dune 3.0)" > dune-project 
 cat > dune <<DUNE
-(executable
-  (name $1)
+(executables
+  (names $1)
   ; (libraries graphics)
   )
 DUNE
