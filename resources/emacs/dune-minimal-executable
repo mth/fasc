@@ -8,7 +8,7 @@ not_exists() {
 }
 
 if [ -z "$1" ]; then
-	echo "$0 executable-name"
+	echo "$0 executable-names..."
 	exit 1
 fi
 
@@ -18,7 +18,7 @@ not_exists dune
 echo "(lang dune 3.0)" > dune-project 
 cat > dune <<DUNE
 (executables
-  (names $1)
+  (names $*)
   ; (libraries graphics)
   )
 DUNE
