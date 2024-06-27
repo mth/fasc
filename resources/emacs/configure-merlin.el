@@ -1,3 +1,26 @@
+(defun dune-run-program ()
+  "Run program using dune"
+  (interactive)
+  (require 'dune)
+
+  (let* ((buffer-name (file-name-base (buffer-file-name)))
+         (description (read (shell-command-to-string
+			     (format "%s describe" dune-command))))
+	 (target (cadr (assoc 'build_context description)))
+	 (executables (cadr (assoc 'executables description)))
+         (names (cadr (assoc 'names executables)))
+         (name (car (append
+		     (cl-loop for name in names
+			      if (string-equal-ignore-case (symbol-name name) buffer-name)
+			      collect name)
+		     names '(nil)))))
+    (if name
+        (compile (format "%s exec %S/%S.exe" dune-command target name))
+      (message "Couldn't determine from dune configuration"))))
+
+(defun bind-ocaml-keys ()
+  (local-set-key (kbd "<f5>") #'dune-run-program))  
+
 (let ((opam-share (ignore-errors (car (process-lines "opam" "var" "share")))))
  (when (and opam-share (file-directory-p opam-share))
   ;; Register Merlin
@@ -17,5 +40,6 @@
 
 (require 'merlin-eldoc)
 (add-hook 'tuareg-mode-hook 'merlin-eldoc-setup)
+(add-hook 'tuareg-mode-hook 'bind-ocaml-keys)
 
 (provide 'configure-merlin)
