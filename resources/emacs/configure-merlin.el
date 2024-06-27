@@ -42,4 +42,8 @@
 (add-hook 'tuareg-mode-hook 'merlin-eldoc-setup)
 (add-hook 'tuareg-mode-hook 'bind-ocaml-keys)
 
+(setq tuareg-indent-align-with-first-arg t)
+(setq tuareg-match-patterns-aligned t)
+(setq tuareg-in-indent t)
+
 (provide 'configure-merlin)
