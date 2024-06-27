@@ -19,7 +19,7 @@
       (message "Couldn't determine from dune configuration"))))
 
 (defun bind-ocaml-keys ()
-  (local-set-key (kbd "<f5>") #'dune-run-program))  
+  (local-set-key (kbd "<f5>") #'dune-run-program))
 
 (let ((opam-share (ignore-errors (car (process-lines "opam" "var" "share")))))
  (when (and opam-share (file-directory-p opam-share))
