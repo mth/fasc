@@ -1,3 +1,5 @@
+; https://emacs.stackexchange.com/questions/14187/run-code-right-after-compilation
+
 (defun dune-run-program ()
   "Run program using dune"
   (interactive)
@@ -15,7 +17,9 @@
 			      collect name)
 		     names '(nil)))))
     (if name
-        (compile (format "%s exec %S/%S.exe" dune-command target name))
+	(progn
+	  (ignore-errors (kill-compilation))
+	  (compile (format "%s exec %S/%S.exe" dune-command target name) t))
       (message "Couldn't determine from dune configuration"))))
 
 (defun bind-ocaml-keys ()
