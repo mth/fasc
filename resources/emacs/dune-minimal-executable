@@ -19,6 +19,6 @@ echo "(lang dune 3.0)" > dune-project
 cat > dune <<DUNE
 (executables
   (names $*)
-  ; (libraries graphics)
+  ; (libraries graphics unix)
   )
 DUNE
