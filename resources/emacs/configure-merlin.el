@@ -5,17 +5,22 @@
 
 (defun run-program-after-dune-compile (buffer desc)
   (if (and dune-run-program-path (string-equal (buffer-name buffer) "*compilation*"))
-      (let ((program-path dune-run-program-path))
+      (let ((program-name (car dune-run-program-path))
+	    (program-path (cdr dune-run-program-path)))
 	(setq dune-run-program-path nil)
 	(if (equal (string-trim desc) "finished")
-	    (progn
-	      (if dune-run-program-terminal
-		  (ignore-errors (delete-process dune-run-program-terminal)))
+	    (let ((program-terminal (alist-get program-name dune-run-program-terminal)))
+	      (if program-terminal
+		  (ignore-errors (delete-process program-terminal)))
+	      (setq program-terminal
+		    (make-term (format "%s output" program-name)
+			       dune-command nil "exec" program-path))
 	      (setq dune-run-program-terminal
-		    (make-term "OCaml program" dune-command nil "exec" program-path))
-	      (set-buffer dune-run-program-terminal)
+		    (cons (cons program-name program-terminal)
+			  (assoc-delete-all program-name dune-run-program-terminal)))
+	      (set-buffer program-terminal)
 	      (term-char-mode)
-	      (pop-to-buffer-same-window dune-run-program-terminal))))))
+	      (pop-to-buffer-same-window program-terminal))))))
 
 (defun dune-run-program ()
   "Run program using dune"
@@ -35,7 +40,7 @@
 		     names '(nil)))))
     (if name
 	(progn
-	  (setq dune-run-program-path (format "%S/%S.exe" target name))
+	  (setq dune-run-program-path (cons name (format "%S/%S.exe" target name)))
           (compile (format "%s build" dune-command)))
       (message "Couldn't determine from dune configuration"))))
 
