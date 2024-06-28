@@ -197,6 +197,7 @@ proc installEmacs(user: UserInfo) =
 proc installMerlin*(args: StrMap) =
   let user = args.userInfo
   user.installEmacs
+  writeAsUser user, "bin/dune-minimal-executable", duneMinimalExec, 0o755
   packagesToInstall &= ["elpa-tuareg", "opam", "libx11-dev", "pkgconf"]
   commitQueue()
   if fileExists("/usr/bin/ocamlopt") and isDebian():
@@ -206,4 +207,3 @@ proc installMerlin*(args: StrMap) =
   if not fileExists(user.home / ".opam/opam-init/init.sh"):
     user.runCmd true, "opam", "init", "--shell-setup"
   user.runCmd true, "opam", "install", "graphics", "utop", "merlin"
-  writeAsUser user, "bin/dune-minimal-executable", duneMinimalExec, 0o755
