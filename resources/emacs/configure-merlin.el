@@ -1,4 +1,21 @@
-; https://emacs.stackexchange.com/questions/14187/run-code-right-after-compilation
+; https://dev.to/erickgnavar/using-compilation-mode-to-run-all-the-things-231o
+
+(setq dune-run-program-path nil)
+(setq dune-run-program-terminal nil)
+
+(defun run-program-after-dune-compile (buffer desc)
+  (if (and dune-run-program-path (string-equal (buffer-name buffer) "*compilation*"))
+      (let ((program-path dune-run-program-path))
+	(setq dune-run-program-path nil)
+	(if (equal (string-trim desc) "finished")
+	    (progn
+	      (if dune-run-program-terminal
+		  (ignore-errors (delete-process dune-run-program-terminal)))
+	      (setq dune-run-program-terminal
+		    (make-term "OCaml program" dune-command nil "exec" program-path))
+	      (set-buffer dune-run-program-terminal)
+	      (term-char-mode)
+	      (pop-to-buffer-same-window dune-run-program-terminal))))))
 
 (defun dune-run-program ()
   "Run program using dune"
@@ -18,8 +35,8 @@
 		     names '(nil)))))
     (if name
 	(progn
-	  (ignore-errors (kill-compilation))
-	  (compile (format "%s exec %S/%S.exe" dune-command target name) t))
+	  (setq dune-run-program-path (format "%S/%S.exe" target name))
+          (compile (format "%s build" dune-command)))
       (message "Couldn't determine from dune configuration"))))
 
 (defun bind-ocaml-keys ()
@@ -45,6 +62,7 @@
 (require 'merlin-eldoc)
 (add-hook 'tuareg-mode-hook 'merlin-eldoc-setup)
 (add-hook 'tuareg-mode-hook 'bind-ocaml-keys)
+(add-hook 'compilation-finish-functions 'run-program-after-dune-compile)
 
 (setq tuareg-indent-align-with-first-arg t)
 (setq tuareg-match-patterns-aligned t)
