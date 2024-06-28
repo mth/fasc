@@ -13,7 +13,7 @@
 	      (if program-terminal
 		  (ignore-errors (delete-process program-terminal)))
 	      (setq program-terminal
-		    (make-term (format "%s output" program-name)
+		    (make-term (format "%s console" program-name)
 			       dune-command nil "exec" program-path))
 	      (setq dune-run-program-terminal
 		    (cons (cons program-name program-terminal)
