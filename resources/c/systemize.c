@@ -34,7 +34,7 @@ static inline int is_listen_socket(const struct sockaddr *addr, socklen_t addrle
 			return 1;
 	} else if (addr->sa_family == AF_UNIX && addrlen >= 24) {
 		struct sockaddr_un *sun = (struct sockaddr_un*) addr;
-		if (!memcmp(sun->sun_path, "systemd/socket", 15))
+		if (!memcmp(sun->sun_path, "/systemd/socket", 16))
 			return 1;
 	}
 	return 0;
