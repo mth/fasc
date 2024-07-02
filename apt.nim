@@ -166,4 +166,7 @@ proc installDevel*(args: StrMap) =
 
 proc beginnerDevel*(args: StrMap) =
   installDevel args
-  packagesToInstall.add ["scratch", "thonny", "ocaml", "utop", "libgraphics-ocaml-dev"]
+  packagesToInstall.add ["scratch", "thonny"]
+  if ocaml in args:
+    packagesToInstall.add["ocaml", "utop", "libgraphics-ocaml-dev"]
+
