@@ -1,7 +1,24 @@
 #import std/[parseutils, sequtils, strformat, strutils, os, tables]
 #import apps, services, utils
 
+import std/strformat
 import utils
+
+func sshUserConfig(user, chrootDir: string): string = fmt"""
+Match User {user}
+\tAutherizedKeysFile /etc/ssh/authorized_keys/{user}
+\tAllowStreamLocalForwarding local
+\tChrootDirectory {chrootDir}
+"""
+
+proc sshChrootUser(user, chrootDir: string) =
+  if not fileExists("/usr/sbin/sshd"):
+    packagesToInstall.add "openssh-server"
+    commitQueue()
+  let confFile = &"/etc/ssh/sshd_config.d/{user}.conf"
+  writeFileSynced confFile, sshUserConfig(user, chrootDir)
+  if appendMissing("/etc/ssh/sshd_config", "Include " & confFile):
+    runCommand "systemctl", "reload", "sshd"
 
 proc createBackupUser(name, home: string): UserInfo =
   try:
@@ -12,6 +29,7 @@ proc createBackupUser(name, home: string): UserInfo =
                 else: ""
     addSystemUser name, group, home
     return name.userInfo
+
 
 # TODO server
 # * socket-activation vahendaja, et nbd-server käivitada ainult vastavalt vajadusele 
