@@ -1,7 +1,7 @@
 #import std/[parseutils, sequtils, strformat, strutils, os, tables]
 #import apps, services, utils
 
-import std/strformat
+import std/[strformat, os]
 import utils
 
 func sshUserConfig(user, chrootDir: string): string = fmt"""
@@ -15,8 +15,9 @@ proc sshChrootUser(user, chrootDir: string) =
   if not fileExists("/usr/sbin/sshd"):
     packagesToInstall.add "openssh-server"
     commitQueue()
+  createDir "/etc/ssh/authorized_keys"
   let confFile = &"/etc/ssh/sshd_config.d/{user}.conf"
-  writeFileSynced confFile, sshUserConfig(user, chrootDir)
+  writeFile confFile, [sshUserConfig(user, chrootDir)]
   if appendMissing("/etc/ssh/sshd_config", "Include " & confFile):
     runCommand "systemctl", "reload", "sshd"
 
@@ -36,8 +37,11 @@ proc createBackupUser(name, home: string): UserInfo =
 #   (using proxy function from services module)
 # * nbd-server systemd teenus
 # * on-demand systemd mount backup failisüsteemile, mida nbd-server kasutaks
+#   + Determine UUID by device path
+#     blkid -o value -s UUID /dev/sda2
 # * kasutaja loomine kes saaks ssh kaudu seda soklit kasutada
 # * sshd conf ChrootDirectory ja AllowStreamLocalForwarding local kasutajale
+# * script to rotate backup images
 
 # TODO klient
 ...?
