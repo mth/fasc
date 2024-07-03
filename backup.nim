@@ -8,6 +8,7 @@ import utils
 
 # TODO server
 # * socket-activation vahendaja, et nbd-server käivitada ainult vastavalt vajadusele 
+#   (using proxy function from services module)
 # * nbd-server systemd teenus
 # * on-demand systemd mount backup failisüsteemile, mida nbd-server kasutaks
 # * kasutaja loomine kes saaks ssh kaudu seda soklit kasutada
