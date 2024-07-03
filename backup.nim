@@ -3,6 +3,9 @@
 
 import utils
 
+# Create useradd function into utils that invokes useradd command
+# (useradd should work across different distributions).
+
 # TODO server
 # * socket-activation vahendaja, et nbd-server käivitada ainult vastavalt vajadusele 
 # * nbd-server systemd teenus
