@@ -4,8 +4,8 @@
 import utils
 
 # TODO server
-# * bind mähkur mis võimaldab systemd socket activation nbd-server'ile
-# * nbd-server systemd teenus mis kuulab soklit
+# * socket-activation vahendaja, et nbd-server käivitada ainult vastavalt vajadusele 
+# * nbd-server systemd teenus
 # * on-demand systemd mount backup failisüsteemile, mida nbd-server kasutaks
 # * kasutaja loomine kes saaks ssh kaudu seda soklit kasutada
 # * sshd conf ChrootDirectory ja AllowStreamLocalForwarding local kasutajale
