@@ -3,8 +3,15 @@
 
 import utils
 
-# Create useradd function into utils that invokes useradd command
-# (useradd should work across different distributions).
+proc createBackupUser(name, home: string): UserInfo =
+  try:
+    return name.userInfo # already exists
+  except KeyError:
+    let nbdGid = groupId("nbd")
+    let group = if nbdGid != -1: $nbdGid
+                else: ""
+    addSystemUser name, group, home
+    return name.userInfo
 
 # TODO server
 # * socket-activation vahendaja, et nbd-server käivitada ainult vastavalt vajadusele 

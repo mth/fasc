@@ -65,6 +65,12 @@ func group*(user: UserInfo): string =
     return $user.gid
   return $group.gr_name
 
+func groupId*(group: string): Gid =
+  let description = getgrnam(group)
+  if description == nil:
+    return -1
+  return description.gr_gid
+
 proc enableAndStart*(units: varargs[string]) =
   for unit in units:
     enableUnits.add unit
@@ -344,4 +350,14 @@ proc updateMime*() =
     runCmd "update-mime-database", "/usr/share/mime"
   else:
     runCmd "update-mime"
- 
+
+proc addSystemUser*(user, group, home: string) =
+  var arguments = @["-r", "-s", "/usr/sbin/nologin"]
+  if group != "":
+    arguments &= ["-Ng", group]
+  else:
+    arguments &= "-U"
+  if home != "":
+    arguments &= ["-d", home]
+  arguments &= user
+  runCmd "useradd", arguments
