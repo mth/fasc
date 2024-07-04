@@ -88,7 +88,7 @@ proc readSymlink*(symlink: string): string =
 
 proc sparseFile*(filename: string, size: Off) =
   if filename.truncate(size) != 0:
-    raise newException(OSError, fmt"truncate({filename}) failed: {$strerror(errno)}")
+    raise newException(OSError, fmt"truncate({filename}) failed: {strerror(errno)}")
 
 proc setPermissions*(fullPath: string, permissions: Mode) =
   if chmod(fullPath, permissions) == -1:
