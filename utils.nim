@@ -361,3 +361,10 @@ proc addSystemUser*(user, group, home: string) =
     arguments &= ["-d", home]
   arguments &= user
   runCmd "useradd", arguments
+
+proc sparseFile*(filename: string, size: Off) =
+  let f = open(filename, mode = fmWrite)
+  defer: f.close
+  if f.getFileHandle.ftruncate(size) != 0:
+    raise newException(OSError, $strerror(errno))
+
