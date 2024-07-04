@@ -61,6 +61,7 @@ proc backupMount(dev: string): string =
 # % on-demand systemd mount backup failisüsteemile, mida nbd-server kasutaks
 #   + Determine UUID by device path
 #     blkid -o value -s UUID /dev/sda2
+# * Backup image loomine
 # % kasutaja loomine kes saaks ssh kaudu seda soklit kasutada
 # % sshd conf ChrootDirectory ja AllowStreamLocalForwarding local kasutajale
 # * script to rotate backup images
