@@ -364,5 +364,5 @@ proc addSystemUser*(user, group, home: string) =
 
 proc sparseFile*(filename: string, size: Off) =
   if filename.truncate(size) != 0:
-    raise newException(OSError, $strerror(errno))
+    raise newException(OSError, fmt"truncate({filename}): {$strerror(errno)}")
 
