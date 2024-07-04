@@ -86,6 +86,10 @@ proc readSymlink*(symlink: string): string =
   except:
     discard
 
+proc sparseFile*(filename: string, size: Off) =
+  if filename.truncate(size) != 0:
+    raise newException(OSError, fmt"truncate({filename}) failed: {$strerror(errno)}")
+
 proc setPermissions*(fullPath: string, permissions: Mode) =
   if chmod(fullPath, permissions) == -1:
     echo fmt"chmod({fullPath}) failed: {strerror(errno)}"
@@ -361,9 +365,3 @@ proc addSystemUser*(user, group, home: string) =
     arguments &= ["-d", home]
   arguments &= user
   runCmd "useradd", arguments
-
-proc sparseFile*(filename: string, size: Off) =
-  if filename.truncate(size) != 0:
-    let error = $strerror(errno)
-    raise newException(OSError, fmt"truncate({filename}): {error}")
-
