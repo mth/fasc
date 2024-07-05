@@ -1,7 +1,7 @@
 #import std/[parseutils, sequtils, strformat, strutils, os, tables]
 #import apps, services, utils
 
-import std/[strformat, strutils, os]
+import std/[strformat, strutils, os, tables]
 import utils
 
 const backupMountPoint = "/media/backupstore"
@@ -43,13 +43,19 @@ Where={where}
 """
 
 proc onDemandMount(description, dev, mount: string): string =
+  result = mount.strip(chars={'/'}).replace('/', '-') & ".mount" 
+  let unitFile = "/etc/systemd/system/" & result
+  if dev == "":
+    if unitFile.fileExists:
+      return result
+    echo "Device mount point not defined"
+    quit 1
   var what = dev
   if what.startsWith('/'):
     what = outputOfCommand("", "blkid", "-o", "value", "-s", "UUID", dev).join.strip
   var unit = mountUnit(description, "StopWhenUnneeded=true\n", dev, mount)
   unit &= "Options=noatime,noexec,nodev,noauto\n"
-  result = mount.strip(chars={'/'}).replace('/', '-') & ".mount" 
-  writeFile "/etc/systemd/system/" & result, [unit], true
+  writeFile unitFile, [unit], true
 
 proc backupMount(dev: string): string =
   onDemandMount "Backup store mount", dev, backupMountPoint
@@ -68,9 +74,12 @@ proc backupMount(dev: string): string =
 
 proc backupServer*(args: StrMap) =
   let backupUser = args.nonEmptyParam "backup-user"
-  let dev = args.nonEmptyParam "backup-dev"
+  let dev = args.getOrDefault "backup-dev"
   let clientDir = backupMountPoint / "client"
   let userDir = clientDir / backupUser
+  let defaultImage = userDir / "backup.latest"
+  let imageSize = if defaultImage.fileExists: 0
+                  else: args.nonEmptyParam("backup-size").parseInt
   let chrootDir = userDir / "proxy"
   let socketForSSH = chrootDir / "socket"
   createDir clientDir
@@ -78,6 +87,8 @@ proc backupServer*(args: StrMap) =
   user.createParentDirs socketForSSH
   sshChrootUser user.user, chrootDir
   let mountUnit = backupMount dev
+  if imageSize > 0: # MB
+    sparseFile defaultImage, imageSize * 1024 * 1024
   # proxy and nbd service
   # backup rotation
 
