@@ -21,7 +21,7 @@ proc sshChrootUser(user, chrootDir: string) =
   let confFile = &"/etc/ssh/sshd_config.d/{user}.conf"
   writeFile confFile, [sshUserConfig(user, chrootDir)]
   if appendMissing("/etc/ssh/sshd_config", "Include " & confFile):
-    runCommand "systemctl", "reload", "sshd"
+    runCmd "systemctl", "reload", "sshd"
 
 proc createBackupUser(name, home: string): UserInfo =
   try:
@@ -33,7 +33,7 @@ proc createBackupUser(name, home: string): UserInfo =
     addSystemUser name, group, home
     return name.userInfo
 
-func mountUnit(description, unit, what, where: string) = fmt"""
+func mountUnit(description, unit, what, where: string): string = fmt"""
 [Unit]
 Description={description}
 {unit}
@@ -45,10 +45,10 @@ Where={where}
 proc onDemandMount(description, dev, mount: string): string =
   var what = dev
   if what.startsWith('/'):
-    what = outputOfCommand("", "blkid", "-o", "value", "-s", "UUID", dev).strip
+    what = outputOfCommand("", "blkid", "-o", "value", "-s", "UUID", dev).join.strip
   var unit = mountUnit(description, "StopWhenUnneeded=true\n", dev, mount)
   unit &= "Options=noatime,noexec,nodev,noauto\n"
-  result = mount.strip({'/'}).replace('/', '-') & ".mount" 
+  result = mount.strip(chars={'/'}).replace('/', '-') & ".mount" 
   writeFile "/etc/systemd/system/" & result, [unit], true
 
 proc backupMount(dev: string): string =
@@ -66,6 +66,21 @@ proc backupMount(dev: string): string =
 # % sshd conf ChrootDirectory ja AllowStreamLocalForwarding local kasutajale
 # * script to rotate backup images
 
+proc backupServer*(args: StrMap) =
+  let backupUser = args.nonEmptyParam "backup-user"
+  let dev = args.nonEmptyParam "backup-dev"
+  let clientDir = backupMountPoint / "client"
+  let userDir = clientDir / backupUser
+  let chrootDir = userDir / "proxy"
+  let socketForSSH = chrootDir / "socket"
+  createDir clientDir
+  let user = createBackupUser(backupUser, userDir)
+  user.createParentDirs socketForSSH
+  sshChrootUser user.user, chrootDir
+  let mountUnit = backupMount dev
+  # proxy and nbd service
+  # backup rotation
+
 # TODO klient
-...?
+#...?
 

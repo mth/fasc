@@ -65,11 +65,11 @@ func group*(user: UserInfo): string =
     return $user.gid
   return $group.gr_name
 
-func groupId*(group: string): Gid =
+func groupId*(group: string): int =
   let description = getgrnam(group)
   if description == nil:
     return -1
-  return description.gr_gid
+  return description.gr_gid.int
 
 proc enableAndStart*(units: varargs[string]) =
   for unit in units:

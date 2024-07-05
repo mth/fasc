@@ -1,6 +1,6 @@
 import std/[algorithm, os, sequtils, strutils, tables]
 import utils, network, gui, sway, apt, system, sound, shell, nspawn, services, apps, vnc
-import tv
+import tv, backup
 
 func argsToMap(args: seq[string]): StrMap =
   for arg in args:
@@ -67,6 +67,7 @@ let tasks = {
   "safenet": ("Setup DNS blocklists", setupSafeNet),
   "tv": ("Install weston gui for TV", westonTV),
   "merlin": ("Setup emacs with tuareg mode and merlin using opam", installMerlin),
+  "backup-server": ("Setup backup server backup-dev=/dev/sdd2 backup-user=foo-backup", backupServer),
   #"disable-tracker": ("Disable GNOME tracker", disableTracker),
 }.toTable
 if paramCount() == 0:
