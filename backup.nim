@@ -85,10 +85,11 @@ proc backupServer*(args: StrMap) =
   createDir clientDir
   let user = createBackupUser(backupUser, userDir)
   user.createParentDirs socketForSSH
-  sshChrootUser user.user, chrootDir
-  let mountUnit = backupMount dev
   if imageSize > 0: # MB
     sparseFile defaultImage, imageSize * 1024 * 1024
+    setPermissions defaultImage, user, 0o600
+  sshChrootUser user.user, chrootDir
+  let mountUnit = backupMount dev
   # proxy and nbd service
   # backup rotation
 
