@@ -104,10 +104,14 @@ proc backupServer*(args: StrMap) =
                   else: args.nonEmptyParam("backup-size").parseInt
   let chrootDir = userDir / "proxy"
   let socketForSSH = chrootDir / "socket"
+  # FIXME? Maybe user home should be userDir/active and leave other stuff to root?
+  # There isn't really reason why user should have write access anywhere else.
+  # The chrootDir can be well be readonly, ssh needs access only to systemd created socket itself
+  # The userDir then contains active, socket and older backup images
   createDir clientDir
   let user = createBackupUser(backupUser, userDir)
   user.createParentDirs defaultImage
-  user.createParentDirs socketForSSH
+  createDir chrootDir # root owner
   if imageSize > 0: # MB
     sparseFile defaultImage, imageSize * 1024 * 1024
   setPermissions defaultImage, user, 0o600
