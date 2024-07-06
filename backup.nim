@@ -64,8 +64,8 @@ proc backupNbdServer(mountUnit: string) =
   let group = if groupId("nbd") != -1: "nbd"
               else: "%I"
   addService "backup-nbd-server@", "Backup NBD server for %I", [],
-    "nbd-server -C /etc/nbd-server/%i.conf",
-    flags={s_sandbox, s_private_dev, s_call_filter}, serviceType="forking",
+    "nbd-server -C /etc/nbd-server/%i.conf", serviceType="forking",
+    flags={s_sandbox, s_private_dev, s_call_filter},
     options=["User=%I", &"Group={group}", &"ReadWritePaths={backupMountPoint}/%i/active"],
     unitOptions=[&"RequiresMountsFor={backupMountPoint}",
                  &"BindsTo={mountUnit}", "StopWhenUnneeded=true"]
