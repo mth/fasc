@@ -14,11 +14,11 @@ const util_files = [
   ("/etc/triggerhappy/triggers.d/mpd.conf", readResource("tv/mpd-triggers.conf"), 0o644),
 ]
 
-proc codename(): string =
+#[proc codename(): string =
   for line in lines("/etc/os-release"):
     if line.startsWith "VERSION_CODENAME=":
       return line[17..^1]
-  return "bookworm"
+  return "bookworm" ]#
 
 #proc vivaldi(user: UserInfo) =
 #  const vivaldi_list = "/etc/apt/sources.list.d/vivaldi.list"
@@ -38,7 +38,7 @@ proc codename(): string =
 
 # wget -O - http://apt.xbian.org/xbian.gpg.key | gpg --dearmor > /usr/share/keyrings/xbian-archive-keyring.gpg
 
-proc addRepo(name, arch, suites, keyUrl, repoUrl: string,
+#[proc addRepo(name, arch, suites, keyUrl, repoUrl: string,
              preferences: varargs[(string, int)]) =
   let keyring = fmt"/usr/share/keyrings/{name}-archive-keyring.gpg"
   if not keyring.fileExists:
@@ -55,7 +55,7 @@ proc addRepo(name, arch, suites, keyUrl, repoUrl: string,
         prefs &= [&"Package: {package}",
                   &"Pin: origin \"{urlParts[2]}\"",
                   &"Pin-Priority: {priority}"]
-      writeFile fmt"/etc/apt/preferences.d/{name}", prefs
+      writeFile fmt"/etc/apt/preferences.d/{name}", prefs ]#
 
 #proc addXbian() =
 #  when defined(arm64):

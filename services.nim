@@ -57,7 +57,8 @@ proc properties(flags: set[ServiceFlags]): seq[(string, string)] =
 
 proc addService*(name, description: string, depends: openarray[string],
                  exec: string, install="", flags: set[ServiceFlags] = {},
-                 options: openarray[string] = [], serviceType="") =
+                 options: openarray[string] = [], serviceType="",
+                 unitOptions: openarray[string] = []) =
   var depString = ""
   for dep in depends:
     if dep != "":
@@ -70,6 +71,7 @@ proc addService*(name, description: string, depends: openarray[string],
   if depString != "":
     service &= fmt"Requires={depString}"
     service &= fmt"After={depString}"
+  service.add unitOptions
   service.add ["", "[Service]"]
   if serviceType != "":
     service &= fmt"Type={serviceType}"

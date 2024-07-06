@@ -2,7 +2,7 @@
 #import apps, services, utils
 
 import std/[strformat, strutils, os, tables]
-import utils
+import services, utils
 
 const backupMountPoint = "/media/backupstore"
 
@@ -60,6 +60,17 @@ proc onDemandMount(description, dev, mount: string): string =
 proc backupMount(dev: string): string =
   onDemandMount "Backup store mount", dev, backupMountPoint
 
+proc backupNbdServer(mountUnit: string) =
+  let group = if groupId("nbd") != -1: "nbd"
+              else: "%I"
+  addService "backup-nbd-server@", "Backup NBD server for %I", [],
+    "nbd-server -C /etc/nbd-server/%i.conf",
+    flags={s_sandbox, s_private_dev, s_call_filter}, serviceType="forking",
+    options=["User=%I", &"Group={group}", &"ReadWritePaths={backupMountPoint}/%i/active"],
+    unitOptions=[&"RequiresMountsFor={backupMountPoint}",
+                 &"BindsTo={mountUnit}", "StopWhenUnneeded=true"]
+  # TODO create conf
+
 # TODO server
 # * socket-activation vahendaja, et nbd-server käivitada ainult vastavalt vajadusele 
 #   (using proxy function from services module)
@@ -77,19 +88,21 @@ proc backupServer*(args: StrMap) =
   let dev = args.getOrDefault "backup-dev"
   let clientDir = backupMountPoint / "client"
   let userDir = clientDir / backupUser
-  let defaultImage = userDir / "backup.latest"
+  let defaultImage = userDir / "active/backup.latest"
   let imageSize = if defaultImage.fileExists: 0
                   else: args.nonEmptyParam("backup-size").parseInt
   let chrootDir = userDir / "proxy"
   let socketForSSH = chrootDir / "socket"
   createDir clientDir
   let user = createBackupUser(backupUser, userDir)
+  user.createParentDirs defaultImage
   user.createParentDirs socketForSSH
   if imageSize > 0: # MB
     sparseFile defaultImage, imageSize * 1024 * 1024
   setPermissions defaultImage, user, 0o600
   sshChrootUser user.user, chrootDir
   let mountUnit = backupMount dev
+  backupNbdServer mountUnit
   # proxy and nbd service
   # backup rotation
 
