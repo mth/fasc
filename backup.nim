@@ -15,7 +15,7 @@ Match User {user}
 
 proc sshChrootUser(user, chrootDir: string) =
   if not fileExists("/usr/sbin/sshd") or not fileExists("/bin/nbd-server"):
-    packagesToInstall.add "openssh-server", "nbd-server"
+    packagesToInstall.add ["openssh-server", "nbd-server"]
     commitQueue()
   createDir "/etc/ssh/authorized_keys"
   let confFile = &"/etc/ssh/sshd_config.d/{user}.conf"
@@ -60,16 +60,27 @@ proc onDemandMount(description, dev, mount: string): string =
 proc backupMount(dev: string): string =
   onDemandMount "Backup store mount", dev, backupMountPoint
 
-proc backupNbdServer(mountUnit: string) =
-  let group = if groupId("nbd") != -1: "nbd"
-              else: "%I"
+func nbdConfig(name: string): string = fmt"""
+[generic]
+
+[{name}]
+unixsock = {backupMountPoint}/{name}/active/nbd.socket
+exportname = {backupMountPoint}/{name}/active/backup.image
+splice = true
+flush = true
+fua = true
+trim = true
+rotational = true
+"""
+
+proc backupNbdServer(mountUnit, name, group: string) =
   addService "backup-nbd-server@", "Backup NBD server for %I", [],
     "/bin/nbd-server -C /etc/nbd-server/%i.conf", serviceType="forking",
     flags={s_sandbox, s_private_dev, s_call_filter},
     options=["User=%I", &"Group={group}", &"ReadWritePaths={backupMountPoint}/%i/active"],
     unitOptions=[&"RequiresMountsFor={backupMountPoint}",
                  &"BindsTo={mountUnit}", "StopWhenUnneeded=true"]
-  # TODO create conf
+  writeFile fmt"/etc/nbd-server/{name}.conf", [nbdConfig(name)]
 
 # TODO server
 # * socket-activation vahendaja, et nbd-server käivitada ainult vastavalt vajadusele 
@@ -88,7 +99,7 @@ proc backupServer*(args: StrMap) =
   let dev = args.getOrDefault "backup-dev"
   let clientDir = backupMountPoint / "client"
   let userDir = clientDir / backupUser
-  let defaultImage = userDir / "active/backup.latest"
+  let defaultImage = userDir / "active/backup.image"
   let imageSize = if defaultImage.fileExists: 0
                   else: args.nonEmptyParam("backup-size").parseInt
   let chrootDir = userDir / "proxy"
@@ -102,8 +113,12 @@ proc backupServer*(args: StrMap) =
   setPermissions defaultImage, user, 0o600
   sshChrootUser user.user, chrootDir
   let mountUnit = backupMount dev
-  backupNbdServer mountUnit
-  # proxy and nbd service
+  let group = if groupId("nbd") != -1: "nbd"
+              else: "%I"
+  backupNbdServer mountUnit, user.user, group
+  proxy fmt"backup-nbd-proxy@:%I:{group}:0600", socketForSSH, "",
+        userDir / "active/nbd.socket", "30s", "backup-nbd-proxy@%i.service",
+        "Backup NBD proxy for %I"
   # backup rotation
 
 # TODO klient
