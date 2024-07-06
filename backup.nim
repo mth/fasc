@@ -119,6 +119,7 @@ proc backupServer*(args: StrMap) =
   proxy fmt"backup-nbd-proxy@:%I:{group}:0600", socketForSSH, "",
         userDir / "active/nbd.socket", "30s", "backup-nbd-proxy@%i.service",
         "Backup NBD proxy for %I"
+  enableAndStart fmt"backup-nbd-proxy@{user.user}"
   # backup rotation
 
 # TODO klient

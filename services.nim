@@ -146,7 +146,8 @@ proc proxy*(proxy, listen, bindTo, connectTo, exitIdleTime, targetService: strin
   addService(socketParam[0], descriptionStr, requires,
     "/usr/lib/systemd/systemd-socket-proxyd --exit-idle-time=" &
     exitIdleTime & ' ' & connectTo, "", {s_no_new_priv, s_overwrite}, options)
-  enableAndStart socketName
+  if '@' notin socketParam[0]:
+    enableAndStart socketName
   systemdReload = true
 
 proc socketProxy*(args: StrMap) =
