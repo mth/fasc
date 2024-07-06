@@ -83,9 +83,9 @@ proc backupNbdServer(mountUnit, name, group: string) =
   writeFile fmt"/etc/nbd-server/{name}.conf", [nbdConfig(name)]
 
 # TODO server
-# * socket-activation vahendaja, et nbd-server käivitada ainult vastavalt vajadusele 
+# % socket-activation vahendaja, et nbd-server käivitada ainult vastavalt vajadusele 
 #   (using proxy function from services module)
-# * nbd-server systemd teenus
+# % nbd-server systemd teenus
 # % on-demand systemd mount backup failisüsteemile, mida nbd-server kasutaks
 #   + Determine UUID by device path
 #     blkid -o value -s UUID /dev/sda2
