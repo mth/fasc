@@ -83,6 +83,16 @@ proc backupNbdServer(mountUnit, name, group: string) =
                  &"BindsTo={mountUnit}", "StopWhenUnneeded=true"]
   writeFile fmt"/etc/nbd-server/{name}.conf", [nbdConfig(name)]
 
+proc rotateBackup(mountUnit: string) =
+  writeFile "/usr/local/sbin/rotate-backup", [rotateBackup], permissions=0o755
+  addService "backup-rotate", "Rotates backup image snapshots", [],
+    "/usr/local/sbin/rotate-backup", serviceType="oneshot",
+    flags={s_sandbox, s_private_dev, s_call_filter},
+    options=[&"ReadWritePaths={backupMountPoint/client"],
+    unitOptions=[&"RequiresMountsFor={backupMountPoint}", &"BindsTo={mountUnit}"]
+  addTimer "backup-rotate", "Timer to rotate backup image snapshots",
+           "OnCalendar=*-01,04,07,10-01 10:10:10"
+
 # TODO server
 # % socket-activation vahendaja, et nbd-server käivitada ainult vastavalt vajadusele 
 #   (using proxy function from services module)
@@ -123,7 +133,7 @@ proc backupServer*(args: StrMap) =
         activeDir / "nbd.socket", "30s", "backup-nbd-proxy@%i.service",
         "Backup NBD proxy for %I"
   enableAndStart fmt"backup-nbd-proxy@{user.user}"
-  # backup rotation - run rotate-backup every 4 weeks
+  rotateBackup mountUnit
 
 # TODO klient
 #...?
