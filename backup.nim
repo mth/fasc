@@ -123,7 +123,7 @@ proc backupServer*(args: StrMap) =
         activeDir / "nbd.socket", "30s", "backup-nbd-proxy@%i.service",
         "Backup NBD proxy for %I"
   enableAndStart fmt"backup-nbd-proxy@{user.user}"
-  # backup rotation
+  # backup rotation - run rotate-backup every 4 weeks
 
 # TODO klient
 #...?
