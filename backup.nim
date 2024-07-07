@@ -9,9 +9,9 @@ const rotateBackup = readResource("rotate-backup.sh")
 
 func sshUserConfig(user, chrootDir: string): string = fmt"""
 Match User {user}
-\tAutherizedKeysFile /etc/ssh/authorized_keys/{user}
-\tAllowStreamLocalForwarding local
-\tChrootDirectory {chrootDir}
+	AuthorizedKeysFile /etc/ssh/authorized_keys/{user}
+	AllowStreamLocalForwarding local
+	ChrootDirectory {chrootDir}
 """
 
 func mountUnit(description, unit, what, where: string): string = fmt"""

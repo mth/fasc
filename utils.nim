@@ -87,7 +87,7 @@ proc readSymlink*(symlink: string): string =
     discard
 
 proc sparseFile*(filename: string, size: Off, permissions: Mode) =
-  let fd = open(filename, O_CREAT or O_EXCL, permissions)
+  let fd = open(filename, O_CREAT or O_EXCL or O_WRONLY, permissions)
   var error: cint = 0
   if fd != -1:
     if fd.ftruncate(size) != 0:
