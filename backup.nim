@@ -122,7 +122,7 @@ proc backupServer*(args: StrMap) =
   setPermissions chrootDir, 0, user.gid, 0o750
   setPermissions activeDir, user, 0o700
   if imageSize > 0: # MB
-    sparseFile defaultImage, imageSize * 1024 * 1024
+    sparseFile defaultImage, imageSize * 1024 * 1024, 0o600
   setPermissions defaultImage, user, 0o600
   sshChrootUser user.user, chrootDir
   let mountUnit = backupMount dev

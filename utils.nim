@@ -86,9 +86,17 @@ proc readSymlink*(symlink: string): string =
   except:
     discard
 
-proc sparseFile*(filename: string, size: Off) =
-  if filename.truncate(size) != 0:
-    raise newException(OSError, fmt"truncate({filename}) failed: {strerror(errno)}")
+proc sparseFile*(filename: string, size: Off, permissions: Mode) =
+  let fd = open(filename, O_CREAT or O_EXCL, permissions)
+  var error: cint = 0
+  if fd != -1:
+    if fd.ftruncate(size) != 0:
+      error = errno
+    if fd.close == 0 and error == 0:
+      return
+  if error == 0:
+    error = errno
+  raise newException(OSError, fmt"truncate({filename}) failed: {strerror(error)}")
 
 proc setPermissions*(fullPath: string, permissions: Mode) =
   if chmod(fullPath, permissions) == -1:
