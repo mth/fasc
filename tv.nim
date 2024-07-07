@@ -1,4 +1,4 @@
-import sway, sound, utils, std/[os, posix, strformat, strutils]
+import sway, sound, utils, std/[os, posix]
 
 const weston_ini = readResource("tv/weston.ini")
 const util_files = [
@@ -38,24 +38,27 @@ const util_files = [
 
 # wget -O - http://apt.xbian.org/xbian.gpg.key | gpg --dearmor > /usr/share/keyrings/xbian-archive-keyring.gpg
 
-#[proc addRepo(name, arch, suites, keyUrl, repoUrl: string,
-             preferences: varargs[(string, int)]) =
-  let keyring = fmt"/usr/share/keyrings/{name}-archive-keyring.gpg"
-  if not keyring.fileExists:
-    let gpgKey = outputOfCommand("", "wget", "-qO", "-", keyUrl)
-    discard outputOfCommand(gpgKey.join("\n"), "gpg", "--dearmor", "-o", keyring)
-  let source = fmt"/etc/apt/sources.list.d/{name}.list"
-  if not source.fileExists:
-    writeFileSynced source, &"deb [signed-by={keyring} arch={arch}] {repoUrl} {suites}\n"
-    aptUpdate = true
-    if preferences.len > 0:
-      let urlParts = repoUrl.split '/'
-      var prefs: seq[string]
-      for (package, priority) in preferences:
-        prefs &= [&"Package: {package}",
-                  &"Pin: origin \"{urlParts[2]}\"",
-                  &"Pin-Priority: {priority}"]
-      writeFile fmt"/etc/apt/preferences.d/{name}", prefs ]#
+when defined(arm64):
+  import std/[strformat, strutils]
+
+  proc addRepo(name, arch, suites, keyUrl, repoUrl: string,
+               preferences: varargs[(string, int)]) =
+    let keyring = fmt"/usr/share/keyrings/{name}-archive-keyring.gpg"
+    if not keyring.fileExists:
+      let gpgKey = outputOfCommand("", "wget", "-qO", "-", keyUrl)
+      discard outputOfCommand(gpgKey.join("\n"), "gpg", "--dearmor", "-o", keyring)
+    let source = fmt"/etc/apt/sources.list.d/{name}.list"
+    if not source.fileExists:
+      writeFileSynced source, &"deb [signed-by={keyring} arch={arch}] {repoUrl} {suites}\n"
+      aptUpdate = true
+      if preferences.len > 0:
+        let urlParts = repoUrl.split '/'
+        var prefs: seq[string]
+        for (package, priority) in preferences:
+          prefs &= [&"Package: {package}",
+                    &"Pin: origin \"{urlParts[2]}\"",
+                    &"Pin-Priority: {priority}"]
+        writeFile fmt"/etc/apt/preferences.d/{name}", prefs
 
 #proc addXbian() =
 #  when defined(arm64):
