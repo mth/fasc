@@ -67,7 +67,7 @@ let tasks = {
   "safenet": ("Setup DNS blocklists", setupSafeNet),
   "tv": ("Install weston gui for TV", westonTV),
   "merlin": ("Setup emacs with tuareg mode and merlin using opam", installMerlin),
-  "backup-server": ("Setup backup server backup-dev=/dev/sdd2 backup-user=foo-backup", backupServer),
+  "backup-server": ("Setup backup server backup-dev=/dev/sdd2 backup-user=foo-backup backup-size=MB", backupServer),
   #"disable-tracker": ("Disable GNOME tracker", disableTracker),
 }.toTable
 if paramCount() == 0:
