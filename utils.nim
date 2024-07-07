@@ -96,7 +96,9 @@ proc sparseFile*(filename: string, size: Off, permissions: Mode) =
       return
   if error == 0:
     error = errno
-  raise newException(OSError, fmt"truncate({filename}) failed: {strerror(error)}")
+  if fd != -1:
+    discard unlink(filename)
+  raise newException(OSError, fmt"truncate({filename}, {size}) failed: {strerror(error)}")
 
 proc setPermissions*(fullPath: string, permissions: Mode) =
   if chmod(fullPath, permissions) == -1:
