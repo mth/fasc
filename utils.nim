@@ -94,15 +94,18 @@ proc setPermissions*(fullPath: string, permissions: Mode) =
   if chmod(fullPath, permissions) == -1:
     echo fmt"chmod({fullPath}) failed: {strerror(errno)}"
 
-proc setPermissions*(fullPath: string, user: UserInfo, permissions: Mode) =
-  if chown(fullPath, user.uid, user.gid) == -1:
+proc setPermissions*(fullPath: string, uid: Uid, gid: Gid, permissions: Mode) =
+  if chown(fullPath, uid, gid) == -1:
     echo fmt"chown({fullPath}) failed: {strerror(errno)}"
-  setPermissions(fullPath, permissions)
+  setPermissions fullPath, permissions
+
+proc setPermissions*(fullPath: string, user: UserInfo, permissions: Mode) =
+  setPermissions fullPath, user.uid, user.gid, permissions
 
 proc groupExec*(fullPath: string, user: UserInfo) =
   if chown(fullPath, 0, user.gid) == -1:
     echo fmt"chgrp({fullPath}) failed: {strerror(errno)}"
-  setPermissions(fullPath, 0o750)
+  setPermissions fullPath, 0o750
 
 proc writeFileSynced*(filename, content: string) =
   let f = open(filename, fmWrite)
@@ -144,7 +147,7 @@ proc createParentDirs*(user: UserInfo, filename: string) =
     var absolute = user.home / part
     absolute.removeSuffix '/'
     if not absolute.existsOrCreateDir:
-      setPermissions(absolute, user, 0o755)
+      setPermissions absolute, user, 0o755
 
 proc writeAsUser*(user: UserInfo, filename, content: string,
                   permissions: Mode = 0o644, force = false) =

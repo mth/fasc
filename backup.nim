@@ -97,21 +97,19 @@ proc backupNbdServer(mountUnit, name, group: string) =
 proc backupServer*(args: StrMap) =
   let backupUser = args.nonEmptyParam "backup-user"
   let dev = args.getOrDefault "backup-dev"
-  let clientDir = backupMountPoint / "client"
-  let userDir = clientDir / backupUser
-  let defaultImage = userDir / "active/backup.image"
+  let userDir = backupMountPoint / "client" / backupUser
+  let activeDir = userDir / "active"
+  let defaultImage = activeDir / "backup.image"
   let imageSize = if defaultImage.fileExists: 0
                   else: args.nonEmptyParam("backup-size").parseInt
   let chrootDir = userDir / "proxy"
   let socketForSSH = chrootDir / "socket"
-  # FIXME? Maybe user home should be userDir/active and leave other stuff to root?
-  # There isn't really reason why user should have write access anywhere else.
-  # The chrootDir can be well be readonly, ssh needs access only to systemd created socket itself
-  # The userDir then contains active, socket and older backup images
-  createDir clientDir
-  let user = createBackupUser(backupUser, userDir)
-  user.createParentDirs defaultImage
-  createDir chrootDir # root owner
+  let user = createBackupUser(backupUser, activeDir)
+  createDir chrootDir
+  createDir activeDir
+  setPermissions userDir, 0, user.gid, 0o750
+  setPermissions chrootDir, 0, user.gid, 0o750
+  setPermissions activeDir, user, 0o700
   if imageSize > 0: # MB
     sparseFile defaultImage, imageSize * 1024 * 1024
   setPermissions defaultImage, user, 0o600
@@ -121,7 +119,7 @@ proc backupServer*(args: StrMap) =
               else: "%I"
   backupNbdServer mountUnit, user.user, group
   proxy fmt"backup-nbd-proxy@:%I:{group}:0600", socketForSSH, "",
-        userDir / "active/nbd.socket", "30s", "backup-nbd-proxy@%i.service",
+        activeDir / "nbd.socket", "30s", "backup-nbd-proxy@%i.service",
         "Backup NBD proxy for %I"
   enableAndStart fmt"backup-nbd-proxy@{user.user}"
   # backup rotation
