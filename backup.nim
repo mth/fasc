@@ -5,12 +5,35 @@ import std/[strformat, strutils, os, tables]
 import services, utils
 
 const backupMountPoint = "/media/backupstore"
+const rotateBackup = readResource("rotate-backup.sh")
 
 func sshUserConfig(user, chrootDir: string): string = fmt"""
 Match User {user}
 \tAutherizedKeysFile /etc/ssh/authorized_keys/{user}
 \tAllowStreamLocalForwarding local
 \tChrootDirectory {chrootDir}
+"""
+
+func mountUnit(description, unit, what, where: string): string = fmt"""
+[Unit]
+Description={description}
+{unit}
+[Mount]
+What={what}
+Where={where}
+"""
+
+func nbdConfig(name: string): string = fmt"""
+[generic]
+
+[{name}]
+unixsock = {backupMountPoint}/{name}/active/nbd.socket
+exportname = {backupMountPoint}/{name}/active/backup.image
+splice = true
+flush = true
+fua = true
+trim = true
+rotational = true
 """
 
 proc sshChrootUser(user, chrootDir: string) =
@@ -33,15 +56,6 @@ proc createBackupUser(name, home: string): UserInfo =
     addSystemUser name, group, home
     return name.userInfo
 
-func mountUnit(description, unit, what, where: string): string = fmt"""
-[Unit]
-Description={description}
-{unit}
-[Mount]
-What={what}
-Where={where}
-"""
-
 proc onDemandMount(description, dev, mount: string): string =
   result = mount.strip(chars={'/'}).replace('/', '-') & ".mount" 
   let unitFile = "/etc/systemd/system/" & result
@@ -59,19 +73,6 @@ proc onDemandMount(description, dev, mount: string): string =
 
 proc backupMount(dev: string): string =
   onDemandMount "Backup store mount", dev, backupMountPoint
-
-func nbdConfig(name: string): string = fmt"""
-[generic]
-
-[{name}]
-unixsock = {backupMountPoint}/{name}/active/nbd.socket
-exportname = {backupMountPoint}/{name}/active/backup.image
-splice = true
-flush = true
-fua = true
-trim = true
-rotational = true
-"""
 
 proc backupNbdServer(mountUnit, name, group: string) =
   addService "backup-nbd-server@", "Backup NBD server for %I", [],
