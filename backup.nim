@@ -69,14 +69,14 @@ proc onDemandMount(description, dev, mount: string): string =
 proc backupMount(dev: string): string =
   onDemandMount "Backup store mount", dev, backupMountPoint
 
-proc backupNbdServer(mountUnit, name, directory: string) =
+proc backupNbdServer(mountUnit, name, image: string) =
   let group = if groupId("nbd") != -1: "nbd"
               else: name
   addService name & "-nbd-server@", "Backup NBD server for " & name, [],
-    "/bin/nbd-server 0 {directory}/backup.image -C /etc/nbd-server/backup.conf",
+    "/bin/nbd-server 0 {image} -C /etc/nbd-server/backup.conf",
     flags={s_sandbox, s_private_dev, s_call_filter},
     options=["StandardInput=socket", "User=" & name, "Group=" & group,
-             "CollectMode=inactive-or-failed", "ReadWritePaths=" & directory],
+             "CollectMode=inactive-or-failed", "ReadWritePaths=" & image],
     unitOptions=["RequiresMountsFor=" & backupMountPoint,
                  "BindsTo=" & mountUnit, "StopWhenUnneeded=true"]
   writeFile fmt"/etc/nbd-server/backup.conf", [nbdConfig]
@@ -121,7 +121,7 @@ proc backupServer*(args: StrMap) =
   finally:
     runCmd "systemctl", "stop", mountUnit
   sshChrootUser user.user
-  backupNbdServer mountUnit, user.user, activeDir
+  backupNbdServer mountUnit, user.user, defaultImage
   rotateBackupTimer mountUnit
 
 # TODO klient
