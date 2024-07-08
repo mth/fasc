@@ -124,7 +124,7 @@ proc backupServer*(args: StrMap) =
         "", backupMountPoint / "client/%i/active/nbd.socket", "30s",
         "backup-nbd-server@%i.service", "Backup NBD proxy for %i",
         [&"ExecStartPre=/bin/mkdir -pm 755 '/run/backup-nbd-proxy/%i'"]
-  enableAndStart fmt"backup-nbd-proxy@{user.user}"
+  enableAndStart fmt"backup-nbd-proxy@{user.user}.socket"
   rotateBackupTimer mountUnit
 
 # TODO klient
