@@ -127,6 +127,8 @@ proc socketUnit*(socketName, description, listen: string, socketOptions: varargs
   socket &= ["", "[Install]", "WantedBy=sockets.target", ""]
   writeFile("/etc/systemd/system" / socketName, socket, force=true)
   systemdReload = true
+  if '@' notin socketParam[0]:
+    enableAndStart socketName
 
 proc proxy*(proxy, listen, bindTo, connectTo, exitIdleTime, targetService: string,
             description = "", socketOptions: openarray[string] = []) =
@@ -142,7 +144,6 @@ proc proxy*(proxy, listen, bindTo, connectTo, exitIdleTime, targetService: strin
     socket &= fmt"SocketGroup={socketParam[2]}"
   if socketParam.len > 3:
     socket &= fmt"SocketMode={socketParam[3]}"
-  socketUnit socketName, descriptionStr, listen, socket
   var options = @["PrivateTmp=yes"]
   if listen.startsWith("/") and connectTo.startsWith("/"):
     options.add "PrivateNetwork=yes"
@@ -151,8 +152,7 @@ proc proxy*(proxy, listen, bindTo, connectTo, exitIdleTime, targetService: strin
   addService(socketParam[0], descriptionStr, requires,
     "/usr/lib/systemd/systemd-socket-proxyd --exit-idle-time=" &
     exitIdleTime & ' ' & connectTo, "", {s_no_new_priv, s_overwrite}, options)
-  if '@' notin socketParam[0]:
-    enableAndStart socketName
+  socketUnit socketName, descriptionStr, listen, socket
 
 proc socketProxy*(args: StrMap) =
   proxy(proxy=args.nonEmptyParam "proxy",
