@@ -93,18 +93,6 @@ proc rotateBackupTimer(mountUnit: string) =
   addTimer "backup-rotate", "Timer to rotate backup image snapshots",
            "OnCalendar=*-01,04,07,10-01 10:10:10"
 
-# TODO server
-# % socket-activation vahendaja, et nbd-server käivitada ainult vastavalt vajadusele 
-#   (using proxy function from services module)
-# % nbd-server systemd teenus
-# % on-demand systemd mount backup failisüsteemile, mida nbd-server kasutaks
-#   + Determine UUID by device path
-#     blkid -o value -s UUID /dev/sda2
-# % Backup image loomine - sparseFile(name, size)
-# % kasutaja loomine kes saaks ssh kaudu seda soklit kasutada
-# % sshd conf ChrootDirectory ja AllowStreamLocalForwarding local kasutajale
-# * script to rotate backup images
-
 proc backupServer*(args: StrMap) =
   let backupUser = args.nonEmptyParam "backup-user"
   let dev = args.getOrDefault "backup-dev"
