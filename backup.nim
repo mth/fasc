@@ -8,7 +8,7 @@ func sshUserConfig(user: string): string = fmt"""
 Match User {user}
 	AuthorizedKeysFile /etc/ssh/authorized_keys/{user}
 	AllowStreamLocalForwarding local
-	ChrootDirectory /run/backup-nbd-proxy/{user}
+	ChrootDirectory /run/nbd-backup/{user}
 """
 
 func mountUnit(description, unit, what, where: string): string = fmt"""
@@ -20,12 +20,10 @@ What={what}
 Where={where}
 """
 
-func nbdConfig(name: string): string = fmt"""
+const nbdConfig = """
 [generic]
-unixsock = {backupMountPoint}/client/{name}/active/nbd.socket
 
-[{name}]
-exportname = {backupMountPoint}/client/{name}/active/backup.image
+[backup]
 splice = true
 flush = true
 fua = true
@@ -71,15 +69,19 @@ proc onDemandMount(description, dev, mount: string): string =
 proc backupMount(dev: string): string =
   onDemandMount "Backup store mount", dev, backupMountPoint
 
-proc backupNbdServer(mountUnit, name, group: string) =
-  addService "backup-nbd-server@", "Backup NBD server for %i", [],
-    "/bin/nbd-server -C /etc/nbd-server/%i.conf", serviceType="forking",
+proc backupNbdServer(mountUnit, name, group, directory: string) =
+  addService name & "-nbd-server@", "Backup NBD server for " & name, [],
+    "/bin/nbd-server 0 {directory}/backup.image -C /etc/nbd-server/backup.conf",
     flags={s_sandbox, s_private_dev, s_call_filter},
-    options=["ExecStartPre=/bin/rm -f '/media/backupstore/client/%i/active/nbd.socket'",
-             "User=%i", &"Group={group}", &"ReadWritePaths={backupMountPoint}/client/%i/active"],
-    unitOptions=[&"RequiresMountsFor={backupMountPoint}",
-                 &"BindsTo={mountUnit}", "StopWhenUnneeded=true"]
-  writeFile fmt"/etc/nbd-server/{name}.conf", [nbdConfig(name)]
+    options=["StandardInput=socket", "User=" & name, "Group=" & group,
+             "CollectMode=inactive-or-failed", "ReadWritePaths=" & directory],
+    unitOptions=["RequiresMountsFor=" & backupMountPoint,
+                 "BindsTo=" & mountUnit, "StopWhenUnneeded=true"]
+  writeFile fmt"/etc/nbd-server/backup.conf", [nbdConfig]
+  socketUnit name & "-nbd-server.socket", "Backup NBD socket for " & name,
+             &"/run/nbd-backup/{name}/socket", "SocketUser=" & name,
+             "SocketGroup=" & group, "SocketMode=0600",
+             &"ExecStartPre=/bin/mkdir -pm 755 '/run/nbd-backup/{name}'"
 
 proc rotateBackupTimer(mountUnit: string) =
   writeFile "/usr/local/sbin/rotate-backup", [rotateBackup], permissions=0o755
@@ -87,7 +89,7 @@ proc rotateBackupTimer(mountUnit: string) =
     "/usr/local/sbin/rotate-backup", serviceType="oneshot",
     flags={s_sandbox, s_private_dev, s_call_filter},
     options=[&"ReadWritePaths={backupMountPoint}/client"],
-    unitOptions=[&"RequiresMountsFor={backupMountPoint}", &"BindsTo={mountUnit}"]
+    unitOptions=["RequiresMountsFor=" & backupMountPoint, "BindsTo=" & mountUnit]
   addTimer "backup-rotate", "Timer to rotate backup image snapshots",
            "OnCalendar=*-01,04,07,10-01 10:10:10"
 
@@ -119,12 +121,7 @@ proc backupServer*(args: StrMap) =
   sshChrootUser user.user
   let group = if groupId("nbd") != -1: "nbd"
               else: "%i"
-  backupNbdServer mountUnit, user.user, group
-  proxy fmt"backup-nbd-proxy@:%i:{group}:0600", "/run/backup-nbd-proxy/%i/socket",
-        "", backupMountPoint / "client/%i/active/nbd.socket", "30s",
-        "backup-nbd-server@%i.service", "Backup NBD proxy for %i",
-        [&"ExecStartPre=/bin/mkdir -pm 755 '/run/backup-nbd-proxy/%i'"]
-  enableAndStart fmt"backup-nbd-proxy@{user.user}.socket"
+  backupNbdServer mountUnit, user.user, group, activeDir
   rotateBackupTimer mountUnit
 
 # TODO klient
