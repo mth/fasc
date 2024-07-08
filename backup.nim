@@ -73,7 +73,7 @@ proc backupNbdServer(mountUnit, name, image: string) =
   let group = if groupId("nbd") != -1: "nbd"
               else: name
   addService name & "-nbd-server@", "Backup NBD server for " & name, [],
-    "/bin/nbd-server 0 {image} -C /etc/nbd-server/backup.conf",
+    &"/bin/nbd-server 0 {image} -C /etc/nbd-server/backup.conf",
     flags={s_sandbox, s_private_dev, s_call_filter},
     options=["StandardInput=socket", "User=" & name, "Group=" & group,
              "ReadWritePaths=" & image],
