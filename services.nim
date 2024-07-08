@@ -127,7 +127,7 @@ proc socketUnit*(socketName, description, listen: string, socketOptions: varargs
   socket &= ["", "[Install]", "WantedBy=sockets.target", ""]
   writeFile("/etc/systemd/system" / socketName, socket, force=true)
   systemdReload = true
-  if '@' notin socketParam[0]:
+  if '@' notin socketName:
     enableAndStart socketName
 
 proc proxy*(proxy, listen, bindTo, connectTo, exitIdleTime, targetService: string,
