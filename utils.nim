@@ -71,11 +71,6 @@ func groupId*(group: string): int =
     return -1
   return description.gr_gid.int
 
-proc enableAndStart*(units: varargs[string]) =
-  for unit in units:
-    enableUnits.add unit
-    startUnits.add unit
-
 proc addPackageUnless*(packageName, requiredPath: string) =
   if not requiredPath.fileExists:
     packagesToInstall.add packageName
@@ -229,11 +224,20 @@ proc aptInstallNow*(packages: varargs[string]) =
       runCmd("apt-get", @["install", "-y", "--no-install-recommends"] & packagesToInstall)
     packagesToInstall.reset
 
-proc commitQueue*() =
-  aptInstallNow()
+proc checkSystemdReload() =
   if systemdReload:
     runCmd("systemctl", "daemon-reload")
     systemdReload = false
+
+proc enableAndStart*(units: varargs[string]) =
+  checkSystemdReload()
+  for unit in units:
+    enableUnits.add unit
+    startUnits.add unit
+
+proc commitQueue*() =
+  aptInstallNow()
+  checkSystemdReload()
   if enableUnits.len > 0:
     let units = enableUnits.deduplicate
     echo("Enabling services: ", units.join(", "))
