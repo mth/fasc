@@ -126,6 +126,7 @@ proc socketUnit*(socketName, description, listen: string, socketOptions: varargs
   socket.add socketOptions
   socket &= ["", "[Install]", "WantedBy=sockets.target", ""]
   writeFile("/etc/systemd/system" / socketName, socket, force=true)
+  systemdReload = true
 
 proc proxy*(proxy, listen, bindTo, connectTo, exitIdleTime, targetService: string,
             description = "", socketOptions: openarray[string] = []) =
@@ -152,7 +153,6 @@ proc proxy*(proxy, listen, bindTo, connectTo, exitIdleTime, targetService: strin
     exitIdleTime & ' ' & connectTo, "", {s_no_new_priv, s_overwrite}, options)
   if '@' notin socketParam[0]:
     enableAndStart socketName
-  systemdReload = true
 
 proc socketProxy*(args: StrMap) =
   proxy(proxy=args.nonEmptyParam "proxy",
