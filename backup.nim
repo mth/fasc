@@ -75,10 +75,10 @@ proc backupMount(dev: string): string =
   onDemandMount "Backup store mount", dev, backupMountPoint
 
 proc backupNbdServer(mountUnit, name, group: string) =
-  addService "backup-nbd-server@", "Backup NBD server for %I", [],
+  addService "backup-nbd-server@", "Backup NBD server for %i", [],
     "/bin/nbd-server -C /etc/nbd-server/%i.conf", serviceType="forking",
     flags={s_sandbox, s_private_dev, s_call_filter},
-    options=["User=%I", &"Group={group}", &"ReadWritePaths={backupMountPoint}/%i/active"],
+    options=["User=%i", &"Group={group}", &"ReadWritePaths={backupMountPoint}/client/%i/active"],
     unitOptions=[&"RequiresMountsFor={backupMountPoint}",
                  &"BindsTo={mountUnit}", "StopWhenUnneeded=true"]
   writeFile fmt"/etc/nbd-server/{name}.conf", [nbdConfig(name)]
@@ -111,27 +111,37 @@ proc backupServer*(args: StrMap) =
   let userDir = backupMountPoint / "client" / backupUser
   let activeDir = userDir / "active"
   let defaultImage = activeDir / "backup.image"
-  let imageSize = if defaultImage.fileExists: 0
-                  else: args.nonEmptyParam("backup-size").parseInt
+  let imageSize = args.getOrDefault("backup-size", "0").parseInt
   let chrootDir = userDir / "proxy"
   let socketForSSH = chrootDir / "socket"
   let user = createBackupUser(backupUser, activeDir)
-  createDir chrootDir
-  createDir activeDir
-  setPermissions userDir, 0, user.gid, 0o750
-  setPermissions chrootDir, 0, user.gid, 0o750
-  setPermissions activeDir, user, 0o700
-  if imageSize > 0: # MB
-    sparseFile defaultImage, imageSize * 1024 * 1024, 0o600
-  setPermissions defaultImage, user, 0o600
-  sshChrootUser user.user, chrootDir
   let mountUnit = backupMount dev
+  runCmd "systemctl", "daemon-reload"
+  runCmd "systemctl", "start", mountUnit
+  # FIXME: /media/backupstore/client/foobar-backup/proxy/socket keeps store mounted
+  try:
+    createDir chrootDir
+    createDir activeDir
+    setPermissions userDir, 0, user.gid, 0o750
+    setPermissions chrootDir, 0, user.gid, 0o750
+    setPermissions activeDir, user, 0o700
+    if defaultImage.fileExists:
+      echo "Image already exists: ", defaultImage
+    elif imageSize > 0: # MB
+      sparseFile defaultImage, imageSize * 1024 * 1024, 0o600
+    else:
+      echo fmt"Invalid backup-size={imageSize} for the image"
+      quit 1
+    setPermissions defaultImage, user, 0o600
+  finally:
+    runCmd "systemctl", "stop", mountUnit
+  sshChrootUser user.user, chrootDir
   let group = if groupId("nbd") != -1: "nbd"
-              else: "%I"
+              else: "%i"
   backupNbdServer mountUnit, user.user, group
-  proxy fmt"backup-nbd-proxy@:%I:{group}:0600", socketForSSH, "",
-        activeDir / "nbd.socket", "30s", "backup-nbd-proxy@%i.service",
-        "Backup NBD proxy for %I"
+  proxy fmt"backup-nbd-proxy@:%i:{group}:0600", socketForSSH, "",
+        activeDir / "nbd.socket", "30s", "backup-nbd-server@%i.service",
+        "Backup NBD proxy for %i"
   enableAndStart fmt"backup-nbd-proxy@{user.user}"
   rotateBackupTimer mountUnit
 
