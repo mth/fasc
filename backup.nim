@@ -27,8 +27,8 @@ func nbdConfig(name: string): string = fmt"""
 [generic]
 
 [{name}]
-unixsock = {backupMountPoint}/{name}/active/nbd.socket
-exportname = {backupMountPoint}/{name}/active/backup.image
+unixsock = {backupMountPoint}/client/{name}/active/nbd.socket
+exportname = {backupMountPoint}/client/{name}/active/backup.image
 splice = true
 flush = true
 fua = true
