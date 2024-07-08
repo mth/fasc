@@ -111,14 +111,10 @@ proc secureService*(args: StrMap) =
     props &= ("CPUAffinity=", "0 1")
   overrideService service, flags, props
 
-proc proxy*(proxy, listen, bindTo, connectTo, exitIdleTime, targetService: string,
-            description = "", socketOptions: openarray[string] = []) =
-  let socketParam = proxy.split ':'
-  let socketName = socketParam[0] & ".socket"
-  let descriptionStr = descriptionOfName(socketParam[0], description)
+proc socketUnit*(socketName, description, listen: string, socketOptions: varargs[string]) =
   var socket = @[
     "[Unit]",
-    "Description=" & descriptionStr
+    "Description=" & description
   ]
   if ':' in listen:
     socket.add "Requires=network-online.target"
@@ -127,6 +123,16 @@ proc proxy*(proxy, listen, bindTo, connectTo, exitIdleTime, targetService: strin
     "[Socket]",
     fmt"ListenStream={listen}"
   ]
+  socket.add socketOptions
+  socket &= ["", "[Install]", "WantedBy=sockets.target", ""]
+  writeFile("/etc/systemd/system" / socketName, socket, force=true)
+
+proc proxy*(proxy, listen, bindTo, connectTo, exitIdleTime, targetService: string,
+            description = "", socketOptions: openarray[string] = []) =
+  let socketParam = proxy.split ':'
+  let socketName = socketParam[0] & ".socket"
+  let descriptionStr = descriptionOfName(socketParam[0], description)
+  var socket = @socketOptions
   if bindTo != "":
     socket &= fmt"BindToDevice={bindTo}"
   if socketParam.len > 1:
@@ -135,10 +141,7 @@ proc proxy*(proxy, listen, bindTo, connectTo, exitIdleTime, targetService: strin
     socket &= fmt"SocketGroup={socketParam[2]}"
   if socketParam.len > 3:
     socket &= fmt"SocketMode={socketParam[3]}"
-  socket.add socketOptions
-
-  socket &= ["", "[Install]", "WantedBy=sockets.target", ""]
-  writeFile("/etc/systemd/system" / socketName, socket, force=true)
+  socketUnit socketName, descriptionStr, listen, socket
   var options = @["PrivateTmp=yes"]
   if listen.startsWith("/") and connectTo.startsWith("/"):
     options.add "PrivateNetwork=yes"
