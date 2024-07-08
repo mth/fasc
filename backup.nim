@@ -101,7 +101,6 @@ proc backupServer*(args: StrMap) =
   let mountUnit = backupMount dev
   runCmd "systemctl", "daemon-reload"
   runCmd "systemctl", "start", mountUnit
-  # FIXME: /media/backupstore/client/foobar-backup/proxy/socket keeps store mounted
   try:
     createDir activeDir
     setPermissions userDir, 0, user.gid, 0o750
