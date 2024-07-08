@@ -22,9 +22,9 @@ Where={where}
 
 func nbdConfig(name: string): string = fmt"""
 [generic]
+unixsock = {backupMountPoint}/client/{name}/active/nbd.socket
 
 [{name}]
-unixsock = {backupMountPoint}/client/{name}/active/nbd.socket
 exportname = {backupMountPoint}/client/{name}/active/backup.image
 splice = true
 flush = true
@@ -75,7 +75,8 @@ proc backupNbdServer(mountUnit, name, group: string) =
   addService "backup-nbd-server@", "Backup NBD server for %i", [],
     "/bin/nbd-server -C /etc/nbd-server/%i.conf", serviceType="forking",
     flags={s_sandbox, s_private_dev, s_call_filter},
-    options=["User=%i", &"Group={group}", &"ReadWritePaths={backupMountPoint}/client/%i/active"],
+    options=["ExecStartPre=/bin/rm -f '/media/backupstore/client/%i/active/nbd.socket'",
+             "User=%i", &"Group={group}", &"ReadWritePaths={backupMountPoint}/client/%i/active"],
     unitOptions=[&"RequiresMountsFor={backupMountPoint}",
                  &"BindsTo={mountUnit}", "StopWhenUnneeded=true"]
   writeFile fmt"/etc/nbd-server/{name}.conf", [nbdConfig(name)]
