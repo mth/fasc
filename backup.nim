@@ -11,7 +11,7 @@ func sshUserConfig(user: string): string = fmt"""
 Match User {user}
 	AuthorizedKeysFile /etc/ssh/authorized_keys/{user}
 	AllowStreamLocalForwarding local
-	ChrootDirectory /run/nbd-proxy/{user}
+	ChrootDirectory /run/backup-nbd-proxy/{user}
 """
 
 func mountUnit(description, unit, what, where: string): string = fmt"""
@@ -135,10 +135,10 @@ proc backupServer*(args: StrMap) =
   let group = if groupId("nbd") != -1: "nbd"
               else: "%i"
   backupNbdServer mountUnit, user.user, group
-  proxy fmt"backup-nbd-proxy@:%i:{group}:0600", "/run/nbd-broxy/%i/socket",
+  proxy fmt"backup-nbd-proxy@:%i:{group}:0600", "/run/backup-nbd-proxy/%i/socket",
         "", backupMountPoint / "client/%i/active/nbd.socket", "30s",
         "backup-nbd-server@%i.service", "Backup NBD proxy for %i",
-        [&"ExecStartPre=/bin/mkdir -pm 755 '/run/nbd-proxy/%i'"]
+        [&"ExecStartPre=/bin/mkdir -pm 755 '/run/backup-nbd-proxy/%i'"]
   enableAndStart fmt"backup-nbd-proxy@{user.user}"
   rotateBackupTimer mountUnit
 
