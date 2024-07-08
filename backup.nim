@@ -76,9 +76,9 @@ proc backupNbdServer(mountUnit, name, image: string) =
     "/bin/nbd-server 0 {image} -C /etc/nbd-server/backup.conf",
     flags={s_sandbox, s_private_dev, s_call_filter},
     options=["StandardInput=socket", "User=" & name, "Group=" & group,
-             "CollectMode=inactive-or-failed", "ReadWritePaths=" & image],
-    unitOptions=["RequiresMountsFor=" & backupMountPoint,
-                 "BindsTo=" & mountUnit, "StopWhenUnneeded=true"]
+             "ReadWritePaths=" & image],
+    unitOptions=["RequiresMountsFor=" & backupMountPoint, "BindsTo=" & mountUnit,
+                 "StopWhenUnneeded=true", "CollectMode=inactive-or-failed"]
   writeFile fmt"/etc/nbd-server/backup.conf", [nbdConfig]
   socketUnit name & "-nbd-server.socket", "Backup NBD socket for " & name,
              &"/run/nbd-backup/{name}/socket", "Accept=yes", "SocketUser=" & name,
