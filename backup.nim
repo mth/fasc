@@ -69,7 +69,9 @@ proc onDemandMount(description, dev, mount: string): string =
 proc backupMount(dev: string): string =
   onDemandMount "Backup store mount", dev, backupMountPoint
 
-proc backupNbdServer(mountUnit, name, group, directory: string) =
+proc backupNbdServer(mountUnit, name, directory: string) =
+  let group = if groupId("nbd") != -1: "nbd"
+              else: name
   addService name & "-nbd-server@", "Backup NBD server for " & name, [],
     "/bin/nbd-server 0 {directory}/backup.image -C /etc/nbd-server/backup.conf",
     flags={s_sandbox, s_private_dev, s_call_filter},
@@ -119,9 +121,7 @@ proc backupServer*(args: StrMap) =
   finally:
     runCmd "systemctl", "stop", mountUnit
   sshChrootUser user.user
-  let group = if groupId("nbd") != -1: "nbd"
-              else: "%i"
-  backupNbdServer mountUnit, user.user, group, activeDir
+  backupNbdServer mountUnit, user.user, activeDir
   rotateBackupTimer mountUnit
 
 # TODO klient
