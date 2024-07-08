@@ -7,11 +7,11 @@ import services, utils
 const backupMountPoint = "/media/backupstore"
 const rotateBackup = readResource("rotate-backup.sh")
 
-func sshUserConfig(user, chrootDir: string): string = fmt"""
+func sshUserConfig(user: string): string = fmt"""
 Match User {user}
 	AuthorizedKeysFile /etc/ssh/authorized_keys/{user}
 	AllowStreamLocalForwarding local
-	ChrootDirectory {chrootDir}
+	ChrootDirectory /run/nbd-proxy/{user}
 """
 
 func mountUnit(description, unit, what, where: string): string = fmt"""
@@ -36,13 +36,13 @@ trim = true
 rotational = true
 """
 
-proc sshChrootUser(user, chrootDir: string) =
+proc sshChrootUser(user: string) =
   if not fileExists("/usr/sbin/sshd") or not fileExists("/bin/nbd-server"):
     packagesToInstall.add ["openssh-server", "nbd-server"]
     commitQueue()
   createDir "/etc/ssh/authorized_keys"
   let confFile = &"/etc/ssh/sshd_config.d/{user}.conf"
-  writeFile confFile, [sshUserConfig(user, chrootDir)]
+  writeFile confFile, [sshUserConfig(user)]
   if appendMissing("/etc/ssh/sshd_config", "Include " & confFile):
     runCmd "systemctl", "reload", "sshd"
 
@@ -112,18 +112,14 @@ proc backupServer*(args: StrMap) =
   let activeDir = userDir / "active"
   let defaultImage = activeDir / "backup.image"
   let imageSize = args.getOrDefault("backup-size", "0").parseInt
-  let chrootDir = userDir / "proxy"
-  let socketForSSH = chrootDir / "socket"
   let user = createBackupUser(backupUser, activeDir)
   let mountUnit = backupMount dev
   runCmd "systemctl", "daemon-reload"
   runCmd "systemctl", "start", mountUnit
   # FIXME: /media/backupstore/client/foobar-backup/proxy/socket keeps store mounted
   try:
-    createDir chrootDir
     createDir activeDir
     setPermissions userDir, 0, user.gid, 0o750
-    setPermissions chrootDir, 0, user.gid, 0o750
     setPermissions activeDir, user, 0o700
     if defaultImage.fileExists:
       echo "Image already exists: ", defaultImage
@@ -135,13 +131,14 @@ proc backupServer*(args: StrMap) =
     setPermissions defaultImage, user, 0o600
   finally:
     runCmd "systemctl", "stop", mountUnit
-  sshChrootUser user.user, chrootDir
+  sshChrootUser user.user
   let group = if groupId("nbd") != -1: "nbd"
               else: "%i"
   backupNbdServer mountUnit, user.user, group
-  proxy fmt"backup-nbd-proxy@:%i:{group}:0600", socketForSSH, "",
-        activeDir / "nbd.socket", "30s", "backup-nbd-server@%i.service",
-        "Backup NBD proxy for %i"
+  proxy fmt"backup-nbd-proxy@:%i:{group}:0600", "/run/nbd-broxy/%i/socket",
+        "", backupMountPoint / "client/%i/active/nbd.socket", "30s",
+        "backup-nbd-server@%i.service", "Backup NBD proxy for %i",
+        [&"ExecStartPre=/bin/mkdir -pm 755 '/run/nbd-proxy/%i'"]
   enableAndStart fmt"backup-nbd-proxy@{user.user}"
   rotateBackupTimer mountUnit
 

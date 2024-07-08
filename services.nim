@@ -112,7 +112,7 @@ proc secureService*(args: StrMap) =
   overrideService service, flags, props
 
 proc proxy*(proxy, listen, bindTo, connectTo, exitIdleTime, targetService: string,
-            description = "") =
+            description = "", socketOptions: openarray[string] = []) =
   let socketParam = proxy.split ':'
   let socketName = socketParam[0] & ".socket"
   let descriptionStr = descriptionOfName(socketParam[0], description)
@@ -135,6 +135,7 @@ proc proxy*(proxy, listen, bindTo, connectTo, exitIdleTime, targetService: strin
     socket &= fmt"SocketGroup={socketParam[2]}"
   if socketParam.len > 3:
     socket &= fmt"SocketMode={socketParam[3]}"
+  socket.add socketOptions
 
   socket &= ["", "[Install]", "WantedBy=sockets.target", ""]
   writeFile("/etc/systemd/system" / socketName, socket, force=true)
