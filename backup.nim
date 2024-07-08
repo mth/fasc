@@ -81,7 +81,7 @@ proc backupNbdServer(mountUnit, name, image: string) =
                  "BindsTo=" & mountUnit, "StopWhenUnneeded=true"]
   writeFile fmt"/etc/nbd-server/backup.conf", [nbdConfig]
   socketUnit name & "-nbd-server.socket", "Backup NBD socket for " & name,
-             &"/run/nbd-backup/{name}/socket", "SocketUser=" & name,
+             &"/run/nbd-backup/{name}/socket", "Accept=yes", "SocketUser=" & name,
              "SocketGroup=" & group, "SocketMode=0600", "MaxConnections=1",
              &"ExecStartPre=/bin/mkdir -pm 755 '/run/nbd-backup/{name}'"
 
