@@ -120,6 +120,8 @@ proc backupServer*(args: StrMap) =
   sshChrootUser user.user
   let group = if groupId("nbd") != -1: "nbd"
               else: "%i"
+  # nbd-server is a finicky piece of soft. Only configuration where it seems to
+  # work somewhat reliably is a forking server without TLS and no inetd style use.
   backupNbdServer mountUnit, user.user, group
   proxy fmt"backup-nbd-proxy@:%i:{group}:0600", "/run/backup-nbd-proxy/%i/socket",
         "", backupMountPoint / "client/%i/active/nbd.socket", "30s",
