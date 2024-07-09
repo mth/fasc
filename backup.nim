@@ -26,6 +26,7 @@ unixsock = {backupMountPoint}/client/{name}/active/nbd.socket
 
 [{name}]
 exportname = {backupMountPoint}/client/{name}/active/backup.image
+maxconnections = 1
 splice = true
 flush = true
 fua = true
