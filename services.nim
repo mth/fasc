@@ -151,7 +151,8 @@ proc proxy*(proxy, listen, bindTo, connectTo, exitIdleTime, targetService: strin
                  else: @[socketName]
   addService(socketParam[0], descriptionStr, requires,
     "/usr/lib/systemd/systemd-socket-proxyd --exit-idle-time=" &
-    exitIdleTime & ' ' & connectTo, "", {s_no_new_priv, s_overwrite}, options)
+    exitIdleTime & ' ' & connectTo, "",
+    {s_sandbox, s_private_dev, s_call_filter, s_overwrite}, options)
   socketUnit socketName, descriptionStr, listen, socket
 
 proc socketProxy*(args: StrMap) =
