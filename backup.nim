@@ -20,10 +20,12 @@ What={what}
 Where={where}
 """
 
-const nbdConfig = """
+func nbdConfig(image: string) = """
 [generic]
+port = 0
 
 [backup]
+exportname = {image}
 splice = true
 flush = true
 fua = true
@@ -70,16 +72,17 @@ proc backupMount(dev: string): string =
   onDemandMount "Backup store mount", dev, backupMountPoint
 
 proc backupNbdServer(mountUnit, name, image: string) =
+  let configFile = fmt"/etc/nbd-server/{name}.conf"
   let group = if groupId("nbd") != -1: "nbd"
               else: name
   addService name & "-nbd-server@", "Backup NBD server for " & name, [],
-    &"/bin/nbd-server 0 {image} -C /etc/nbd-server/backup.conf",
+    &"/bin/nbd-server -d -C '{configFile}'" ,
     flags={s_sandbox, s_private_dev, s_call_filter},
     options=["StandardInput=socket", "User=" & name, "Group=" & group,
              "ReadWritePaths=" & image],
     unitOptions=["RequiresMountsFor=" & backupMountPoint, "BindsTo=" & mountUnit,
                  "CollectMode=inactive-or-failed"]
-  writeFile fmt"/etc/nbd-server/backup.conf", [nbdConfig]
+  writeFile configFile, [nbdConfig(image)]
   socketUnit name & "-nbd-server.socket", "Backup NBD socket for " & name,
              &"/run/nbd-backup/{name}/socket", "Accept=yes", "SocketUser=" & name,
              "SocketGroup=" & group, "SocketMode=0600", "MaxConnections=1",
