@@ -20,7 +20,7 @@ What={what}
 Where={where}
 """
 
-func nbdConfig(image: string): string = """
+func nbdConfig(image: string): string = fmt"""
 [generic]
 port = 0
 
