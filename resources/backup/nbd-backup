@@ -1,0 +1,135 @@
+#!/bin/sh
+
+set -e
+
+error() {
+	echo "$1" >&2
+	exit 1
+}
+
+unset REMOTE_MOUNT_DIR BACKUP_TARGET_DIR CRYPTSETUP_KEY BACKUP_HOST
+ENCRYPTED_IMAGE_NAME='image'
+ENCRYPTED_IMAGE=''
+BACKUP_MOUNT_OPTIONS='nobarrier,noatime,journal_checksum'
+CRYPT_DEVICE='backup'
+NBD_SOCKET='/run/nbd-backup/socket'
+NBD_DEVICE='/dev/nbd7'
+RSYNC_COMMAND=/usr/bin/rsync
+BACKUP_DIRS='/root /etc /var /usr/local /home /opt /srv'
+EXCLUDE_DIRS='/dev /media /mnt /proc /run /sys /tmp /var/tmp'
+RSYNC_OPTIONS='--stats --del --numeric-ids -aHSx'
+RSYNC_BACKUP_NOTICE='/var/backups/sbackup.finished'
+
+[ -f /etc/sbackup/sbackup.conf ] || error 'missing /etc/sbackup/sbackup.conf'
+. /etc/sbackup/sbackup.conf
+
+[ -d "$REMOTE_MOUNT_DIR" ] || \
+	error "Missing REMOTE_MOUNT_DIR ($REMOTE_MOUNT_DIR)"
+[ -d "$BACKUP_TARGET_DIR" ] || \
+	error "Missing BACKUP_TARGET_DIR ($BACKUP_TARGET_DIR)"
+[ -f "$CRYPTSETUP_KEY" ] || \
+	error "Key '$CRYPTSETUP_KEY' is unavailable (CRYPTSETUP_KEY)"
+[ -n "$BACKUP_DIRS" ] || \
+	error "BACKUP_DIRS is not set"
+[ -n "$BACKUP_TARGET_DIR" ] || \
+	error "BACKUP_TARGET_DIR is not set"
+[ -n "$BACKUP_HOST" ] || \
+	error "BACKUP_HOST is not set"
+
+export PATH HOME LANG
+unset LD_PRELOAD
+
+if [ "$ENCRYPTED_IMAGE" = "" ]; then
+	[ "$REMOTE_MOUNT_DIR" != "" ] || error 'REMOTE_MOUNT_DIR not set'
+	ENCRYPTED_IMAGE="$REMOTE_MOUNT_DIR/$ENCRYPTED_IMAGE_NAME"
+fi
+
+CLEANUP_UMOUNT=true
+CLEANUP_CRYPT=true
+CLEANUP_NBD_CLIENT=true
+CLEANUP_SSH_PID=0
+
+cleanup_on_exit() {
+        $CLEANUP_UMOUNT "$BACKUP_TARGET_DIR"
+	$CLEANUP_CRYPT remove "$CRYPT_DEVICE"
+	sync
+	sleep 0.5
+	$CLEANUP_NBD_CLIENT -d "$NBD_DEVICE"
+	kill "$CLEANUP_SSH_PID"
+}
+
+# Ensure that the backup is unmounted
+while umount "$BACKUP_TARGET_DIR" 2>/dev/null; do
+        echo "$BACKUP_TARGET_DIR was mounted!" >&2
+done
+
+[ -z "$(ss -xlH src $NBD_SOCKET)" ] \
+	|| error "$NBD_SOCKET is active, backup seems to be already in progress?" 
+
+! grep " $BACKUP_TARGET_DIR " /proc/mounts \
+	|| error "Could not unmount $BACKUP_TARGET_DIR, exiting!"
+
+# Ensure that the cryptsetup device is inactive
+! cryptsetup remove "$CRYPT_DEVICE" >&2 \
+	|| echo "backup mapper $CRYPT_DEVICE was active" >&2
+
+! nbd-client -d "$NBD_DEVICE" 2>/dev/null || echo "$NBD_DEVICE was active" >&2
+
+rm -f "$NBD_SOCKET"
+ssh "-L$NBD_SOCKET:/socket" -N "$BACKUP_HOST" &
+
+CLEANUP_SSH_PID=$!
+trap cleanup_on_exit EXIT
+
+wait_for_nbd_socket() {
+	for i in 0 1 2 3 4 5 6 7 8 9; do
+		sleep 1
+		[ -z "$(ss -xlH src $NBD_SOCKET)" ] || return
+	done
+	error "Could not get $NBD_SOCKET"
+}
+
+wait_for_nbd_socket
+
+nbd-client -unix "$NBD_SOCKET" "$NBD_DEVICE" \
+	|| error "Could not setup $NBD_DEVICE for $NBD_SOCKET"
+CLEANUP_NBD_CLIENT=nbd-client
+
+cryptsetup open -d "$CRYPTSETUP_KEY" "$NBD_DEVICE" "$CRYPT_DEVICE" \
+	|| error "Could not create dm-crypt mapper"
+CLEANUP_CRYPT=cryptsetup
+
+set +e
+e2fsck -y "/dev/mapper/$CRYPT_DEVICE"
+FSCK_ERR=$?
+[ $FSCK_ERR -le 2 ] || error "Backup fsck failed with exit code $FSCK_ERR."
+set -e
+
+mount -t ext4 -o "$BACKUP_MOUNT_OPTIONS" \
+	"/dev/mapper/$CRYPT_DEVICE" "$BACKUP_TARGET_DIR"
+CLEANUP_UMOUNT=umount
+
+do_rsync() {
+  echo
+  echo "Starting $1 backup."
+  date
+  /bin/mkdir -p "$BACKUP_TARGET_DIR$1"
+  RS_XTRA_OPTS="$RSYNC_OPTIONS --exclude=$1/lost+found"
+  for RS_EXCLUDE_DIR in $EXCLUDE_DIRS; do
+    case "$RS_EXCLUDE_DIR" in
+    "$1"*) RS_XTRA_OPTS="$RS_XTRA_OPTS --exclude=$RS_EXCLUDE_DIR";;
+    esac
+  done
+  if "$RSYNC_COMMAND" $RS_XTRA_OPTS "$1" "$BACKUP_TARGET_DIR/`dirname "$1"`/"
+  then echo "$1 backup done."
+  else echo "$1 backup failed with $?."
+  fi
+}
+
+for CUR_BACKUP_DIR in $BACKUP_DIRS; do
+  do_rsync "$CUR_BACKUP_DIR"
+done
+
+/bin/sync
+echo 'All backup done.'
+/bin/date '+%Y-%m-%dT%H:%M:%S' > "$RSYNC_BACKUP_NOTICE"

@@ -2,7 +2,7 @@ import std/[strformat, strutils, os, tables]
 import services, utils
 
 const backupMountPoint = "/media/backupstore"
-const rotateBackup = readResource("rotate-backup.sh")
+const rotateBackup = readResource("backup/rotate-backup.sh")
 
 func sshUserConfig(user: string): string = fmt"""
 Match User {user}
