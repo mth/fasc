@@ -3,6 +3,8 @@ import services, utils
 
 const backupMountPoint = "/media/backupstore"
 const rotateBackup = readResource("backup/rotate-backup.sh")
+const backupClient = readResource("backup/nbd-backup")
+const backupConf   = readResource("backup/nbd-backup.conf")
 
 func sshUserConfig(user: string): string = fmt"""
 Match User {user}

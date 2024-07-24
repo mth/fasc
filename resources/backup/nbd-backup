@@ -7,42 +7,30 @@ error() {
 	exit 1
 }
 
-unset REMOTE_MOUNT_DIR BACKUP_TARGET_DIR CRYPTSETUP_KEY BACKUP_HOST
-ENCRYPTED_IMAGE_NAME='image'
-ENCRYPTED_IMAGE=''
+unset CRYPTSETUP_KEY BACKUP_HOST
+BACKUP_TARGET_DIR='/media/backup-storage'
 BACKUP_MOUNT_OPTIONS='nobarrier,noatime,journal_checksum'
+BACKUP_DIRS='/root /etc /var /usr/local /home /opt /srv'
+EXCLUDE_DIRS='/dev /media /mnt /proc /run /sys /tmp /var/tmp'
 CRYPT_DEVICE='backup'
 NBD_SOCKET='/run/nbd-backup/socket'
 NBD_DEVICE='/dev/nbd7'
 RSYNC_COMMAND=/usr/bin/rsync
-BACKUP_DIRS='/root /etc /var /usr/local /home /opt /srv'
-EXCLUDE_DIRS='/dev /media /mnt /proc /run /sys /tmp /var/tmp'
 RSYNC_OPTIONS='--stats --del --numeric-ids -aHSx'
 RSYNC_BACKUP_NOTICE='/var/backups/sbackup.finished'
 
-[ -f /etc/sbackup/sbackup.conf ] || error 'missing /etc/sbackup/sbackup.conf'
-. /etc/sbackup/sbackup.conf
+[ -f /etc/backup/nbd-backup.conf ] || error 'missing /etc/backup/nbd-backup.conf'
+. /etc/backup/nbd-backup.conf
 
-[ -d "$REMOTE_MOUNT_DIR" ] || \
-	error "Missing REMOTE_MOUNT_DIR ($REMOTE_MOUNT_DIR)"
 [ -d "$BACKUP_TARGET_DIR" ] || \
 	error "Missing BACKUP_TARGET_DIR ($BACKUP_TARGET_DIR)"
 [ -f "$CRYPTSETUP_KEY" ] || \
 	error "Key '$CRYPTSETUP_KEY' is unavailable (CRYPTSETUP_KEY)"
-[ -n "$BACKUP_DIRS" ] || \
-	error "BACKUP_DIRS is not set"
-[ -n "$BACKUP_TARGET_DIR" ] || \
-	error "BACKUP_TARGET_DIR is not set"
 [ -n "$BACKUP_HOST" ] || \
 	error "BACKUP_HOST is not set"
 
 export PATH HOME LANG
 unset LD_PRELOAD
-
-if [ "$ENCRYPTED_IMAGE" = "" ]; then
-	[ "$REMOTE_MOUNT_DIR" != "" ] || error 'REMOTE_MOUNT_DIR not set'
-	ENCRYPTED_IMAGE="$REMOTE_MOUNT_DIR/$ENCRYPTED_IMAGE_NAME"
-fi
 
 CLEANUP_UMOUNT=true
 CLEANUP_CRYPT=true
@@ -130,6 +118,7 @@ for CUR_BACKUP_DIR in $BACKUP_DIRS; do
   do_rsync "$CUR_BACKUP_DIR"
 done
 
+/sbin/fstrim "$BACKUP_TARGET_DIR" || echo "fstrim $BACKUP_TARGET_DIR failed."
 /bin/sync
 echo 'All backup done.'
 /bin/date '+%Y-%m-%dT%H:%M:%S' > "$RSYNC_BACKUP_NOTICE"
