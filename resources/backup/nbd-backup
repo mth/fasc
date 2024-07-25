@@ -7,6 +7,8 @@ error() {
 	exit 1
 }
 
+#TODO option to create dmcrypt and filesystem
+
 unset CRYPTSETUP_KEY BACKUP_HOST
 BACKUP_TARGET_DIR='/media/backup-storage'
 BACKUP_MOUNT_OPTIONS='nobarrier,noatime,journal_checksum'
