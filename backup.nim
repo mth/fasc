@@ -140,4 +140,7 @@ proc installBackupClient*(args: StrMap) =
   writeFile "/usr/local/sbin/nbd-backup", [backupClient]
   writeFile "/etc/backup/nbd-backup.conf", [backupConf]
   setPermissions "/etc/backup", 0, 0, 0o700
+  addService "nbd-backup", "Start NBD backup client", [], "/usr/local/sbin/nbd-backup"
+  addTimer "nbd-backup", "Starts NBD backup client periodically",
+           []
   # TODO timer to start backup (should be able to wake a computer on AC power)
