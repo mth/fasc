@@ -135,3 +135,9 @@ proc backupServer*(args: StrMap) =
 # TODO klient
 #...?
 
+proc installBackupClient*(args: StrMap) =
+  createDir "/media/backup-storage"
+  writeFile "/usr/local/sbin/nbd-backup", [backupClient]
+  writeFile "/etc/backup/nbd-backup.conf", [backupConf]
+  setPermissions "/etc/backup", 0, 0, 0o700
+  # TODO timer to start backup (should be able to wake a computer on AC power)
