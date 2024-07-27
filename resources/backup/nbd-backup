@@ -130,8 +130,7 @@ mount -t ext4 -o "$BACKUP_MOUNT_OPTIONS" \
 	"/dev/mapper/$CRYPT_DEVICE" "$BACKUP_TARGET_DIR"
 
 if [ "$COMMAND" = "mount" ]; then
-	CLEANUP_NBD_CLIENT=true
-	CLEANUP_CRYPT=true
+	trap - EXIT
 	exit 0
 fi
 
