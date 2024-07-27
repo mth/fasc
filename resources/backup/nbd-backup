@@ -13,6 +13,9 @@ nbd-backup sync
 nbd-backup mkfs
   Setups dmcrypt and creates new filesystem on the remote image.
 
+nbd-backup mount
+  Mounts backup filesystem and quits
+
 nbd-backup unmount
   Unmounts backup device
 HELP
@@ -125,6 +128,13 @@ set -e
 
 mount -t ext4 -o "$BACKUP_MOUNT_OPTIONS" \
 	"/dev/mapper/$CRYPT_DEVICE" "$BACKUP_TARGET_DIR"
+
+if [ "$COMMAND" = "mount" ]; then
+	CLEANUP_NBD_CLIENT=true
+	CLEANUP_CRYPT=true
+	exit 0
+fi
+
 CLEANUP_UMOUNT=umount
 
 do_rsync() {
