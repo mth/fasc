@@ -67,7 +67,7 @@ let tasks = {
   "safenet": ("Setup DNS blocklists", setupSafeNet),
   "tv": ("Install weston gui for TV", westonTV),
   "merlin": ("Setup emacs with tuareg mode and merlin using opam", installMerlin),
-  "backup-server": ("Setup backup server backup-dev=/dev/sdd2 backup-user=foo-backup backup-size=MB", backupServer),
+  "backup-server": ("Setup backup server backup-dev=/dev/sdd2 backup-user=foo-backup backup-size=MB [recreate-image]", backupServer),
   "nbd-backup": ("Install nbd-backup client", installBackupClient),
   #"disable-tracker": ("Disable GNOME tracker", disableTracker),
 }.toTable

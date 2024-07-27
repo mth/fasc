@@ -97,6 +97,7 @@ proc rotateBackupTimer(mountUnit: string) =
 proc backupServer*(args: StrMap) =
   let backupUser = args.nonEmptyParam "backup-user"
   let dev = args.getOrDefault "backup-dev"
+  let recreateImage = "recreate-image" in args
   let userDir = backupMountPoint / "client" / backupUser
   let activeDir = userDir / "active"
   let defaultImage = activeDir / "backup.image"
@@ -109,9 +110,11 @@ proc backupServer*(args: StrMap) =
     createDir activeDir
     setPermissions userDir, 0, user.gid, 0o750
     setPermissions activeDir, user, 0o700
-    if defaultImage.fileExists:
+    if not recreateImage and defaultImage.fileExists:
       echo "Image already exists: ", defaultImage
     elif imageSize > 0: # MB
+      if recreateImage:
+        removeFile defaultImage
       sparseFile defaultImage, imageSize * 1024 * 1024, 0o600
     else:
       echo fmt"Invalid backup-size={imageSize} for the image"
