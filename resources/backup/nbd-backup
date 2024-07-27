@@ -99,7 +99,7 @@ trap cleanup_on_exit EXIT
 wait_for_nbd_socket() {
 	for i in 0 1 2 3 4 5 6 7 8 9; do
 		sleep 1
-		[ -z "$(ss -xlH src $NBD_SOCKET)" ] || return
+		[ -z "$(ss -xlH src $NBD_SOCKET)" ] || return 0
 	done
 	error "Could not get $NBD_SOCKET"
 }
