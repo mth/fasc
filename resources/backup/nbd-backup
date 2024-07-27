@@ -77,7 +77,7 @@ while umount "$BACKUP_TARGET_DIR" 2>/dev/null; do
         echo "$BACKUP_TARGET_DIR was mounted!" >&2
 done
 
-[ -z "$(ss -xlH src $NBD_SOCKET)" ] \
+[ -z "$(ss -xlH src $NBD_SOCKET)" ] || [ "$COMMAND" = "unmount" ] \
 	|| error "$NBD_SOCKET is active, backup seems to be already in progress?" 
 
 ! grep " $BACKUP_TARGET_DIR " /proc/mounts \
@@ -116,7 +116,7 @@ CLEANUP_NBD_CLIENT=nbd-client
 [ "$COMMAND" != "mkfs" ] || cryptsetup luksFormat "$NBD_DEVICE" "$CRYPTSETUP_KEY" \
   || error "Could not format dm-crypt device $NBD_DEVICE"
 
-cryptsetup open -d "$CRYPTSETUP_KEY" "$NBD_DEVICE" "$CRYPT_DEVICE" \
+cryptsetup open -d "$CRYPTSETUP_KEY" --allow-discards "$NBD_DEVICE" "$CRYPT_DEVICE" \
 	|| error "Could not create dm-crypt mapper"
 CLEANUP_CRYPT=cryptsetup
 
@@ -165,4 +165,4 @@ done
 /sbin/fstrim "$BACKUP_TARGET_DIR" || echo "fstrim $BACKUP_TARGET_DIR failed."
 /bin/sync
 echo 'All backup done.'
-/bin/date '+%Y-%m-%dT%H:%M:%S' > "$RSYNC_BACKUP_NOTICE"
+# /bin/date '+%Y-%m-%dT%H:%M:%S' > "$RSYNC_BACKUP_NOTICE"
