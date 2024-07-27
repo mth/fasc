@@ -29,6 +29,7 @@ let fedoraPackageMap = [
   ("git", "git-core"),
   ("xmahjongg", "gnome-mahjongg"),
   ("build-essential", "gcc"),
+  ("nbd-client", "nbd"),
 ].toTable
 
 proc detectDistro() =

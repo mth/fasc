@@ -143,6 +143,7 @@ proc installBackupClient*(args: StrMap) =
   writeFile "/usr/local/sbin/nbd-backup", [backupClient], permissions=0o750
   writeFile "/etc/backup/nbd-backup.conf", [backupConf]
   setPermissions "/etc/backup", 0, 0, 0o700
+  addPackageUnless "nbd-client", "/usr/sbin/nbd-client"
   addService "nbd-backup", "Start NBD backup client", [],
              "systemd-inhibit /usr/local/sbin/nbd-backup sync",
              options=["ConditionACPower=true"]
