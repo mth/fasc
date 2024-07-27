@@ -3,7 +3,7 @@
 set -e
 
 case "$1" in
-	sync|mkfs|unmount) ;;
+	sync|mkfs|mount|unmount) ;;
 	*)
 	  [ "$1" = "help" ] || { echo "Unknown command ($1)"; echo; }
 cat <<HELP
