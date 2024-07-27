@@ -140,7 +140,7 @@ proc backupServer*(args: StrMap) =
 
 proc installBackupClient*(args: StrMap) =
   createDir "/media/backup-storage"
-  writeFile "/usr/local/sbin/nbd-backup", [backupClient]
+  writeFile "/usr/local/sbin/nbd-backup", [backupClient], permissions=0o750
   writeFile "/etc/backup/nbd-backup.conf", [backupConf]
   setPermissions "/etc/backup", 0, 0, 0o700
   addService "nbd-backup", "Start NBD backup client", [],
