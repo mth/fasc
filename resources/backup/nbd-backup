@@ -2,12 +2,24 @@
 
 set -e
 
+case "$1" in
+	sync|mkfs) ;;
+	*)
+	  [ "$1" = "help" ] || { echo "Unknown command ($1)"; echo; }
+		echo "nbd-backup sync"
+		echo "  Updates remote backup snapshot to the current filesystem data."
+		echo
+		echo "nbd-backup mkfs"
+		echo "  Setups dmcrypt and creates new filesystem on the remote image."
+		[ "$1" = "help" ]
+		exit 0
+		;;
+esac
+
 error() {
 	echo "$1" >&2
 	exit 1
 }
-
-#TODO option to create dmcrypt and filesystem
 
 unset CRYPTSETUP_KEY BACKUP_HOST
 BACKUP_TARGET_DIR='/media/backup-storage'
@@ -34,6 +46,7 @@ RSYNC_BACKUP_NOTICE='/var/backups/sbackup.finished'
 export PATH HOME LANG
 unset LD_PRELOAD
 
+COMMAND="$1"
 CLEANUP_UMOUNT=true
 CLEANUP_CRYPT=true
 CLEANUP_NBD_CLIENT=true
