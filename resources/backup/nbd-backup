@@ -63,10 +63,10 @@ CLEANUP_SSH_PID=0
 
 cleanup_on_exit() {
         $CLEANUP_UMOUNT "$BACKUP_TARGET_DIR"
-	$CLEANUP_CRYPT remove "$CRYPT_DEVICE"
+	while ! $CLEANUP_CRYPT remove "$CRYPT_DEVICE"; do sleep 0.5; done
 	sync
-	sleep 0.5
-	$CLEANUP_NBD_CLIENT -d "$NBD_DEVICE"
+	while sleep 1 && ! $CLEANUP_NBD_CLIENT -d "$NBD_DEVICE"; do
+	done
 	kill "$CLEANUP_SSH_PID"
 }
 
