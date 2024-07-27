@@ -88,7 +88,9 @@ done
 
 [ "$COMMAND" != "unmount" ] || exit 0
 
+NBD_SOCKET_DIR="$(dirname $NBD_SOCKET)"
 rm -f "$NBD_SOCKET"
+mkdir -p "$NBD_SOCKET_DIR"
 ssh "-L$NBD_SOCKET:/socket" -N "$BACKUP_HOST" &
 
 CLEANUP_SSH_PID=$!
