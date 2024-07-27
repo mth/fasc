@@ -37,6 +37,7 @@ EXCLUDE_DIRS='/dev /media /mnt /proc /run /sys /tmp /var/tmp'
 CRYPT_DEVICE='backup'
 NBD_SOCKET='/run/nbd-backup/socket'
 NBD_DEVICE='/dev/nbd7'
+NBD_BACKUP_NAME='backup-storage'
 RSYNC_COMMAND=/usr/bin/rsync
 RSYNC_OPTIONS='--stats --del --numeric-ids -aHSx'
 RSYNC_BACKUP_NOTICE='/var/backups/sbackup.finished'
@@ -106,7 +107,7 @@ wait_for_nbd_socket() {
 
 wait_for_nbd_socket
 
-nbd-client -unix "$NBD_SOCKET" "$NBD_DEVICE" \
+nbd-client -unix "$NBD_SOCKET" "$NBD_DEVICE" -name "$NBD_BACKUP_NAME" \
 	|| error "Could not setup $NBD_DEVICE for $NBD_SOCKET"
 CLEANUP_NBD_CLIENT=nbd-client
 
