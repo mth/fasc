@@ -116,7 +116,7 @@ cryptsetup open -d "$CRYPTSETUP_KEY" "$NBD_DEVICE" "$CRYPT_DEVICE" \
 CLEANUP_CRYPT=cryptsetup
 
 if [ "$COMMAND" = "mkfs" ]; then
-  mkfs.ext4 -O ^huge_file "/dev/mapper/$CRYPT_DEVICE"
+  mkfs.ext4 "/dev/mapper/$CRYPT_DEVICE"
   exit 0
 fi
 
