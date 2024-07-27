@@ -3,14 +3,19 @@
 set -e
 
 case "$1" in
-	sync|mkfs) ;;
+	sync|mkfs|unmount) ;;
 	*)
 	  [ "$1" = "help" ] || { echo "Unknown command ($1)"; echo; }
-		echo "nbd-backup sync"
-		echo "  Updates remote backup snapshot to the current filesystem data."
-		echo
-		echo "nbd-backup mkfs"
-		echo "  Setups dmcrypt and creates new filesystem on the remote image."
+cat <<HELP
+nbd-backup sync
+  Updates remote backup snapshot to the current filesystem data.
+
+nbd-backup mkfs
+  Setups dmcrypt and creates new filesystem on the remote image.
+
+nbd-backup unmount
+  Unmounts backup device
+HELP
 		[ "$1" = "help" ]
 		exit 0
 		;;
@@ -36,12 +41,12 @@ RSYNC_BACKUP_NOTICE='/var/backups/sbackup.finished'
 [ -f /etc/backup/nbd-backup.conf ] || error 'missing /etc/backup/nbd-backup.conf'
 . /etc/backup/nbd-backup.conf
 
-[ -d "$BACKUP_TARGET_DIR" ] || \
-	error "Missing BACKUP_TARGET_DIR ($BACKUP_TARGET_DIR)"
-[ -f "$CRYPTSETUP_KEY" ] || \
-	error "Key '$CRYPTSETUP_KEY' is unavailable (CRYPTSETUP_KEY)"
-[ -n "$BACKUP_HOST" ] || \
-	error "BACKUP_HOST is not set"
+[ -d "$BACKUP_TARGET_DIR" ] \
+	|| error "Missing BACKUP_TARGET_DIR ($BACKUP_TARGET_DIR)"
+[ -f "$CRYPTSETUP_KEY" ] \
+	|| error "Key '$CRYPTSETUP_KEY' is unavailable (CRYPTSETUP_KEY)"
+[ -n "$BACKUP_HOST" ] \
+	|| error "BACKUP_HOST is not set"
 
 export PATH HOME LANG
 unset LD_PRELOAD
@@ -78,6 +83,8 @@ done
 
 ! nbd-client -d "$NBD_DEVICE" 2>/dev/null || echo "$NBD_DEVICE was active" >&2
 
+[ "$COMMAND" != "unmount" ] || exit 0
+
 rm -f "$NBD_SOCKET"
 ssh "-L$NBD_SOCKET:/socket" -N "$BACKUP_HOST" &
 
@@ -98,9 +105,17 @@ nbd-client -unix "$NBD_SOCKET" "$NBD_DEVICE" \
 	|| error "Could not setup $NBD_DEVICE for $NBD_SOCKET"
 CLEANUP_NBD_CLIENT=nbd-client
 
+[ "$COMMAND" != "mkfs" ] || cryptsetup luksFormat "$NBD_DEVICE" "$CRYPTSETUP_KEY" \
+  || error "Could not format dm-crypt device $NBD_DEVICE"
+
 cryptsetup open -d "$CRYPTSETUP_KEY" "$NBD_DEVICE" "$CRYPT_DEVICE" \
 	|| error "Could not create dm-crypt mapper"
 CLEANUP_CRYPT=cryptsetup
+
+if [ "$COMMAND" = "mkfs" ]; then
+  mkfs.ext4 -O ^huge_file "/dev/mapper/$CRYPT_DEVICE"
+  exit 0
+fi
 
 set +e
 e2fsck -y "/dev/mapper/$CRYPT_DEVICE"
