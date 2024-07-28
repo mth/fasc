@@ -6,6 +6,14 @@ const rotateBackup = readResource("backup/rotate-backup.sh")
 const backupClient = readResource("backup/nbd-backup")
 const backupConf   = readResource("backup/nbd-backup.conf")
 
+const sshBackupService = """
+
+Host backup-service
+HostName 127.0.0.1
+User what-backup
+IdentityFile /root/.ssh/id_backup-service
+"""
+
 func sshUserConfig(user: string): string = fmt"""
 Match User {user}
 	AuthorizedKeysFile /etc/ssh/authorized_keys/{user}
@@ -114,7 +122,7 @@ proc backupServer*(args: StrMap) =
       echo "Image already exists: ", defaultImage
     elif imageSize > 0: # MB
       if recreateImage:
-        removeFile defaultImage
+        discard tryRemoveFile(defaultImage)
       sparseFile defaultImage, imageSize * 1024 * 1024, 0o600
     else:
       echo fmt"Invalid backup-size={imageSize} for the image"
@@ -135,9 +143,6 @@ proc backupServer*(args: StrMap) =
   enableAndStart fmt"backup-nbd-proxy@{user.user}.socket"
   rotateBackupTimer mountUnit
 
-# TODO klient
-#...?
-
 proc installBackupClient*(args: StrMap) =
   createDir "/media/backup-storage"
   writeFile "/usr/local/sbin/nbd-backup", [backupClient], permissions=0o750
@@ -149,3 +154,9 @@ proc installBackupClient*(args: StrMap) =
              options=["ConditionACPower=true"]
   addTimer "nbd-backup", "Starts NBD backup client periodically",
            ["OnCalendar=*-*-02/4 05:05:05", "WakeSystem=true"]
+  let sshConfig = "/root/.ssh/config"
+  if not sshConfig.fileContains("Host backup-service"):
+    sshConfig.appendToFile sshBackupService, 0o600
+    setPermissions "/root/.ssh", 0o700
+    runCmd "ssh-keygen", "-t", "ed25519", "-f", "/root/.ssh/id_backup-service"
+    echo fmt"vi {sshConfig}"

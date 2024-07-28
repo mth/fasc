@@ -113,12 +113,15 @@ proc groupExec*(fullPath: string, user: UserInfo) =
     echo fmt"chgrp({fullPath}) failed: {strerror(errno)}"
   setPermissions fullPath, 0o750
 
+proc sync(f: File) =
+  if f.getFileHandle.fsync != 0:
+    raise newException(OSError, $strerror(errno))
+
 proc writeFileSynced*(filename, content: string) =
   let f = open(filename, fmWrite)
   defer: f.close
   f.write content
-  if f.getFileHandle.fsync != 0:
-    raise newException(OSError, $strerror(errno))
+  f.sync
 
 proc safeFileUpdate*(filename, content: string, permissions: Mode = 0o644) =
   echo "Updating ", filename
@@ -284,6 +287,25 @@ proc userInfo*(param: StrMap): UserInfo =
     echo e.msg
     quit 1
 
+proc fileContains*(filename, line: string): bool =
+  if filename.fileExists:
+    for fileLine in lines(filename):
+      if fileLine.strip == line:
+        return true
+
+proc appendToFile*(filename, contents: string, mode: Mode) =
+  var f = if filename.fileExists:
+            open filename, fmAppend
+          else:
+            createDir filename.parentDir
+            open filename, fmWrite
+  try:
+    f.write contents
+    f.sync
+  finally:
+    f.close
+  filename.setPermissions mode
+
 proc appendMissing*(filename: string, needed: openarray[(string, string)],
                     create = false): bool =
   var addLines = @needed
@@ -302,8 +324,7 @@ proc appendMissing*(filename: string, needed: openarray[(string, string)],
   defer: f.close
   for (prefix, line) in addLines:
     f.writeLine(prefix & line)
-  if f.getFileHandle.fsync != 0:
-    raise newException(OSError, $strerror(errno))
+  f.sync
   return true
 
 proc appendMissing*(filename: string, needed: varargs[string]): bool =
