@@ -164,5 +164,4 @@ done
 
 /sbin/fstrim "$BACKUP_TARGET_DIR" || echo "fstrim $BACKUP_TARGET_DIR failed."
 /bin/sync
-echo 'All backup done.'
-# /bin/date '+%Y-%m-%dT%H:%M:%S' > "$RSYNC_BACKUP_NOTICE"
+echo "All backup done. $(/bin/date '+%Y-%m-%dT%H:%M:%S')"
