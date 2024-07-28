@@ -158,7 +158,7 @@ proc installBackupClient*(args: StrMap) =
   if not sshConfig.fileContains("Host backup-service"):
     sshConfig.appendToFile sshBackupService, 0o600
     setPermissions "/root/.ssh", 0o700
-    runCmd "ssh-keygen", "-t", "ed25519", "-f", "/root/.ssh/id_backup-service -N /dev/null"
+    runCmd "ssh-keygen", "-t", "ed25519", "-f", "/root/.ssh/id_backup-service", "-N", "/dev/null"
     for line in lines("/root/.ssh/id_backup-service.pub"):
       echo line
     echo fmt"vi {sshConfig}"
