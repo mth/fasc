@@ -151,7 +151,7 @@ proc installBackupClient*(args: StrMap) =
   addPackageUnless "nbd-client", "/usr/sbin/nbd-client"
   addService "nbd-backup", "Start NBD backup client", [],
              "systemd-inhibit /usr/local/sbin/nbd-backup sync",
-             options=["ConditionACPower=true"]
+             unitOptions=["ConditionACPower=true"]
   addTimer "nbd-backup", "Starts NBD backup client periodically",
            ["OnCalendar=*-*-02/4 05:05:05", "WakeSystem=true"]
   let sshConfig = "/root/.ssh/config"
