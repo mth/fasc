@@ -82,7 +82,7 @@ func supplicantService(iface: string): string =
 
 proc wlanNetwork() =
   network("wlan", "Name=*\nType=wlan", "DHCP=yes", "IPv6PrivacyExtensions=true", "DNSSEC=allow-downgrade",
-          "[DHCPv4]", "UseDomains=true")
+          "Domains=~.", "[DHCPv4]", "UseDomains=true")
   addPackageUnless("iw", "/usr/sbin/iw")
 
 proc wpaSupplicant(device: string) =
