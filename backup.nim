@@ -100,7 +100,7 @@ proc rotateBackupTimer(mountUnit: string) =
     options=[&"ReadWritePaths={backupMountPoint}/client"],
     unitOptions=[&"RequiresMountsFor={backupMountPoint}", &"BindsTo={mountUnit}"]
   addTimer "backup-rotate", "Timer to rotate backup image snapshots",
-           "OnCalendar=*-01,04,07,10-01 10:10:10"
+           "OnCalendar=*-*-01 10:10:10"
 
 proc backupServer*(args: StrMap) =
   let backupUser = args.nonEmptyParam "backup-user"
