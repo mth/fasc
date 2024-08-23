@@ -144,7 +144,9 @@ proc backupServer*(args: StrMap) =
   rotateBackupTimer mountUnit
 
 const waitInhibit =
-  "ExecStartPre=/bin/sh -c 'while ! systemd-inhibit --what=sleep /bin/sleep 1; do true; done'"
+  "ExecStartPre=/bin/sh -c 'while ! systemd-inhibit" &
+  " --what=idle:sleep:handle-suspend-key:handle-hibernate-key --who=nbd-backup" &
+  " --why='Active backup' /bin/true 1; do sleep 1; done'"
 
 proc installBackupClient*(args: StrMap) =
   createDir "/media/backup-storage"
