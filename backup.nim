@@ -23,6 +23,15 @@ const rotateBackup = readResource("backup/rotate-backup.sh")
 const backupClient = readResource("backup/nbd-backup")
 const backupConf   = readResource("backup/nbd-backup.conf")
 
+# for some reason, systemd-inhibit doesn't always prevent sleep
+const delaySleep = fmt"""
+#!/bin/sh
+
+[ "$1" != "pre" ] || while grep -q " {backupMountPoint}/ " /proc/mounts
+do sleep 1
+done
+"""
+
 const sshBackupService = """
 
 Host backup-service
@@ -169,6 +178,7 @@ proc installBackupClient*(args: StrMap) =
   createDir "/media/backup-storage"
   writeFile "/usr/local/sbin/nbd-backup", [backupClient], permissions=0o750
   writeFile "/etc/backup/nbd-backup.conf", [backupConf]
+  safeFileUpdate "/usr/lib/systemd/system-sleep/backup-no-sleep", delaySleep, permissions=0o755
   setPermissions "/etc/backup", 0, 0, 0o700
   addPackageUnless "nbd-client", "/usr/sbin/nbd-client"
   addService "nbd-backup", "Start NBD backup client", [],
