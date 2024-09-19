@@ -1,3 +1,20 @@
+# This file is part of FASC, the FAst System Configurator.
+#
+# Copyright (C) 2022-2024 Madis Janson
+#
+# FASC is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# FASC is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+# See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with FASC. If not, see <https://www.gnu.org/licenses/>.
+
 import std/[strformat, strutils, os, tables]
 import services, utils
 
@@ -5,6 +22,15 @@ const backupMountPoint = "/media/backupstore"
 const rotateBackup = readResource("backup/rotate-backup.sh")
 const backupClient = readResource("backup/nbd-backup")
 const backupConf   = readResource("backup/nbd-backup.conf")
+
+# for some reason, systemd-inhibit doesn't always prevent sleep
+const delaySleep = fmt"""
+#!/bin/sh
+
+[ "$1" != "pre" ] || while grep -q " {backupMountPoint}/ " /proc/mounts
+do sleep 1
+done
+"""
 
 const sshBackupService = """
 
@@ -152,6 +178,7 @@ proc installBackupClient*(args: StrMap) =
   createDir "/media/backup-storage"
   writeFile "/usr/local/sbin/nbd-backup", [backupClient], permissions=0o750
   writeFile "/etc/backup/nbd-backup.conf", [backupConf]
+  safeFileUpdate "/usr/lib/systemd/system-sleep/backup-no-sleep", delaySleep, permissions=0o755
   setPermissions "/etc/backup", 0, 0, 0o700
   addPackageUnless "nbd-client", "/usr/sbin/nbd-client"
   addService "nbd-backup", "Start NBD backup client", [],

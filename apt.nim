@@ -1,3 +1,20 @@
+# This file is part of FASC, the FAst System Configurator.
+#
+# Copyright (C) 2022-2024 Madis Janson
+#
+# FASC is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# FASC is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+# See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with FASC. If not, see <https://www.gnu.org/licenses/>.
+
 import utils, aptcleaner, system
 import std/[strformat, strutils, os, tables]
 
@@ -41,9 +58,12 @@ proc setupUnattendedUpgrades() =
         return
   except:
     discard
-  safeFileUpdate(conf_path, unattended_upgrade_conf)
+  safeFileUpdate conf_path, unattended_upgrade_conf
   enableUnits.add "unattended-upgrades.service"
-  runCmd("systemctl", "restart", "unattended-upgrades.service")
+  if appendMissing("/etc/apt/apt.conf.d/20auto-upgrades",
+      [("APT::Periodic::Update-Package-Lists ", "\"1\";"),
+       ("APT::Periodic::Unattended-Upgrade ", "\"1\";")], true):
+    runCmd "systemctl", "restart", "unattended-upgrades.service"
 
 proc mandbUpdate() =
   let autoUpdate = "/var/lib/man-db/auto-update"
