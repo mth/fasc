@@ -3,6 +3,7 @@
 Utility to configure Debian, and partially Fedora installation fast into a state that I like.
 
 It is opionated, which means that it creates configurations that the author likes, and isn't very flexible.
+The configurations are also usually very minimal.
 
 It is at least for now mostly undocumented. You can run the binary and it will display a list of subcommands.
 
