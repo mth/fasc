@@ -40,7 +40,8 @@ Install sway destop.
 	fasc sway
 
 This starts up at boot without any login, since you've supposedly just entered your disc encryption password.
+If sway crashes, you must login as root from console and run `systemctl restart run-wayland` manually.
 
-If sway crashes, you must login as root from console and run `systemctl restart run-wayland` manually.It might be useful to additionally run this to get few utilities.
+It might be useful to additionally run this to get few utilities.
 
 	fasc gui-packages
