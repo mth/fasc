@@ -18,7 +18,7 @@ It is written in Nim, as having statically typed language compiler to catch some
 ## Example setup of minimal Sway desktop
 
 1. Install minimal Debian or Fedora Sway spin with root filesystem encryption.
-2. Copy fasc into somewhere in path.
+2. Copy fasc into somewhere in the path.
 3. Use fasc for setup.
 
 If using WIFI, setup iwd.
