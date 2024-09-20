@@ -35,7 +35,7 @@ Common system configuration. On Debian this setups ALSA and on Fedora you suppos
 
 	fasc common
 
-Install sway destop.
+Setup Sway destop.
 
 	fasc sway
 
