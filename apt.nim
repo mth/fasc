@@ -58,9 +58,12 @@ proc setupUnattendedUpgrades() =
         return
   except:
     discard
-  safeFileUpdate(conf_path, unattended_upgrade_conf)
+  safeFileUpdate conf_path, unattended_upgrade_conf
   enableUnits.add "unattended-upgrades.service"
-  runCmd("systemctl", "restart", "unattended-upgrades.service")
+  if appendMissing("/etc/apt/apt.conf.d/20auto-upgrades",
+      [("APT::Periodic::Update-Package-Lists ", "\"1\";"),
+       ("APT::Periodic::Unattended-Upgrade ", "\"1\";")], true):
+    runCmd "systemctl", "restart", "unattended-upgrades.service"
 
 proc mandbUpdate() =
   let autoUpdate = "/var/lib/man-db/auto-update"
