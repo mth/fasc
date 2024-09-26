@@ -163,7 +163,7 @@ do_rsync() {
     "$1"*) RS_XTRA_OPTS="$RS_XTRA_OPTS --exclude=$RS_EXCLUDE_DIR";;
     esac
   done
-  if "$RSYNC_COMMAND" $RS_XTRA_OPTS "$1" "$BACKUP_TARGET_DIR/`dirname "$1"`/"
+  if /usr/bin/nice -n15 "$RSYNC_COMMAND" $RS_XTRA_OPTS "$1" "$BACKUP_TARGET_DIR/`dirname "$1"`/"
   then echo "$1 backup done."
   else echo "$1 backup failed with $?."
   fi

@@ -81,6 +81,7 @@ proc addFirefox*(wayland: bool) =
     pref("dom.event.clipboardevents.enabled", false),
     pref("dom.event.contextmenu.enabled", false),
     pref("dom.suspend_inactive.enabled", true),
+    pref("dom.private-attribution.submission.enabled", false),
     pref("general.warnOnAboutConfig", false),
     pref("gfx.canvas.azure.accelerated", true),
     pref("gfx.webrender.all", true),
