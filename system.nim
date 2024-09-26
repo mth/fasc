@@ -307,9 +307,11 @@ proc batteryMonitor(useUdev: bool) =
           onlyEmpty=false):
       runCmd "systemctl", "restart", "sleepd.service"
 
-proc limitBattery() =
+proc limitBattery(args: StrMap) =
+  let limit = args.getOrDefault("maxCharge", "85")
   addService "battery-limit", "Limit battery max charge", [],
-    "/bin/sh -c 'for bat in /sys/class/power_supply/BAT*/charge_{stop_threshold,control_end_threshold}; do echo 90 > $bat; done'",
+    "/bin/sh -c 'for bat in /sys/class/power_supply/BAT*/charge_{stop_threshold,control_end_threshold}; do echo " &
+    limit & " > $bat; done'",
     "multi-user.target", serviceType="oneshot"
 
 proc inMemoryJournal() =
@@ -340,7 +342,7 @@ proc tuneSystem*(args: StrMap) =
                serviceType="oneshot"
   if batteries != 0:
     batteryMonitor(batteries == 1)
-    limitBattery()
+    args.limitBattery
   if isFedora():
     runCmd "systemctl", "disable", "--now", "systemd-userdbd.socket",
            "systemd-userdbd.service", "systemd-homed.service"

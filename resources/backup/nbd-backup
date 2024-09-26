@@ -3,12 +3,22 @@
 set -e
 
 case "$1" in
+	sync-no-sleep)
+		while ! systemd-inhibit --what=idle:sleep:handle-lid-switch:handle-suspend-key:handle-hibernate-key \
+				--who=nbd-backup /bin/true; do
+			sleep 1
+		done
+		systemd-inhibit --what=idle:sleep:handle-lid-switch:handle-suspend-key:handle-hibernate-key \
+			--who=nbd-backup "--why=Active backup" "$0" sync
+		exit $?;;
 	sync|mkfs|mount|unmount) ;;
 	*)
 	  [ "$1" = "help" ] || { echo "Unknown command ($1)"; echo; }
 cat <<HELP
 nbd-backup sync
+nbd-backup sync-no-sleep
   Updates remote backup snapshot to the current filesystem data.
+  The sync-no-sleep option uses systemd-inhibit to prevent sleeping.
 
 nbd-backup mkfs
   Setups dmcrypt and creates new filesystem on the remote image.
@@ -20,8 +30,7 @@ nbd-backup unmount
   Unmounts backup device
 HELP
 		[ "$1" = "help" ]
-		exit 0
-		;;
+		exit 0;;
 esac
 
 error() {
@@ -163,7 +172,7 @@ do_rsync() {
     "$1"*) RS_XTRA_OPTS="$RS_XTRA_OPTS --exclude=$RS_EXCLUDE_DIR";;
     esac
   done
-  if "$RSYNC_COMMAND" $RS_XTRA_OPTS "$1" "$BACKUP_TARGET_DIR/`dirname "$1"`/"
+  if /usr/bin/nice -n15 "$RSYNC_COMMAND" $RS_XTRA_OPTS "$1" "$BACKUP_TARGET_DIR/`dirname "$1"`/"
   then echo "$1 backup done."
   else echo "$1 backup failed with $?."
   fi

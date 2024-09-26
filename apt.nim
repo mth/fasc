@@ -138,14 +138,17 @@ proc configureAndPruneDNF(args: StrMap) =
   for i in countdown(preserve.len - 1, 0):
     if preserve[i] notin installed:
       preserve.delete i
-  runCmd("dnf", @["mark", "install"] & preserve)
+  runCmd("dnf", @["mark", "user"] & preserve)
+  # would like to permanently remove avahi, but some s**t depends on it and will reinstall it
   runCmd("dnf", "remove", "NetworkManager", "PackageKit", "PackageKit-glib",
-         "avahi", "chrony", "firewalld", "udisks2", "gssproxy", "upower",
+         "chrony", "firewalld", "fprintd", "udisks2", "gssproxy", "upower",
          "teamd", "python3-firewall", "sssd-client", "tracker", "bash-color-prompt",
          "virtualbox-guest-additions", "open-vm-tools", "open-vm-tools-desktop",
          "brcmfmac-firmware", "cirrus-audio-firmware", "libertas-firmware",
          "nvidia-gpu-firmware", "nxpwireless-firmware", "tiwilink-firmware")
   echo "You could also remove atheros-firmware and mt7xxx-firmware"
+  runCmd "systemctl", "disable", "--now", "avahi-daemon.socket", "avahi-daemon.service",
+         "ModemManager.service", "switcheroo-control.service"
   if isIntelCPU():
     runCmd "dnf", "remove", "amd-ucode-firmware", "amd-gpu-firmware"
 
