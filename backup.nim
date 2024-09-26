@@ -179,16 +179,17 @@ proc backupServer*(args: StrMap) =
   rotateBackupTimer mountUnit
 
 proc installBackupClient*(args: StrMap) =
+  const waitWakeup = "/etc/backup/wait-uninhibited"
   createDir "/media/backup-storage"
   writeFile "/usr/local/sbin/nbd-backup", [backupClient], permissions=0o750
   writeFile "/etc/backup/nbd-backup.conf", [backupConf]
-  writeFile "/etc/backup/wait-uninhibited", [waitUnhibited], permissions=0o755
+  writeFile waitWakeup, [waitUnhibited], permissions=0o755
   safeFileUpdate "/usr/lib/systemd/system-sleep/backup-no-sleep", delaySleep, permissions=0o755
   setPermissions "/etc/backup", 0, 0, 0o700
   addPackageUnless "nbd-client", "/usr/sbin/nbd-client"
   addService "nbd-backup", "Start NBD backup client", [],
              "systemd-inhibit --what=sleep --who=nbd-backup \"--why=Active backup\" /usr/local/sbin/nbd-backup sync",
-             options=["ExecStartPre=/etc/backup/wait-uninhibited"],
+             options=["ExecStartPre=" & waitWakeup],
              unitOptions=["ConditionACPower=true"]
   addTimer "nbd-backup", "Starts NBD backup client periodically",
            ["OnCalendar=*-*-02/4 05:05:05", "WakeSystem=true"]
