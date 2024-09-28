@@ -24,10 +24,13 @@ const backupClient = readResource("backup/nbd-backup")
 const backupConf   = readResource("backup/nbd-backup.conf")
 
 # for some reason, systemd-inhibit doesn't always prevent sleep
-const delaySleep = fmt"""
+const delaySleep = """
 #!/bin/sh
 
-[ "$1" != "pre" ] || while grep -q " {backupMountPoint}/ " /proc/mounts
+[ "$1" = "pre" ] || exit
+BACKUP_TARGET_DIR=/media/backup-storage
+. /etc/backup/nbd-backup.conf
+while grep -q " $BACKUP_TARGET_DIR/ " /proc/mounts
 do sleep 1
 done
 """
