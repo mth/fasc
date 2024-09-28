@@ -28,12 +28,15 @@ const delaySleep = """
 #!/bin/sh
 
 [ "$1" = "pre" ] || exit
-BACKUP_TARGET_DIR=/media/backup-storage
-. /etc/backup/nbd-backup.conf
-while grep -q " $BACKUP_TARGET_DIR/ " /proc/mounts
+
+while systemctl is-active -q nbd-backup.service
 do sleep 1
 done
 """
+
+#BACKUP_TARGET_DIR=/media/backup-storage
+#. /etc/backup/nbd-backup.conf
+#while grep -q " $BACKUP_TARGET_DIR/ " /proc/mounts
 
 const waitUnhibited = """
 #!/bin/sh
@@ -182,17 +185,18 @@ proc backupServer*(args: StrMap) =
   rotateBackupTimer mountUnit
 
 proc installBackupClient*(args: StrMap) =
-  const waitWakeup = "/etc/backup/wait-uninhibited"
+  #const waitWakeup = "/etc/backup/wait-uninhibited"
   createDir "/media/backup-storage"
   writeFile "/usr/local/sbin/nbd-backup", [backupClient], permissions=0o750
   writeFile "/etc/backup/nbd-backup.conf", [backupConf]
-  writeFile waitWakeup, [waitUnhibited], permissions=0o755
+  # writeFile waitWakeup, [waitUnhibited], permissions=0o755
   safeFileUpdate "/usr/lib/systemd/system-sleep/backup-no-sleep", delaySleep, permissions=0o755
   setPermissions "/etc/backup", 0, 0, 0o700
   addPackageUnless "nbd-client", "/usr/sbin/nbd-client"
+  # "systemd-inhibit --what=sleep --who=nbd-backup \"--why=Active backup\" /usr/local/sbin/nbd-backup sync",
   addService "nbd-backup", "Start NBD backup client", [],
-             "systemd-inhibit --what=sleep --who=nbd-backup \"--why=Active backup\" /usr/local/sbin/nbd-backup sync",
-             options=["ExecStartPre=" & waitWakeup],
+             "/usr/local/sbin/nbd-backup sync",
+             # options=["ExecStartPre=" & waitWakeup],
              unitOptions=["ConditionACPower=true"]
   addTimer "nbd-backup", "Starts NBD backup client periodically",
            ["OnCalendar=*-*-02/4 05:05:05", "WakeSystem=true"]
