@@ -27,7 +27,7 @@ const backupConf   = readResource("backup/nbd-backup.conf")
 const delaySleep = """
 #!/bin/sh
 
-[ "$1" = "pre" ] || exit
+[ "$1" = "pre" ] || exit 0
 while systemctl is-active -q nbd-backup.service
 do sleep 1
 done
