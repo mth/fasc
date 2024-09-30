@@ -188,9 +188,10 @@ proc installBackupClient*(args: StrMap) =
   setPermissions "/etc/backup", 0, 0, 0o700
   addPackageUnless "nbd-client", "/usr/sbin/nbd-client"
   addService "nbd-backup", "Start NBD backup client", [],
-             "systemd-inhibit --what=idle:sleep:handle-suspend-key:handle-hibernate-key --who=nbd-backup \"--why=Active backup\" /usr/local/sbin/nbd-backup sync",
+             "systemd-inhibit --what=idle:sleep:handle-lid-switch:handle-suspend-key:handle-hibernate-key --who=nbd-backup \"--why=Active backup\" /usr/local/sbin/nbd-backup sync",
              options=["ExecStartPre=" & waitWakeup, "User=root", "PAMName=crond"],
-             unitOptions=["ConditionACPower=true", "BindsTo=user@0.service", "After=user@0.service"]
+             unitOptions=["ConditionACPower=true"]
+  #           unitOptions=["ConditionACPower=true", "BindsTo=user@0.service", "After=user@0.service"]
   addTimer "nbd-backup", "Starts NBD backup client periodically",
            ["OnCalendar=*-*-02/4 05:05:05", "WakeSystem=true"]
   let sshConfig = "/root/.ssh/config"
