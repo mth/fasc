@@ -36,7 +36,7 @@ done
 const waitUnhibited = """
 #!/bin/sh
 
-while ! systemd-inhibit --what=idle:sleep:handle-suspend-key:handle-hibernate-key --who=nbd-backup /bin/true
+while ! systemd-inhibit --what=idle:sleep:handle-lid-switch:handle-suspend-key:handle-hibernate-key --who=nbd-backup /bin/true
 do sleep 1
 done
 """
