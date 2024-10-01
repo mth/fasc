@@ -3,6 +3,10 @@
 set -e
 
 case "$1" in
+	sync-no-sleep)
+		systemd-inhibit --what=idle:sleep:handle-lid-switch:handle-suspend-key:handle-hibernate-key \
+			--who=nbd-backup "--why=Active backup" "$0" sync
+		exit $?;;
 	sync|mkfs|mount|unmount) ;;
 	*)
 	  [ "$1" = "help" ] || { echo "Unknown command ($1)"; echo; }
@@ -20,8 +24,7 @@ nbd-backup unmount
   Unmounts backup device
 HELP
 		[ "$1" = "help" ]
-		exit 0
-		;;
+		exit 0;;
 esac
 
 error() {

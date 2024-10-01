@@ -177,7 +177,7 @@ proc installBackupClient*(args: StrMap) =
   setPermissions "/etc/backup", 0, 0, 0o700
   addPackageUnless "nbd-client", "/usr/sbin/nbd-client"
   addService "nbd-backup", "Start NBD backup client", [],
-             "systemd-inhibit --what=idle:sleep:handle-lid-switch:handle-suspend-key:handle-hibernate-key --who=nbd-backup \"--why=Active backup\" /usr/local/sbin/nbd-backup sync",
+             "/usr/local/sbin/nbd-backup sync-no-sleep",
              options=["ExecStartPre=" & waitWakeup, "User=root", "PAMName=crond"],
              unitOptions=["ConditionACPower=true"]
   addTimer "nbd-backup", "Starts NBD backup client periodically",
