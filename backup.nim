@@ -23,16 +23,6 @@ const rotateBackup = readResource("backup/rotate-backup.sh")
 const backupClient = readResource("backup/nbd-backup")
 const backupConf   = readResource("backup/nbd-backup.conf")
 
-# for some reason, systemd-inhibit doesn't always prevent sleep
-const delaySleep = """
-#!/bin/sh
-
-[ "$1" = "pre" ] || exit 0
-while systemctl is-active -q nbd-backup.service
-do sleep 1
-done
-"""
-
 const waitUnhibited = """
 #!/bin/sh
 
@@ -184,14 +174,12 @@ proc installBackupClient*(args: StrMap) =
   writeFile "/usr/local/sbin/nbd-backup", [backupClient], permissions=0o750
   writeFile "/etc/backup/nbd-backup.conf", [backupConf]
   writeFile waitWakeup, [waitUnhibited], permissions=0o755
-  safeFileUpdate "/usr/lib/systemd/system-sleep/backup-no-sleep", delaySleep, permissions=0o755
   setPermissions "/etc/backup", 0, 0, 0o700
   addPackageUnless "nbd-client", "/usr/sbin/nbd-client"
   addService "nbd-backup", "Start NBD backup client", [],
              "systemd-inhibit --what=idle:sleep:handle-lid-switch:handle-suspend-key:handle-hibernate-key --who=nbd-backup \"--why=Active backup\" /usr/local/sbin/nbd-backup sync",
              options=["ExecStartPre=" & waitWakeup, "User=root", "PAMName=crond"],
              unitOptions=["ConditionACPower=true"]
-  #           unitOptions=["ConditionACPower=true", "BindsTo=user@0.service", "After=user@0.service"]
   addTimer "nbd-backup", "Starts NBD backup client periodically",
            ["OnCalendar=*-*-02/4 05:05:05", "WakeSystem=true"]
   let sshConfig = "/root/.ssh/config"
