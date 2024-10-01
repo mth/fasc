@@ -12,7 +12,9 @@ case "$1" in
 	  [ "$1" = "help" ] || { echo "Unknown command ($1)"; echo; }
 cat <<HELP
 nbd-backup sync
+nbd-backup sync-no-sleep
   Updates remote backup snapshot to the current filesystem data.
+  The sync-no-sleep option uses systemd-inhibit to prevent sleeping.
 
 nbd-backup mkfs
   Setups dmcrypt and creates new filesystem on the remote image.
