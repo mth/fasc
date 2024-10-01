@@ -4,6 +4,10 @@ set -e
 
 case "$1" in
 	sync-no-sleep)
+		while ! systemd-inhibit --what=idle:sleep:handle-lid-switch:handle-suspend-key:handle-hibernate-key \
+				--who=nbd-backup /bin/true; do
+			sleep 1
+		done
 		systemd-inhibit --what=idle:sleep:handle-lid-switch:handle-suspend-key:handle-hibernate-key \
 			--who=nbd-backup "--why=Active backup" "$0" sync
 		exit $?;;
