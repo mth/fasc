@@ -141,7 +141,7 @@ proc configureAndPruneDNF(args: StrMap) =
   runCmd("dnf", @["mark", "user"] & preserve)
   # would like to permanently remove avahi, but some s**t depends on it and will reinstall it
   runCmd("dnf", "remove", "NetworkManager", "PackageKit", "PackageKit-glib",
-         "chrony", "firewalld", "udisks2", "gssproxy", "upower",
+         "chrony", "firewalld", "fprintd", "udisks2", "gssproxy", "upower",
          "teamd", "python3-firewall", "sssd-client", "tracker", "bash-color-prompt",
          "virtualbox-guest-additions", "open-vm-tools", "open-vm-tools-desktop",
          "brcmfmac-firmware", "cirrus-audio-firmware", "libertas-firmware",
