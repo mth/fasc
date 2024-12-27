@@ -15,6 +15,15 @@
 # You should have received a copy of the GNU General Public License
 # along with FASC. If not, see <https://www.gnu.org/licenses/>.
 
+# TODO rustic/restic backup.
+# 1. command to add rustic service
+#    * download from github by version
+#    * fs automount
+#    * hddparm suspend (if sdX)
+#    * generate self-signed tls certificate
+# 2. command to add user/passwd (.htpasswd file for rustic)
+# 3. command to add rustic client
+
 import std/[strformat, strutils, os, tables]
 import services, utils
 
