@@ -220,8 +220,34 @@ proc fstab*(tmpfs = true) =
       """KERNEL=="sd?1" SUBSYSTEM=="block" SUBSYSTEMS=="usb" SYMLINK+="disk/usbdrive1"""")
     udevReload "block"
   if fstab.len != originalLen:
-    safeFileUpdate("/etc/fstab", fstab.join("\n") & "\n")
+    safeFileUpdate "/etc/fstab", fstab.join("\n") & "\n"
   # TODO if no swap, add zswap
+
+proc autoMount*(device, mountPoint, filesystem, flags: string, idleTime = "5min", secure = true) =
+  var def = device & '\t' & mountPoint & '\t' & filesystem & '\t' & flags
+  if flags != "":
+    def &= ','
+  if secure:
+    def &= "noexec,nodev,sec=sys,"
+  def &= "noauto,x-systemd.automount,x-systemd.mount-timeout=20,x-systemd.idle-timeout="
+  def &= idleTime
+  var fstab = ""
+  var hasMount = false
+  for line in lines("/etc/fstab"):
+    let fields = line.split.filterIt(it.len > 0)
+    if fields.len <= 1 or fields[1] != mountPoint:
+      fstab &= line
+    elif line != def:
+      hasMount = true
+      fstab &= def
+    else:
+      return
+    fstab &= '\n'
+  if hasMount:
+    safeFileUpdate "/etc/fstab", fstab
+  else:
+    def &= '\n'
+    writeFileSynced "/etc/fstab", def, fmAppend
 
 proc defaultSleepMinutes*(): int =
   if hasBattery(): 7
