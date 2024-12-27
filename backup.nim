@@ -21,6 +21,7 @@
 #    * fs automount
 #    * hddparm suspend (if sdX)
 #    * generate self-signed tls certificate
+#    * secured systemd service
 # 2. command to add user/passwd (.htpasswd file for rustic)
 # 3. command to add rustic client
 
