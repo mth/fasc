@@ -134,7 +134,7 @@ proc sync(f: File) =
   if f.getFileHandle.fsync != 0:
     raise newException(OSError, $strerror(errno))
 
-proc writeFileSynced*(filename, content: string) =
+proc writeFileSynced*(filename, content: string; openMode: FileMode = fmWrite) =
   let f = open(filename, fmWrite)
   defer: f.close
   f.write content
