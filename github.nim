@@ -36,9 +36,6 @@ proc githubDownload(repository, target: string; nameFunc: proc(name, version: st
   if name.len < 2:
     echo "Repository name '", repository, "' must contain '/'"
     quit 1
-  if target.fileExists:
-    echo "Not downloading an existing file: ", target
-    return
   let baseUrl = "https://github.com/" & repository
   if not fileExists("/usr/bin/wget"):
     packagesToInstall.add "wget"
@@ -47,6 +44,7 @@ proc githubDownload(repository, target: string; nameFunc: proc(name, version: st
   let tarname = nameFunc(name[1], version)
   let fromURL = baseUrl & "/releases/download/" & version & '/' & tarname
   echo "Downloading ", fromURL, "..."
+  removeFile target
   runCmd "wget", "-O", target, fromURL
 
 func versionedTarGz(name, version: string): string =
@@ -55,5 +53,17 @@ func versionedTarGz(name, version: string): string =
 func unversionedTarXz(name, version: string): string =
   name & '-' & ARCH & "-unknown-linux-gnu.tar.xz"
 
+proc githubExtract(repository, tmpFile, inTar, target: string, nameFunc: proc(name, version: string): string) =
+  if (target / inTar).fileExists:
+    echo "Not downloading an existing file: ", target
+    return
+  defer: removeFile tmpFile
+  githubDownload repository, tmpFile, nameFunc
+  let opt = if tmpFile.endsWith("xz"): "-xJf"
+            else: "-xzf"
+  createDir target
+  runCmd "tar", "-C", target, opt, tmpFile, inTar
+
 #githubDownload "rustic-rs/rustic", "/tmp/rustic.tar.gz", versionedTarGz
-githubDownload "rustic-rs/rustic_server", "/tmp/rustic-server.tar.gz", unversionedTarXz
+#githubDownload "rustic-rs/rustic_server", "/tmp/rustic-server.tar.gz", unversionedTarXz
+
