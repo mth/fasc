@@ -67,5 +67,14 @@ proc githubExtract(repository, tmpFile, inTar, target: string, nameFunc: proc(na
 #githubDownload "rustic-rs/rustic", "/tmp/rustic.tar.gz", versionedTarGz
 #githubDownload "rustic-rs/rustic_server", "/tmp/rustic-server.tar.gz", unversionedTarXz
 
-githubExtract "rustic-rs/rustic_server", "/tmp/rustic-server.tar.xz",
-              "rustic-server", "/opt/rustic-server", unversionedTarXz
+proc downloadRusticServer() =
+  let filename = "rustic-server"
+  let destDir = "/opt/rustic-server" 
+  let tarDir = "rustic_server-" & ARCH & "-unknown-linux-gnu"
+  githubExtract "rustic-rs/rustic_server", "/tmp/rustic-server.tar.xz",
+                tarDir / filename, destDir, unversionedTarXz
+  moveFile destDir / tarDir / filename, destDir / filename
+  removeDir destDir / tarDir
+  setPermissions destDir / filename, 0, 0, 0o750
+
+downloadRusticServer()
