@@ -57,13 +57,15 @@ proc githubExtract(repository, tmpFile, inTar, target: string, nameFunc: proc(na
   if (target / inTar).fileExists:
     echo "Not downloading an existing file: ", target
     return
+  createDir target
   defer: removeFile tmpFile
   githubDownload repository, tmpFile, nameFunc
   let opt = if tmpFile.endsWith("xz"): "-xJf"
             else: "-xzf"
-  createDir target
   runCmd "tar", "-C", target, opt, tmpFile, inTar
 
 #githubDownload "rustic-rs/rustic", "/tmp/rustic.tar.gz", versionedTarGz
 #githubDownload "rustic-rs/rustic_server", "/tmp/rustic-server.tar.gz", unversionedTarXz
 
+githubExtract "rustic-rs/rustic_server", "/tmp/rustic-server.tar.xz",
+              "rustic-server", "/opt/rustic-server", unversionedTarXz
