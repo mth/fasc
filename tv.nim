@@ -100,7 +100,7 @@ proc westonTV*(args: StrMap) =
   user.createParentDirs widevine_link
   if not symlinkExists(user.home / widevine_link):
     createSymlink("/opt/WidevineCdm", user.home / widevine_link)
-  user.runWayland "/usr/bin/weston"
+  user.runWayland "/usr/bin/weston", true
   addRaspbian()
   packagesToInstall.add ["weston", "openssh-client", "celluloid", "mpv", "mpd", "mpc",
                          "sonata", "python3-pkg-resources", "geeqie", "fonts-terminus-otb",

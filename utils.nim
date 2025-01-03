@@ -89,10 +89,6 @@ func groupId*(group: string): int =
     return -1
   return description.gr_gid.int
 
-proc addPackageUnless*(packageName, requiredPath: string) =
-  if not requiredPath.fileExists:
-    packagesToInstall.add packageName
-
 proc readSymlink*(symlink: string): string =
   try:
     return expandSymlink(symlink)
@@ -149,7 +145,7 @@ proc safeFileUpdate*(filename, content: string, permissions: Mode = 0o644) =
   setPermissions(tmpFile, permissions)
   moveFile(tmpFile, filename)
 
-proc writeFileIfNotExists(filename, content: string; force = false): bool {.discardable.} =
+proc writeFileIfNotExists*(filename, content: string; force = false): bool {.discardable.} =
   if not force and filename.fileExists:
     echo fmt"Retaining existing {filename}"
   else:
@@ -205,11 +201,11 @@ proc runCmd*(user: UserInfo, exitOnError: bool, command: string, args: varargs[s
       @["-qPGp", "User=" & $user.uid, "--working-directory=" & user.home,
         "--wait", "--service-type=exec", command] & @args)
 
-proc outputOfCommand*(inputString, command: string;
-                      args: varargs[string]): seq[string] =
+proc outputOfCommand*(inputString: string; hasInput: bool;
+                      command: string; args: openarray[string]): seq[string] =
   let process = startProcess(command, args = args,
                              options = {poStdErrToStdOut, poUsePath})
-  if inputString.len > 0:
+  if hasInput:
     let input = process.inputStream
     input.write inputString
     input.flush
@@ -224,6 +220,9 @@ proc outputOfCommand*(inputString, command: string;
     echo result.join("\n")
     quit 1
   process.close
+
+proc outputOfCommand*(inputString, command: string; args: varargs[string]): seq[string] =
+  outputOfCommand(inputString, inputString.len > 0, command, args)
 
 proc aptInstallNow*(packages: varargs[string]) =
   packagesToInstall.add packages
@@ -270,6 +269,12 @@ proc commitQueue*() =
     runCmd("systemctl", "start" & units)
     startUnits.reset
   sync()
+
+proc addPackageUnless*(packageName, requiredPath: string, commit = false) =
+  if not requiredPath.fileExists:
+    packagesToInstall.add packageName
+    if commit:
+      commitQueue()
 
 proc userInfo(pw: ptr Passwd, name: string): UserInfo =
   if pw == nil:

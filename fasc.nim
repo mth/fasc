@@ -86,6 +86,9 @@ let tasks = {
   "merlin": ("Setup emacs with tuareg mode and merlin using opam", installMerlin),
   "backup-server": ("Setup backup server backup-dev=/dev/sdd2 backup-user=foo-backup backup-size=MB [recreate-image]", backupServer),
   "nbd-backup": ("Install nbd-backup client", installBackupClient),
+  "restic-server": ("Setup restic backup server backup-dev=/dev/sdd2 [hostname=host] [serverip=1.2.3.4]", installResticServer),
+  "restic-user": ("Add backup-user=name to the restic server", resticUser),
+  "restic-client": ("Setup restic client rest-server=hostname [backup-user=name]", resticClient),
   #"disable-tracker": ("Disable GNOME tracker", disableTracker),
 }.toTable
 if paramCount() == 0:

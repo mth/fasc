@@ -278,8 +278,36 @@ proc systemdSleep*(sleepMinutes: int) =
 const hdparmConf = "/etc/hdparm.conf"
 const hdparmAPM = "/usr/lib/pm-utils/power.d/95hdparm-apm"
 
+proc hdparmForDevs*(standbyTime: int, sataDevs: seq[(string, string)]) =
+  if sataDevs.len != 0:
+    if not (hdparmConf.fileExists and hdparmAPM.fileExists):
+      aptInstallNow "hdparm"
+    var conf: seq[string]
+    for line in lines(hdparmConf):
+      if line == "# Config examples:":
+        break
+      conf.add line
+    var modified = false
+    for (name, dev) in sataDevs:
+      if (dev & " {") notin conf:
+        var time = 242 # 1 hour
+        if standbyTime > 0:
+          time = standbyTime
+        elif readFile(fmt"/sys/block/{name}/queue/rotational").strip != "1":
+          time = 1  # 5 sec
+        elif hasBattery():
+          time = 12 # 1 min
+        conf.add(dev & " {")
+        conf.add("\tspindown_time = " & $time & "\n}\n")
+        modified = true
+    if modified:
+      writeFile(hdparmConf, conf, true)
+      runCmd(hdparmAPM, "resume")
+
 proc hdparm*(args: StrMap) =
-  let standbyTime = args.getOrDefault ""
+  let standbyTimeStr = args.getOrDefault ""
+  let standbyTime = if standByTimeStr.len != 0: standbyTimeStr.parseInt
+                    else: 0
   var sataDevs: seq[(string, string)]
   for kind, disk in walkDir("/dev/disk/by-id"):
     block current:
@@ -293,30 +321,7 @@ proc hdparm*(args: StrMap) =
               sataDevs.del i
               break
           sataDevs.add (devName, disk)
-  if sataDevs.len != 0:
-    if not (hdparmConf.fileExists and hdparmAPM.fileExists):
-      aptInstallNow "hdparm"
-    var conf: seq[string]
-    for line in lines(hdparmConf):
-      if line == "# Config examples:":
-        break
-      conf.add line
-    var modified = false
-    for (name, dev) in sataDevs:
-      if (dev & " {") notin conf:
-        var time = 242 # 1 hour
-        if standbyTime.len != 0:
-          time = standbyTime.parseInt
-        elif readFile(fmt"/sys/block/{name}/queue/rotational").strip != "1":
-          time = 1  # 5 sec
-        elif hasBattery():
-          time = 12 # 1 min
-        conf.add(dev & " {")
-        conf.add("\tspindown_time = " & $time & "\n}\n")
-        modified = true
-    if modified:
-      writeFile(hdparmConf, conf, true)
-      runCmd(hdparmAPM, "resume")
+  hdparmForDevs standbyTime, sataDevs
 
 # https://wiki.archlinux.org/title/laptop#suspend_on_low_battery_level
 proc batteryMonitor(useUdev: bool) =

@@ -54,8 +54,8 @@ proc uploadCam*(args: StrMap) =
   let rsync_args = args.getOrDefault("rsync-args", "'--groupmap=*:www-data'")
   let user = args.userInfo
   user.writeAsUser("bin/upload-cam",
-    upload_cam_script.replace("{RSYNC_TARGET}", args.nonEmptyParam("rsync-to"))
-                     .replace("{RSYNC_ARGS}", rsync_args), 0o755, true)
+    upload_cam_script.multiReplace(("{RSYNC_TARGET}", args.nonEmptyParam("rsync-to")),
+                                   ("{RSYNC_ARGS}", rsync_args)), 0o755, true)
   user.writeAsUser(".local/share/applications/upload-cam.desktop",
     upload_cam_desktop.replace("HOME", user.home))
   addPackageUnless("rsync", "/usr/bin/rsync")

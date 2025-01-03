@@ -21,6 +21,7 @@ import utils
 type ServiceFlags* = enum
   s_no_new_priv,
   s_sandbox,
+  s_private_all,
   s_private_dev,
   s_allow_netlink,
   s_call_filter,
@@ -46,24 +47,35 @@ proc properties(flags: set[ServiceFlags]): seq[(string, string)] =
       ("MemoryDenyWriteExecute=", "true"),
       ("NoNewPrivileges=", "yes"),
       ("SecureBits=", "nonroot-locked"),
+      ("LockPersonality=", "true"),
     ]
   if s_sandbox in flags:
     result &= [
       ("ProtectSystem=", "strict"),
       ("PrivateTmp=", "true"),
+      ("ProtectHome=", "yes"),
       ("ProtectControlGroups=", "yes"),
       ("ProtectKernelLogs=", "true"),
       ("ProtectKernelModules=", "yes"),
       ("ProtectKernelTunables=", "yes"),
       ("ProtectProc=", "invisible"),
+      ("ProtectClock=", "yes"),
+      ("ProtectHostname=", "yes"),
+      ("RemoveIPC=", "yes"),
       ("RestrictNamespaces=", "yes"),
       ("RestrictRealtime=", "yes"),
+      ("RestrictSUIDSGID=", "yes"),
       ("RestrictAddressFamilies=", "AF_INET AF_INET6 AF_UNIX"),
     ]
-    if s_allow_netlink in flags:
+    if s_private_all in flags:
+      result[0] = ("CapabilityBoundingSet=", "")
+      result[^1][1] = "none"
+    elif s_allow_netlink in flags:
       result[^1][1] &= " AF_NETLINK"
-    if s_private_dev in flags:
-      result &= ("PrivateDevices=", "true")
+  if s_private_all in flags:
+    result &= ("PrivateNetwork=", "yes")
+  if s_private_dev in flags or s_private_all in flags:
+    result &= ("PrivateDevices=", "true")
   if s_call_filter in flags:
     result &= [
       ("SystemCallArchitectures=", "native"),
@@ -148,7 +160,7 @@ proc socketUnit*(socketName, description, listen: string, socketOptions: varargs
     enableAndStart socketName
 
 proc proxy*(proxy, listen, bindTo, connectTo, exitIdleTime, targetService: string,
-            description = "", socketOptions: openarray[string] = []) =
+            description = "", socketOptions: openarray[string] = [], waitFor = false) =
   let socketParam = proxy.split ':'
   let socketName = socketParam[0] & ".socket"
   let descriptionStr = descriptionOfName(socketParam[0], description)
@@ -162,10 +174,13 @@ proc proxy*(proxy, listen, bindTo, connectTo, exitIdleTime, targetService: strin
   if socketParam.len > 3:
     socket &= fmt"SocketMode={socketParam[3]}"
   var options = @["PrivateTmp=yes"]
-  if listen.startsWith("/") and connectTo.startsWith("/"):
+  if connectTo.startsWith("/"):
     options.add "PrivateNetwork=yes"
   let requires = if targetService != "": @[targetService, socketName]
                  else: @[socketName]
+  if waitFor:
+    options &= "ExecStartPre=/usr/bin/perl -e 'select((),(),(),0.06) while $i++<100&&!-S \"" &
+      connectTo & "\"'"
   addService(socketParam[0], descriptionStr, requires,
     "/usr/lib/systemd/systemd-socket-proxyd --exit-idle-time=" &
     exitIdleTime & ' ' & connectTo, "",

@@ -70,8 +70,8 @@ proc installIceWM*(args: StrMap) =
   let sleepMinutes = defaultSleepMinutes()
   let user = args.userInfo
   writeAsUser(user, ".icewm/startup",
-              icewm_startup.replace("SLEEP_SEC", $((sleepMinutes - 2) * 60))
-                           .replace("USERNAME", user.user), 0o755)
+              icewm_startup.multiReplace(("SLEEP_SEC", $((sleepMinutes - 2) * 60)),
+                                         ("USERNAME", user.user)), 0o755)
   writeAsUser(user, ".icewm/toolbar", icewm_toolbar)
   writeAsUser(user, ".icewm/theme", "Theme=\"Infadel2/default.theme\"\n")
   installDesktopPackages args

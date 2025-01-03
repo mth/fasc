@@ -51,7 +51,7 @@ proc defaultLocale(): string =
   if result.len == 0:
     result = "C"
 
-proc runWayland*(userInfo: UserInfo, compositor: string) =
+proc runWayland*(userInfo: UserInfo, compositor: string, sandbox = false) =
   let user = userInfo.user
   let gid = userInfo.gid
   const maxMemLimit = 0x100000000 # 4GB
@@ -64,7 +64,7 @@ proc runWayland*(userInfo: UserInfo, compositor: string) =
   # weird hack for SELinux
   if isFedora():
     compositor = "/usr/bin/sh -c \"exec " & compositor & '"'
-  var service = [
+  var service = @[
     "[Unit]",
     "Description=Runs wayland desktop",
     "Wants=sysinit.target usb-gadget.target",
@@ -94,15 +94,30 @@ proc runWayland*(userInfo: UserInfo, compositor: string) =
     " QT_QPA_PLATFORM=wayland-egl" &
     " XDG_SESSION_TYPE=wayland" &
     " MOZ_WEBRENDER=1" &
-    " LANG=" & defaultLocale(),
+    " LANG=" & defaultLocale()
+  ]
+  if sandbox:
+    service &= [
+      "ProtectSystem=full",
+      "CapabilityBoundingSet=~CAP_SYS_ADMIN",
+      "NoNewPrivileges=yes",
+      "SecureBits=nonroot-locked",
+      "LockPersonality=true",
+      "ProtectControlGroups=yes",
+      "ProtectKernelModules=yes",
+      "ProtectKernelTunables=yes",
+      "ProtectClock=yes",
+      "ProtectHostname=yes"
+    ]
+  service &= [
     "",
     "[Install]",
     "WantedBy=graphical.target",
     ""
   ]
-  writeFile("/etc/systemd/system/run-wayland.service", service)
+  writeFile "/etc/systemd/system/run-wayland.service", service
   enableUnits.add "run-wayland.service"
-  packagesToInstall.add(["qtwayland5", "xwayland"])
+  packagesToInstall.add ["qtwayland5", "xwayland"]
   systemdReload = true
   userInfo.commonGuiSetup
 
