@@ -17,11 +17,11 @@
 
 # TODO rustic/restic backup.
 # 1. command to add rustic service
-#    * download from github by version
-#    * fs automount
-#    * hddparm suspend (if sdX)
+#    * download from github by version (github:downloadRusticServer)
+#    * fs automount                    (system:autoMount)
+#    * hddparm suspend (if sdX)        (system:hdparmForDevs)
 #    * generate self-signed tls certificate
-#    * secured systemd service
+#    * secured systemd service         (services:addService)
 # 2. command to add user/passwd (.htpasswd file for rustic)
 # 3. command to add rustic client
 
