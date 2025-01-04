@@ -25,8 +25,29 @@
 # 2. command to add user/passwd (.htpasswd file for rustic)
 # 3. command to add rustic client
 
-import std/[strformat, strutils, os, tables]
+import std/[base64, strformat, strutils, os, tables]
 import services, utils
+
+proc readRandom(buf: var openarray[byte]) =
+  var rand = open("/dev/urandom")
+  defer: close(rand)
+  var pos = 0
+  while pos < buf.len:
+    let count = rand.readBytes(buf, pos, buf.len - pos)
+    if count <= 0:
+      raise newException(IOError, "Random error")
+    pos += count
+
+proc cryptPassword(password: string): string =
+  var salt: array[0..17, byte]
+  readRandom salt
+  let saltB64 = salt.encode.replace('+', '.')
+  # use perl to access libcrypt without linking it
+  return outputOfCommand("", "perl", "-e", "print(crypt($ARGV[0], $ARGV[1]))",
+                         password, fmt"$y$j9T${saltB64}$")[0]
+
+#proc cryptTest*(args: StrMap) =
+#  echo cryptPassword(args.nonEmptyParam("pass"))
 
 const backupMountPoint = "/media/backupstore"
 const rotateBackup = readResource("backup/rotate-backup.sh")
