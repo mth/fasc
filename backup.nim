@@ -39,12 +39,12 @@ proc readRandom(buf: var openarray[byte]) =
     pos += count
 
 proc cryptPassword(password: string): string =
-  var salt: array[0..22, byte]
+  var salt: array[0..21, byte]
   readRandom salt
   let saltB64 = salt.encode.replace('+', '.')
   # bcrypt hash using perl to access libcrypt without linking it
   return outputOfCommand("", "perl", "-e", "print(crypt($ARGV[0], $ARGV[1]))",
-                         password, fmt"$2a$10${saltB64}$")[0]
+                         password, fmt"$2a$05${saltB64}$")[0]
 
 #proc cryptTest*(args: StrMap) =
 #  echo cryptPassword(args.nonEmptyParam("pass"))
