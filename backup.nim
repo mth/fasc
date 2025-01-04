@@ -1,6 +1,6 @@
 # This file is part of FASC, the FAst System Configurator.
 #
-# Copyright (C) 2022-2024 Madis Janson
+# Copyright (C) 2022-2025 Madis Janson
 #
 # FASC is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
