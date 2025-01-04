@@ -21,6 +21,7 @@
 #    * fs automount                    (system:autoMount)
 #    * hddparm suspend (if sdX)        (system:hdparmForDevs)
 #    * generate self-signed tls certificate
+#      openssl req -newkey rsa:2048 -nodes -x509 -keyout private_key -out public_key -days 365 -addext "subjectAltName = IP:127.0.0.1,DNS:yourdomain.com"
 #    * secured systemd service         (services:addService)
 # 2. command to add user/passwd (.htpasswd file for rustic)
 # 3. command to add rustic client
