@@ -40,7 +40,7 @@ proc readRandom(buf: var openarray[byte]) =
       raise newException(IOError, "Random error")
     pos += count
 
-proc cryptPassword(password: string): string =
+proc bcryptPassword(password: string): string =
   var salt: array[0..21, byte]
   readRandom salt
   let saltB64 = salt.encode.replace('+', '.')
@@ -48,8 +48,19 @@ proc cryptPassword(password: string): string =
   return outputOfCommand("", "perl", "-e", "print(crypt($ARGV[0], $ARGV[1]))",
                          password, fmt"$2a$05${saltB64}$")[0]
 
-#proc cryptTest*(args: StrMap) =
-#  echo cryptPassword(args.nonEmptyParam("pass"))
+proc setCryptPassword(filename, user, password: string) =
+  var updatedConf: seq[string]
+  let prefix = user & ':'
+  let userPass = prefix & bcryptPassword(password)
+  for line in lines(filename):
+    if not line.startsWith(prefix):
+      updatedConf.add line
+  updatedConf.add userPass
+  safeFileUpdate(filename, updatedConf.join("\n") & '\n')
+
+# The .htpasswd should contain "{user}:cryptPassword" lines
+proc cryptTest*(args: StrMap) =
+  setCryptPassword(".htpasswd", args.nonEmptyParam("username"), args.nonEmptyParam("pass"))
 
 const backupMountPoint = "/media/backupstore"
 const rotateBackup = readResource("backup/rotate-backup.sh")
