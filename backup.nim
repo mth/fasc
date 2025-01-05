@@ -58,9 +58,8 @@ proc setCryptPassword(filename, user, password: string) =
   updatedConf.add userPass
   safeFileUpdate(filename, updatedConf.join("\n") & '\n')
 
-# The .htpasswd should contain "{user}:cryptPassword" lines
-proc cryptTest*(args: StrMap) =
-  setCryptPassword(".htpasswd", args.nonEmptyParam("username"), args.nonEmptyParam("pass"))
+#proc cryptTest*(args: StrMap) =
+#  setCryptPassword(".htpasswd", args.nonEmptyParam("username"), args.nonEmptyParam("pass"))
 
 const backupMountPoint = "/media/backupstore"
 const rotateBackup = readResource("backup/rotate-backup.sh")
