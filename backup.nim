@@ -48,7 +48,7 @@ proc bcryptPassword(password: string): string =
   return outputOfCommand("", "perl", "-e", "print(crypt($ARGV[0], $ARGV[1]))",
                          password, fmt"$2a$05${saltB64}$")[0]
 
-proc setCryptPassword(filename, user, password: string) =
+proc htpassword(filename, user, password: string) =
   var updatedConf: seq[string]
   let prefix = user & ':'
   let userPass = prefix & bcryptPassword(password)
