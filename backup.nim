@@ -147,7 +147,8 @@ proc backupNbdServer(mountUnit, name, group: string) =
     "/bin/nbd-server -C /etc/nbd-server/%i.conf", serviceType="forking",
     flags={s_sandbox, s_private_dev, s_call_filter},
     options=["ExecStartPre=/bin/rm -f '/media/backupstore/client/%i/active/nbd.socket'",
-             "User=%i", &"Group={group}", &"ReadWritePaths={backupMountPoint}/client/%i/active"],
+             "User=%i", &"Group={group}", &"ReadWritePaths={backupMountPoint}/client/%i/active",
+             "RuntimeMaxSec=12h"],
     unitOptions=[&"RequiresMountsFor={backupMountPoint}",
                  &"BindsTo={mountUnit}", "StopWhenUnneeded=true"]
   writeFile fmt"/etc/nbd-server/{name}.conf", [nbdConfig(name)]
