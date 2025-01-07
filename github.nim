@@ -50,9 +50,6 @@ proc githubDownload(repository, target: string; nameFunc: proc(version: string):
 #  "rustic_server-" & ARCH & "-unknown-linux-gnu.tar.xz"
 
 proc githubExtract(repository, tmpFile, inTar, target: string, nameFunc: proc(version: string): string) =
-  if (target / inTar).fileExists:
-    echo "Not downloading an existing file: ", target
-    return
   createDir target
   defer: removeFile tmpFile
   githubDownload repository, tmpFile, nameFunc
@@ -69,10 +66,14 @@ func resticServerTarGz(version: string): string =
 proc downloadResticServer() =
   let filename = "rest-server"
   let destDir = "/opt/restic" 
+  let destFile = destDir / filename
+  if destFile.fileExists:
+    echo "Not downloading an existing file: ", destFile
+    return
   let tarDir = "rest-server_0.13.0_linux_" & ARCH
   githubExtract "restic/rest-server", "/tmp/restic-server.tar.gz",
                 tarDir / filename, destDir, resticServerTarGz
-  moveFile destDir / tarDir / filename, destDir / filename
+  moveFile destDir / tarDir / filename, destFile
   removeDir destDir / tarDir
   setPermissions destDir / filename, 0, 0, 0o750
 
