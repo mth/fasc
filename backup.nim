@@ -15,6 +15,14 @@
 # You should have received a copy of the GNU General Public License
 # along with FASC. If not, see <https://www.gnu.org/licenses/>.
 
+import std/[base64, strformat, strutils, os, tables]
+import services, utils
+
+const backupMountPoint = "/media/backupstore"
+const rotateBackup = readResource("backup/rotate-backup.sh")
+const backupClient = readResource("backup/nbd-backup")
+const backupConf   = readResource("backup/nbd-backup.conf")
+
 # XXX considering everything we should have two classes of backup clients
 #     1. server type, always online. these should continue to use the nbd-backup
 #     2. desktop type, going to sleep, possibly unreliably wifi network.
@@ -35,9 +43,6 @@
 #      https://github.com/restic/rest-server/blob/master/examples/systemd/rest-server.service
 # 2. command to add user/passwd (.htpasswd file for rustic)
 # 3. command to add rustic client
-
-import std/[base64, strformat, strutils, os, tables]
-import services, utils
 
 # https://linuxize.com/post/how-to-set-up-sftp-chroot-jail/
 # https://blog.christophetd.fr/how-to-properly-setup-sftp-with-chrooted-users/
@@ -95,11 +100,6 @@ proc htpassword(filename, user, password: string) =
 
 #proc cryptTest*(args: StrMap) =
 #  htpassword(".htpasswd", args.nonEmptyParam("username"), args.nonEmptyParam("pass"))
-
-const backupMountPoint = "/media/backupstore"
-const rotateBackup = readResource("backup/rotate-backup.sh")
-const backupClient = readResource("backup/nbd-backup")
-const backupConf   = readResource("backup/nbd-backup.conf")
 
 const sshBackupService = """
 
