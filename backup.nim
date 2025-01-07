@@ -47,7 +47,7 @@ const backupConf   = readResource("backup/nbd-backup.conf")
 # https://linuxize.com/post/how-to-set-up-sftp-chroot-jail/
 # https://blog.christophetd.fr/how-to-properly-setup-sftp-with-chrooted-users/
 
-proc generateCert(param: StrMap) =
+proc resticTLSCert(param: StrMap) =
   let sslDir = "/etc/ssl/restic"
   let private_key = sslDir & "/private.der"
   let public_key = sslDir & "/public.der"
