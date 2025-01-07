@@ -62,7 +62,7 @@ proc generateCert(param: StrMap) =
   if ip.len == 0:
     ext &= "IP:" & ip
   ext &= "DNS:" & hostname
-  # determine hostname
+  echo "Creating ", public_key, " certificate with ", ext
   createDir sslDir
   # TODO restic user and group
   setPermissions sslDir, 0, 0, 750
