@@ -32,17 +32,15 @@ const backupConf   = readResource("backup/nbd-backup.conf")
 #        Would be nice if sftp could be made to mount it.
 #        https://linuxize.com/post/how-to-set-up-sftp-chroot-jail/
 #        https://blog.christophetd.fr/how-to-properly-setup-sftp-with-chrooted-users/
-# TODO rustic/restic backup.
-# 1. command to add rustic service
-#    * download from github by version (github:downloadRusticServer)
+# 1. command to add restic server
+#    * download from github by version (github:downloadResticServer)
 #    * fs automount                    (system:autoMount)
 #    * hddparm suspend (if sdX)        (system:hdparmForDevs)
-#    * generate self-signed tls certificate
-#      openssl req -newkey rsa:2048 -nodes -x509 -keyout private_key -out public_key -days 365 -addext "subjectAltName = IP:127.0.0.1,DNS:yourdomain.com"
+#    * generate self-signed tls certificate (resticTLSCert)
 #    * secured systemd service         (services:addService)
 #      https://github.com/restic/rest-server/blob/master/examples/systemd/rest-server.service
-# 2. command to add user/passwd (.htpasswd file for rustic)
-# 3. command to add rustic client
+# 2. command to add user/passwd (htpasswd)
+# 3. command to add restic client
 
 # https://linuxize.com/post/how-to-set-up-sftp-chroot-jail/
 # https://blog.christophetd.fr/how-to-properly-setup-sftp-with-chrooted-users/
