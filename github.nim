@@ -1,4 +1,4 @@
-import std/[sequtils, strutils, os]
+import std/[sequtils, strformat, strutils, os]
 import utils
 
 iterator getReleaseTags(baseURL: string): string =
@@ -25,35 +25,31 @@ proc lastVersion(baseURL: string): string =
 when defined(i386):
   const ARCH = "i686"
 when defined(amd64):
-  const ARCH = "x86_64"
+  const ARCH = "amd64"
 when defined(arm):
   const ARCH = "arm"
 when defined(arm64):
-  const ARCH = "aarch64"
+  const ARCH = "arm64"
 
-proc githubDownload(repository, target: string; nameFunc: proc(name, version: string): string) =
-  let name = repository.split('/', 2)
-  if name.len < 2:
-    echo "Repository name '", repository, "' must contain '/'"
-    quit 1
+proc githubDownload(repository, target: string; nameFunc: proc(version: string): string) =
   let baseUrl = "https://github.com/" & repository
   if not fileExists("/usr/bin/wget"):
     packagesToInstall.add "wget"
     commitQueue()
   let version = baseUrl.lastVersion
-  let tarname = nameFunc(name[1], version)
+  let tarname = nameFunc(version[1..^1])
   let fromURL = baseUrl & "/releases/download/" & version & '/' & tarname
   echo "Downloading ", fromURL, "..."
   removeFile target
   runCmd "wget", "-O", target, fromURL
 
-func versionedTarGz(name, version: string): string =
-  name & '-' & version & '-' & ARCH & "-unknown-linux-gnu.tar.gz"
+#func versionedTarGz(version: string): string =
+#  "rustic-" & version & '-' & ARCH & "-unknown-linux-gnu.tar.gz"
 
-func unversionedTarXz(name, version: string): string =
-  name & '-' & ARCH & "-unknown-linux-gnu.tar.xz"
+#func unversionedTarXz(version: string): string =
+#  "rustic_server-" & ARCH & "-unknown-linux-gnu.tar.xz"
 
-proc githubExtract(repository, tmpFile, inTar, target: string, nameFunc: proc(name, version: string): string) =
+proc githubExtract(repository, tmpFile, inTar, target: string, nameFunc: proc(version: string): string) =
   if (target / inTar).fileExists:
     echo "Not downloading an existing file: ", target
     return
@@ -67,14 +63,17 @@ proc githubExtract(repository, tmpFile, inTar, target: string, nameFunc: proc(na
 #githubDownload "rustic-rs/rustic", "/tmp/rustic.tar.gz", versionedTarGz
 #githubDownload "rustic-rs/rustic_server", "/tmp/rustic-server.tar.gz", unversionedTarXz
 
-proc downloadRusticServer() =
-  let filename = "rustic-server"
-  let destDir = "/opt/rustic-server" 
-  let tarDir = "rustic_server-" & ARCH & "-unknown-linux-gnu"
-  githubExtract "rustic-rs/rustic_server", "/tmp/rustic-server.tar.xz",
-                tarDir / filename, destDir, unversionedTarXz
+func resticServerTarGz(version: string): string =
+  fmt"rest-server_{version}_linux_{ARCH}.tar.gz"
+
+proc downloadResticServer() =
+  let filename = "rest-server"
+  let destDir = "/opt/restic" 
+  let tarDir = "rest-server_0.13.0_linux_" & ARCH
+  githubExtract "restic/rest-server", "/tmp/restic-server.tar.gz",
+                tarDir / filename, destDir, resticServerTarGz
   moveFile destDir / tarDir / filename, destDir / filename
   removeDir destDir / tarDir
   setPermissions destDir / filename, 0, 0, 0o750
 
-downloadRusticServer()
+downloadResticServer()
