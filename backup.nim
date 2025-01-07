@@ -42,6 +42,29 @@ import services, utils
 # https://linuxize.com/post/how-to-set-up-sftp-chroot-jail/
 # https://blog.christophetd.fr/how-to-properly-setup-sftp-with-chrooted-users/
 
+proc generateCert(param: StrMap) =
+  let sslDir = "/etc/ssl/restic"
+  let private_key = sslDir & "/private.der"
+  let public_key = sslDir & "/public.der"
+  if private_key.fileExists and public_key.fileExists:
+    echo "Not going to replace existing restic TLS key: ", private_key
+    return
+  var hostname = param.getOrDefault "hostname"
+  if hostname.len == 0:
+    hostname = readFile("/etc/hostname").strip
+  var ext = "subjectAltName = "
+  let ip = param.getOrDefault "serverip"
+  if ip.len == 0:
+    ext &= "IP:" & ip
+  ext &= "DNS:" & hostname
+  # determine hostname
+  createDir sslDir
+  # TODO restic user and group
+  setPermissions sslDir, 0, 0, 750
+  runCmd "openssl", "req", "-newkey", "rsa:2048", "-nodes", "-x509",
+         "-keyout", private_key, "-out", public_key, "-days", "1826",
+         "-addext", ext
+
 proc readRandom(buf: var openarray[byte]) =
   var rand = open("/dev/urandom")
   defer: close(rand)
