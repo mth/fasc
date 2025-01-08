@@ -16,7 +16,7 @@
 # along with FASC. If not, see <https://www.gnu.org/licenses/>.
 
 import std/[base64, strformat, strutils, os, tables]
-import services, utils
+import services, utils, github
 
 const backupMountPoint = "/media/backupstore"
 const rotateBackup = readResource("backup/rotate-backup.sh")
@@ -45,29 +45,6 @@ const backupConf   = readResource("backup/nbd-backup.conf")
 # https://linuxize.com/post/how-to-set-up-sftp-chroot-jail/
 # https://blog.christophetd.fr/how-to-properly-setup-sftp-with-chrooted-users/
 
-proc resticTLSCert(param: StrMap) =
-  let sslDir = "/etc/ssl/restic"
-  let private_key = sslDir & "/private.der"
-  let public_key = sslDir & "/public.der"
-  if private_key.fileExists and public_key.fileExists:
-    echo "Not going to replace existing restic TLS key: ", private_key
-    return
-  var hostname = param.getOrDefault "hostname"
-  if hostname.len == 0:
-    hostname = readFile("/etc/hostname").strip
-  var ext = "subjectAltName = "
-  let ip = param.getOrDefault "serverip"
-  if ip.len == 0:
-    ext &= "IP:" & ip
-  ext &= "DNS:" & hostname
-  echo "Creating ", public_key, " certificate with ", ext
-  createDir sslDir
-  # TODO restic user and group
-  setPermissions sslDir, 0, 0, 750
-  runCmd "openssl", "req", "-newkey", "rsa:2048", "-nodes", "-x509",
-         "-keyout", private_key, "-out", public_key, "-days", "1826",
-         "-addext", ext
-
 proc readRandom(buf: var openarray[byte]) =
   var rand = open("/dev/urandom")
   defer: close(rand)
@@ -95,9 +72,6 @@ proc htpassword(filename, user, password: string) =
       updatedConf.add line
   updatedConf.add userPass
   safeFileUpdate(filename, updatedConf.join("\n") & '\n')
-
-#proc cryptTest*(args: StrMap) =
-#  htpassword(".htpasswd", args.nonEmptyParam("username"), args.nonEmptyParam("pass"))
 
 const sshBackupService = """
 
@@ -157,8 +131,11 @@ proc createBackupUser(name, home: string): UserInfo =
     addSystemUser name, group, home
     return name.userInfo
 
+func mountUnitName(mount: string): string =
+  mount.strip(chars={'/'}).replace('/', '-') & ".mount" 
+
 proc onDemandMount(description, dev, mount: string): string =
-  result = mount.strip(chars={'/'}).replace('/', '-') & ".mount" 
+  result = mount.mountUnitName
   let unitFile = "/etc/systemd/system/" & result
   if dev == "":
     if unitFile.fileExists:
@@ -257,3 +234,51 @@ proc installBackupClient*(args: StrMap) =
     for line in lines("/root/.ssh/id_backup-service.pub"):
       echo line
     echo fmt"vi {sshConfig}"
+
+proc resticTLSCert(param: StrMap) =
+  let sslDir = "/etc/ssl/restic"
+  let private_key = sslDir & "/private.der"
+  let public_key = sslDir & "/public.der"
+  if private_key.fileExists and public_key.fileExists:
+    echo "Not going to replace existing restic TLS key: ", private_key
+    return
+  var hostname = param.getOrDefault "hostname"
+  if hostname.len == 0:
+    hostname = readFile("/etc/hostname").strip
+  var ext = "subjectAltName = "
+  let ip = param.getOrDefault "serverip"
+  if ip.len == 0:
+    ext &= "IP:" & ip
+  ext &= "DNS:" & hostname
+  echo "Creating ", public_key, " certificate with ", ext
+  createDir sslDir
+  # TODO restic user and group
+  setPermissions sslDir, 0, 0, 750
+  runCmd "openssl", "req", "-newkey", "rsa:2048", "-nodes", "-x509",
+         "-keyout", private_key, "-out", public_key, "-days", "1826",
+         "-addext", ext
+
+proc installRestic*(args: StrMap) =
+  let dev = args.getOrDefault "backup-dev"
+  downloadResticServer()
+  args.resticTLSCert
+  let mountUnit = backupMount dev
+  runCmd "systemctl", "daemon-reload"
+  # TODO create required system user(s) / group(s)
+  # TODO create systemd services
+
+proc resticUser*(args: StrMap) =
+  let resticDir = backupMountPoint / "restic" 
+  let mountUnit = backupMountPoint.mountUnitName
+  if not fileExists("/etc/systemd/system/" & mountUnit):
+    echo "Missing ", mountUnit, ", please run installRestic first"
+    quit 1
+  let user = args.nonEmptyParam("username")
+  stderr.write fmt"Restic user {user} password: "
+  let pass = stdin.readLine
+  runCmd "systemctl", "start", mountUnit
+  try:
+    createDir resticDir
+    htpassword(resticDir / ".htpasswd", user, pass)
+  finally:
+    runCmd "systemctl", "stop", mountUnit
