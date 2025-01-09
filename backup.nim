@@ -22,6 +22,7 @@ const backupMountPoint = "/media/backupstore"
 const rotateBackup = readResource("backup/rotate-backup.sh")
 const backupClient = readResource("backup/nbd-backup")
 const backupConf   = readResource("backup/nbd-backup.conf")
+const maxRuntime = "RuntimeMaxSec=12h"
 
 # XXX considering everything we should have two classes of backup clients
 #     1. server type, always online. these should continue to use the nbd-backup
@@ -155,9 +156,8 @@ proc backupNbdServer(mountUnit, name, group: string) =
   addService "backup-nbd-server@", "Backup NBD server for %i", [],
     "/bin/nbd-server -C /etc/nbd-server/%i.conf", serviceType="forking",
     flags={s_sandbox, s_private_dev, s_call_filter},
-    options=["ExecStartPre=/bin/rm -f '/media/backupstore/client/%i/active/nbd.socket'",
-             "User=%i", &"Group={group}", &"ReadWritePaths={backupMountPoint}/client/%i/active",
-             "RuntimeMaxSec=12h"],
+    options=["ExecStartPre=/bin/rm -f '/media/backupstore/client/%i/active/nbd.socket'", maxRuntime,
+             "User=%i", &"Group={group}", &"ReadWritePaths={backupMountPoint}/client/%i/active"],
     unitOptions=[&"RequiresMountsFor={backupMountPoint}",
                  &"BindsTo={mountUnit}", "StopWhenUnneeded=true"]
   writeFile fmt"/etc/nbd-server/{name}.conf", [nbdConfig(name)]
@@ -280,7 +280,7 @@ proc installResticServer*(args: StrMap) =
     " --htpasswd-file " & resticPassFile & tlsOpt & " --listen unix:/run/restic/socket",
     flags={s_sandbox, s_private_dev, s_call_filter, s_protect_home},
     options=["User=restic", "Group=restic", "ReadWritePaths=" & resticHome,
-             "UMask=027", "RuntimeMaxSec=12h", "RuntimeDirectory=/run/restic"],
+             "UMask=027", maxRuntime, "RuntimeDirectory=/run/restic"],
     unitOptions=[&"RequiresMountsFor={backupMountPoint}",
                  &"BindsTo={mountUnit}", "StopWhenUnneeded=true"]
   proxy "restic-proxy", ":444", "", "/run/restic/socket", "30s",
