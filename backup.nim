@@ -24,26 +24,6 @@ const backupClient = readResource("backup/nbd-backup")
 const backupConf   = readResource("backup/nbd-backup.conf")
 const maxRuntime = "RuntimeMaxSec=12h"
 
-# XXX considering everything we should have two classes of backup clients
-#     1. server type, always online. these should continue to use the nbd-backup
-#     2. desktop type, going to sleep, possibly unreliably wifi network.
-#        These should use restic package from distribution.
-#        The server needs to start restic server via systemd-socket-proxyd to start/stop it,
-#        binding it to mounting of the backup fs.
-#        Would be nice if sftp could be made to mount it.
-#        https://linuxize.com/post/how-to-set-up-sftp-chroot-jail/
-#        https://blog.christophetd.fr/how-to-properly-setup-sftp-with-chrooted-users/
-# 1. command to add restic server
-#    * download from github by version (github:downloadResticServer)
-#    * generate self-signed tls certificate (resticTLSCert)
-#    * secured systemd service         (services:addService)
-#      https://github.com/restic/rest-server/blob/master/examples/systemd/rest-server.service
-# 2. command to add user/passwd (htpasswd)
-# 3. command to add restic client
-
-# https://linuxize.com/post/how-to-set-up-sftp-chroot-jail/
-# https://blog.christophetd.fr/how-to-properly-setup-sftp-with-chrooted-users/
-
 proc readRandom(buf: var openarray[byte]) =
   var rand = open("/dev/urandom")
   defer: close(rand)
@@ -300,3 +280,5 @@ proc resticUser*(args: StrMap) =
   htpassword resticPassFile, username, pass
   setPermissions resticPassFile, resticUser, 600
 
+proc resticClient*(args: StrMap) =
+  echo "TODO"
