@@ -252,11 +252,11 @@ proc resticTLSCert(param: StrMap) =
   ext &= "DNS:" & hostname
   echo "Creating ", public_key, " certificate with ", ext
   createDir sslDir
-  # TODO restic user and group
-  setPermissions sslDir, 0, 0, 750
   runCmd "openssl", "req", "-newkey", "rsa:2048", "-nodes", "-x509",
          "-keyout", private_key, "-out", public_key, "-days", "1826",
          "-addext", ext
+
+const resticHome = backupMountPoint / "restic"
 
 proc installRestic*(args: StrMap) =
   let dev = args.getOrDefault "backup-dev"
@@ -264,21 +264,30 @@ proc installRestic*(args: StrMap) =
   args.resticTLSCert
   let mountUnit = backupMount dev
   runCmd "systemctl", "daemon-reload"
-  # TODO create required system user(s) / group(s)
+  addSystemUser "restic", "", resticHome
+  let restic = userInfo "restic"
+  setPermissions "/etc/ssl/restic", 0, restic.gid, 750
+  setPermissions "/etc/ssl/restic/private.der", restic, 400
+  setPermissions "/etc/ssl/restic/public.der", 0, restic.gid, 440
   # TODO create systemd services
 
 proc resticUser*(args: StrMap) =
-  let resticDir = backupMountPoint / "restic" 
   let mountUnit = backupMountPoint.mountUnitName
-  if not fileExists("/etc/systemd/system/" & mountUnit):
+  let resticUser = try: userInfo "restic"
+                   except: ("", "", 0, 0)
+  if resticUser.user.len == 0 or not fileExists("/etc/systemd/system/" & mountUnit):
     echo "Missing ", mountUnit, ", please run installRestic first"
     quit 1
-  let user = args.nonEmptyParam("username")
-  stderr.write fmt"Restic user {user} password: "
+  let username = args.nonEmptyParam("username")
+  stderr.write fmt"Restic user {username} password: "
   let pass = stdin.readLine
   runCmd "systemctl", "start", mountUnit
   try:
-    createDir resticDir
-    htpassword(resticDir / ".htpasswd", user, pass)
+    createDir resticHome
+    setPermissions resticHome, resticUser, 700
+    let passFile = resticHome / ".htpasswd"
+    htpassword passFile, username, pass
+    setPermissions passFile, resticUser, 600
   finally:
     runCmd "systemctl", "stop", mountUnit
+
