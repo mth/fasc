@@ -193,18 +193,21 @@ proc backupServer*(args: StrMap) =
   enableAndStart fmt"backup-nbd-proxy@{user.user}.socket"
   rotateBackupTimer mountUnit
 
+proc backupClientService(name, description, command: string) =
+  addService name, description, [], command,
+             options=["User=root", "PAMName=crond"],
+             unitOptions=["ConditionACPower=true"]
+  addTimer name, description & " periodically",
+           ["OnCalendar=*-*-02/4 05:05:05", "WakeSystem=true"]
+
 proc installBackupClient*(args: StrMap) =
   createDir "/media/backup-storage"
   writeFile "/usr/local/sbin/nbd-backup", [backupClient], permissions=0o750
   writeFile "/etc/backup/nbd-backup.conf", [backupConf]
   setPermissions "/etc/backup", 0, 0, 0o700
   addPackageUnless "nbd-client", "/usr/sbin/nbd-client"
-  addService "nbd-backup", "Start NBD backup client", [],
-             "/usr/local/sbin/nbd-backup sync-no-sleep",
-             options=["User=root", "PAMName=crond"],
-             unitOptions=["ConditionACPower=true"]
-  addTimer "nbd-backup", "Starts NBD backup client periodically",
-           ["OnCalendar=*-*-02/4 05:05:05", "WakeSystem=true"]
+  backupClientService "nbd-backup", "Start NBD backup client",
+                      "/usr/local/sbin/nbd-backup sync-no-sleep"
   let sshConfig = "/root/.ssh/config"
   if not sshConfig.fileContains("Host backup-service"):
     sshConfig.appendToFile sshBackupService, 0o600
@@ -255,7 +258,7 @@ proc installResticServer*(args: StrMap) =
     setPermissions resticHome, restic, 700
   finally:
     runCmd "systemctl", "stop", mountUnit
-  addService "restic", "Restic server", ["restic.socket"],
+  addService "restic-server", "Restic server", [],
     "/opt/restic/rest-server --private-repos --path " & resticHome &
     " --htpasswd-file " & resticPassFile & tlsOpt & " --listen unix:/run/restic/socket",
     flags={s_sandbox, s_private_dev, s_call_filter},
@@ -264,7 +267,7 @@ proc installResticServer*(args: StrMap) =
     unitOptions=[&"RequiresMountsFor={backupMountPoint}",
                  &"BindsTo={mountUnit}", "StopWhenUnneeded=true"]
   proxy "restic-proxy", ":444", "", "/run/restic/socket", "30s",
-        "restic.service", "Restic server proxy"
+        "restic-server.service", "Restic server proxy"
   enableAndStart "restic-proxy.socket"
 
 proc resticUser*(args: StrMap) =
@@ -284,5 +287,11 @@ proc resticClient*(args: StrMap) =
   var server = args.nonEmptyParam "rest-server"
   if ':' notin server:
     server &= ":444"
-  let tlsCert = server.fetchTLSCerts[0]
-  echo tlsCert
+  let server_pem = "/etc/ssl/restic-server.pem"
+  if not server_pem.fileExists:
+    writeFileSynced server_pem, server.fetchTLSCerts[0]
+  addPackageUnless "restic", "/usr/bin/restic"
+  # TODO real backup command and configuration
+  backupClientService "restic", "Start restic client",
+                      "/usr/bin/restic backup"
+

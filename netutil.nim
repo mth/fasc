@@ -49,9 +49,7 @@ when defined(arm64):
 
 proc githubDownload(repository, target: string; nameFunc: proc(version: string): string) =
   let baseUrl = "https://github.com/" & repository
-  if not fileExists("/usr/bin/wget"):
-    packagesToInstall.add "wget"
-    commitQueue()
+  addPackageUnless "wget", "/usr/bin/wget", true
   let version = baseUrl.lastVersion
   let tarname = nameFunc(version[1..^1])
   let fromURL = baseUrl & "/releases/download/" & version & '/' & tarname

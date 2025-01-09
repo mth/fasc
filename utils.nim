@@ -89,10 +89,6 @@ func groupId*(group: string): int =
     return -1
   return description.gr_gid.int
 
-proc addPackageUnless*(packageName, requiredPath: string) =
-  if not requiredPath.fileExists:
-    packagesToInstall.add packageName
-
 proc readSymlink*(symlink: string): string =
   try:
     return expandSymlink(symlink)
@@ -273,6 +269,12 @@ proc commitQueue*() =
     runCmd("systemctl", "start" & units)
     startUnits.reset
   sync()
+
+proc addPackageUnless*(packageName, requiredPath: string, commit = false) =
+  if not requiredPath.fileExists:
+    packagesToInstall.add packageName
+    if commit:
+      commitQueue()
 
 proc userInfo(pw: ptr Passwd, name: string): UserInfo =
   if pw == nil:
