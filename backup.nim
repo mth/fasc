@@ -288,7 +288,7 @@ proc resticUser*(args: StrMap) =
     quit 1
   let username = args.nonEmptyParam("backup-user")
   htpassword resticPassFile, username, resticPass(args, username)
-  setPermissions resticPassFile, resticUser, 600
+  setPermissions resticPassFile, resticUser, 0o600
 
 proc resticClient*(args: StrMap) =
   var server = args.nonEmptyParam "rest-server"
