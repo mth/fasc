@@ -121,11 +121,12 @@ proc sshChrootUser(user: string) =
   if appendMissing("/etc/ssh/sshd_config", "Include " & confFile):
     runCmd "systemctl", "reload", "sshd"
 
-proc createBackupUser(name, home: string): UserInfo =
+proc createBackupUser(name, home: string; nbd = true): UserInfo =
   try:
     return name.userInfo # already exists
   except KeyError:
-    let nbdGid = groupId("nbd")
+    let nbdGid = if nbd: groupId("nbd")
+                 else: -1
     let group = if nbdGid != -1: $nbdGid
                 else: ""
     addSystemUser name, group, home
@@ -245,11 +246,11 @@ proc resticTLSCert(param: StrMap) =
   var hostname = param.getOrDefault "hostname"
   if hostname.len == 0:
     hostname = readFile("/etc/hostname").strip
-  var ext = "subjectAltName = "
+  var ext = "subjectAltName ="
   let ip = param.getOrDefault "serverip"
-  if ip.len == 0:
-    ext &= "IP:" & ip
-  ext &= "DNS:" & hostname
+  if ip.len != 0:
+    ext &= " IP:" & ip
+  ext &= " DNS:" & hostname
   echo "Creating ", public_key, " certificate with ", ext
   createDir sslDir
   runCmd "openssl", "req", "-newkey", "rsa:2048", "-nodes", "-x509",
@@ -258,14 +259,13 @@ proc resticTLSCert(param: StrMap) =
 
 const resticHome = backupMountPoint / "restic"
 
-proc installRestic*(args: StrMap) =
+proc installResticServer*(args: StrMap) =
   let dev = args.getOrDefault "backup-dev"
   downloadResticServer()
   args.resticTLSCert
   let mountUnit = backupMount dev
   runCmd "systemctl", "daemon-reload"
-  addSystemUser "restic", "", resticHome
-  let restic = userInfo "restic"
+  let restic = createBackupUser("restic", resticHome, false)
   setPermissions "/etc/ssl/restic", 0, restic.gid, 750
   setPermissions "/etc/ssl/restic/private.der", restic, 400
   setPermissions "/etc/ssl/restic/public.der", 0, restic.gid, 440
@@ -276,9 +276,9 @@ proc resticUser*(args: StrMap) =
   let resticUser = try: userInfo "restic"
                    except: ("", "", 0, 0)
   if resticUser.user.len == 0 or not fileExists("/etc/systemd/system/" & mountUnit):
-    echo "Missing ", mountUnit, ", please run installRestic first"
+    echo "Missing restic, please run restic-server first"
     quit 1
-  let username = args.nonEmptyParam("username")
+  let username = args.nonEmptyParam("backup-user")
   stderr.write fmt"Restic user {username} password: "
   let pass = stdin.readLine
   runCmd "systemctl", "start", mountUnit
