@@ -278,7 +278,7 @@ proc installResticServer*(args: StrMap) =
   addService "restic", "Restic server", ["restic.socket"],
     "/opt/restic/rest-server --private-repos --path " & resticHome &
     " --htpasswd-file " & resticPassFile & tlsOpt & " --listen unix:/run/restic/socket",
-    flags={s_sandbox, s_private_dev, s_call_filter, s_protect_home},
+    flags={s_sandbox, s_private_dev, s_call_filter},
     options=["User=restic", "Group=restic", "ReadWritePaths=" & resticHome,
              "UMask=027", maxRuntime, "RuntimeDirectory=/run/restic"],
     unitOptions=[&"RequiresMountsFor={backupMountPoint}",

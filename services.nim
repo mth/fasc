@@ -23,7 +23,6 @@ type ServiceFlags* = enum
   s_sandbox,
   s_private_all,
   s_private_dev,
-  s_protect_home,
   s_allow_netlink,
   s_call_filter,
   s_overwrite
@@ -54,6 +53,7 @@ proc properties(flags: set[ServiceFlags]): seq[(string, string)] =
     result &= [
       ("ProtectSystem=", "strict"),
       ("PrivateTmp=", "true"),
+      ("ProtectHome=", "yes"),
       ("ProtectControlGroups=", "yes"),
       ("ProtectKernelLogs=", "true"),
       ("ProtectKernelModules=", "yes"),
@@ -77,8 +77,6 @@ proc properties(flags: set[ServiceFlags]): seq[(string, string)] =
     result &= ("PrivateNetwork=", "yes")
   if s_private_dev in flags or s_private_all in flags:
     result &= ("PrivateDevices=", "true")
-  if s_protect_home in flags:
-    result &= ("ProtectHome=", "yes")
   if s_call_filter in flags:
     result &= [
       ("SystemCallArchitectures=", "native"),
