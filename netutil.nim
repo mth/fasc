@@ -1,12 +1,17 @@
 import std/[sequtils, strformat, strutils, os]
 import utils
 
-proc fetchTLSCerts(host: string): string =
+proc fetchTLSCerts(host: string): seq[string] =
+  var in_cert = false
   for line in outputOfCommand("", "openssl", "s_client", "-showcerts", "-connect", host):
-    return ""
-
-#-----BEGIN CERTIFICATE-----
-#-----END CERTIFICATE-----
+    if line == "-----BEGIN CERTIFICATE-----":
+      result.add (line & '\n')
+      in_cert = true
+    elif in_cert:
+      result[^1] &= line
+      result[^1] &= '\n'
+      if line == "-----END CERTIFICATE-----":
+        in_cert = false
 
 iterator getReleaseTags(baseURL: string): string =
   for line in outputOfCommand("", "/usr/bin/wget", "-qO", "-",
