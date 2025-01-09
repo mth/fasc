@@ -175,14 +175,14 @@ proc proxy*(proxy, listen, bindTo, connectTo, exitIdleTime, targetService: strin
   if socketParam.len > 3:
     socket &= fmt"SocketMode={socketParam[3]}"
   var options = @["PrivateTmp=yes"]
+  var flags = {s_sandbox, s_private_dev, s_call_filter, s_overwrite}
   if listen.startsWith("/") and connectTo.startsWith("/"):
-    options.add "PrivateNetwork=yes"
+    flags.incl s_private_all
   let requires = if targetService != "": @[targetService, socketName]
                  else: @[socketName]
   addService(socketParam[0], descriptionStr, requires,
     "/usr/lib/systemd/systemd-socket-proxyd --exit-idle-time=" &
-    exitIdleTime & ' ' & connectTo, "",
-    {s_sandbox, s_private_dev, s_call_filter, s_overwrite}, options)
+    exitIdleTime & ' ' & connectTo, "", flags, options)
   socketUnit socketName, descriptionStr, listen, socket
 
 proc socketProxy*(args: StrMap) =
