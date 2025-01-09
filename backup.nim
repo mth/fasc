@@ -277,14 +277,14 @@ proc installResticServer*(args: StrMap) =
     runCmd "systemctl", "stop", mountUnit
   addService "restic", "Restic server", ["restic.socket"],
     "/opt/restic/rest-server --private-repos --path " & resticHome &
-    " --htpasswd-file " & resticPassFile & tlsOpt,
-    flags={s_sandbox, s_private_all, s_call_filter},
-    options=["ExecStartPre=/bin/rm -f '/media/backupstore/client/%i/active/nbd.socket'",
-             "User=restic", "Group=restic", &"ReadWritePaths={resticHome}",
-             "UMask=027", "RuntimeMaxSec=12h"],
+    " --htpasswd-file " & resticPassFile & tlsOpt & " --listen unix:/run/restic/socket",
+    flags={s_sandbox, s_private_dev, s_call_filter, s_protect_home},
+    options=["User=restic", "Group=restic", "ReadWritePaths=" & resticHome,
+             "UMask=027", "RuntimeMaxSec=12h", "RuntimeDirectory=/run/restic"],
     unitOptions=[&"RequiresMountsFor={backupMountPoint}",
                  &"BindsTo={mountUnit}", "StopWhenUnneeded=true"]
-  # TODO create systemd services
+  proxy fmt"restic-proxy", ":444", "", "/run/restic/socket", "30s",
+        "restic.service", "Restic server proxy"
   # TODO create necessary configuration
 
 proc resticUser*(args: StrMap) =
