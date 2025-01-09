@@ -16,7 +16,7 @@
 # along with FASC. If not, see <https://www.gnu.org/licenses/>.
 
 import std/[base64, strformat, strutils, os, tables]
-import services, utils, github
+import services, utils, netutil
 
 const backupMountPoint = "/media/backupstore"
 const rotateBackup = readResource("backup/rotate-backup.sh")

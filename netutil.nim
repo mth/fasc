@@ -1,6 +1,13 @@
 import std/[sequtils, strformat, strutils, os]
 import utils
 
+proc fetchTLSCerts(host: string): string =
+  for line in outputOfCommand("", "openssl", "s_client", "-showcerts", "-connect", host):
+    return ""
+
+#-----BEGIN CERTIFICATE-----
+#-----END CERTIFICATE-----
+
 iterator getReleaseTags(baseURL: string): string =
   for line in outputOfCommand("", "/usr/bin/wget", "-qO", "-",
                 baseURL & ".git/info/refs?service=git-upload-pack"):
