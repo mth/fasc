@@ -242,9 +242,9 @@ proc resticTLSCert(param: StrMap, restic: UserInfo): string =
     runCmd "openssl", "req", "-newkey", "rsa:2048", "-nodes", "-x509",
            "-keyout", private_key, "-out", public_key, "-days", "1826",
            "-addext", ext
-    setPermissions sslDir, 0, restic.gid, 750
-    setPermissions private_key, restic, 400
-    setPermissions public_key, 0, restic.gid, 440
+    setPermissions sslDir, 0, restic.gid, 0o750
+    setPermissions private_key, restic, 0o400
+    setPermissions public_key, 0, restic.gid, 0o440
   return fmt" --tls --tls-cert {public_key} --tls-key {private_key}"
 
 const resticHome = backupMountPoint / "restic"
