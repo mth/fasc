@@ -19,9 +19,10 @@ import std/[base64, strformat, strutils, os, tables]
 import services, utils, netutil
 
 const backupMountPoint = "/media/backupstore"
-const rotateBackup = readResource("backup/rotate-backup.sh")
-const backupClient = readResource("backup/nbd-backup")
-const backupConf   = readResource("backup/nbd-backup.conf")
+const rotateBackup  = readResource("backup/rotate-backup.sh")
+const backupClient  = readResource("backup/nbd-backup")
+const backupConf    = readResource("backup/nbd-backup.conf")
+const resticWrapper = readResource("backup/restic.sh")
 const maxRuntime = "RuntimeMaxSec=12h"
 const resticPort = ":448"
 
@@ -297,18 +298,12 @@ proc resticClient*(args: StrMap) =
   let server_pem = "/etc/ssl/restic-server.pem"
   if not server_pem.fileExists:
     writeFileSynced server_pem, server.fetchTLSCerts[0]
+  const wrapperFile = "/usr/local/sbin/restic"
+  if not wrapperFile.fileExists:
+    let pass = args.resticPass username
+    let wrapper = resticWrapper.multiReplace(("{REPOSITORY}", &"rest:https://{server}"),
+                                  ("{REST_USERNAME}", username), ("{REST_PASSWORD}", pass))
+    writeFile wrapperFile, [wrapper], permissions=0o755
   addPackageUnless "restic", "/usr/bin/restic"
-  let pass = args.resticPass username
-  # TODO write the restic wrapper script
-  # RESTIC_REPOSITORY=rest:https://{server}/
-  # RESTIC_REST_USERNAME=
-  # RESTIC_REST_PASSWORD=
-  # export RESTIC_REPOSITORY RESTIC_REST_USERNAME RESTIC_REST_PASSWORD
-  # --cacert /etc/ssl/restic-server.pem
-  # backup-and-forget is alias for
-  # backup
-  # forget --keep-within-weekly 1m --keep-monthly 3
-  # prune
-  backupClientService "restic", "Start restic client",
-                      "/usr/local/sbin/restic backup-and-forget"
+  backupClientService "restic", "Start restic client", wrapperFile & " backup-and-forget"
 
