@@ -5,6 +5,7 @@ set -e
 RESTIC_REPOSITORY={REPOSITORY}
 RESTIC_REST_USERNAME={REST_USERNAME}
 RESTIC_REST_PASSWORD={REST_PASSWORD}
+BACKUP_DIRS="/etc /root /var /home /usr/local"
 
 case "$1" in
 	backup-and-forget-no-sleep)
@@ -15,7 +16,7 @@ case "$1" in
 		exec systemd-inhibit --what=idle:sleep:handle-lid-switch:handle-suspend-key:handle-hibernate-key \
 			--who=restic-backup "--why=Active backup" "$0" backup-and-forget;;
 	backup-and-forget)
-		"$0" backup
+		"$0" -v backup --one-file-system $BACKUP_DIRS --exclude nobackup
 		"$0" forget --keep-within-weekly 1m --keep-monthly 3
 		exec "$0" prune;;
 esac
