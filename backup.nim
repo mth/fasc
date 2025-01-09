@@ -285,6 +285,7 @@ proc installResticServer*(args: StrMap) =
                  &"BindsTo={mountUnit}", "StopWhenUnneeded=true"]
   proxy "restic-proxy", ":444", "", "/run/restic/socket", "30s",
         "restic.service", "Restic server proxy"
+  enableAndStart "restic-proxy.socket"
 
 proc resticUser*(args: StrMap) =
   let resticUser = try: userInfo "restic"
