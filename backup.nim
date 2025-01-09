@@ -283,9 +283,8 @@ proc installResticServer*(args: StrMap) =
              "UMask=027", "RuntimeMaxSec=12h", "RuntimeDirectory=/run/restic"],
     unitOptions=[&"RequiresMountsFor={backupMountPoint}",
                  &"BindsTo={mountUnit}", "StopWhenUnneeded=true"]
-  proxy fmt"restic-proxy", ":444", "", "/run/restic/socket", "30s",
+  proxy "restic-proxy", ":444", "", "/run/restic/socket", "30s",
         "restic.service", "Restic server proxy"
-  # TODO create necessary configuration
 
 proc resticUser*(args: StrMap) =
   let resticUser = try: userInfo "restic"
