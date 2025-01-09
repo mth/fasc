@@ -218,6 +218,11 @@ proc installBackupClient*(args: StrMap) =
       echo line
     echo fmt"vi {sshConfig}"
 
+proc getHostName(param: StrMap, key: string): string =
+  result = param.getOrDefault key
+  if result.len == 0:
+    return readFile("/etc/hostname").strip
+
 proc resticTLSCert(param: StrMap, restic: UserInfo): string =
   const sslDir = "/etc/ssl/restic"
   const private_key = sslDir & "/private.der"
@@ -225,9 +230,7 @@ proc resticTLSCert(param: StrMap, restic: UserInfo): string =
   if private_key.fileExists and public_key.fileExists:
     echo "Not going to replace existing restic TLS key: ", private_key
   else:
-    var hostname = param.getOrDefault "hostname"
-    if hostname.len == 0:
-      hostname = readFile("/etc/hostname").strip
+    let hostname = param.getHostName "hostname"
     var ext = "subjectAltName ="
     let ip = param.getOrDefault "serverip"
     if ip.len != 0:
@@ -271,6 +274,10 @@ proc installResticServer*(args: StrMap) =
         "restic-server.service", "Restic server proxy"
   enableAndStart "restic-proxy.socket"
 
+proc resticPass(args: StrMap, username: string): string =
+  stderr.write fmt"Restic user {username} password: "
+  return stdin.readLine
+
 proc resticUser*(args: StrMap) =
   let resticUser = try: userInfo "restic"
                    except: ("", "", 0, 0)
@@ -279,22 +286,19 @@ proc resticUser*(args: StrMap) =
     echo "Missing restic, please run restic-server first"
     quit 1
   let username = args.nonEmptyParam("backup-user")
-  stderr.write fmt"Restic user {username} password: "
-  let pass = stdin.readLine
-  htpassword resticPassFile, username, pass
+  htpassword resticPassFile, username, resticPass(args, username)
   setPermissions resticPassFile, resticUser, 600
 
 proc resticClient*(args: StrMap) =
   var server = args.nonEmptyParam "rest-server"
-  let username = args.nonEmptyParam("backup-user")
+  let username = args.getHostName "backup-user"
   if ':' notin server:
     server &= resticPort
   let server_pem = "/etc/ssl/restic-server.pem"
   if not server_pem.fileExists:
     writeFileSynced server_pem, server.fetchTLSCerts[0]
   addPackageUnless "restic", "/usr/bin/restic"
-  stderr.write fmt"Restic user {username} password: "
-  let pass = stdin.readLine
+  let pass = args.resticPass username
   # TODO write the restic wrapper script
   # RESTIC_REPOSITORY=rest:https://{server}/
   # RESTIC_REST_USERNAME=
