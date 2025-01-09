@@ -34,8 +34,6 @@ const backupConf   = readResource("backup/nbd-backup.conf")
 #        https://blog.christophetd.fr/how-to-properly-setup-sftp-with-chrooted-users/
 # 1. command to add restic server
 #    * download from github by version (github:downloadResticServer)
-#    * fs automount                    (system:autoMount)
-#    * hddparm suspend (if sdX)        (system:hdparmForDevs)
 #    * generate self-signed tls certificate (resticTLSCert)
 #    * secured systemd service         (services:addService)
 #      https://github.com/restic/rest-server/blob/master/examples/systemd/rest-server.service
@@ -269,25 +267,25 @@ proc installResticServer*(args: StrMap) =
   setPermissions "/etc/ssl/restic", 0, restic.gid, 750
   setPermissions "/etc/ssl/restic/private.der", restic, 400
   setPermissions "/etc/ssl/restic/public.der", 0, restic.gid, 440
+  runCmd "systemctl", "start", mountUnit
+  try:
+    createDir resticHome
+    setPermissions resticHome, restic, 700
+  finally:
+    runCmd "systemctl", "stop", mountUnit
   # TODO create systemd services
 
 proc resticUser*(args: StrMap) =
-  let mountUnit = backupMountPoint.mountUnitName
   let resticUser = try: userInfo "restic"
                    except: ("", "", 0, 0)
-  if resticUser.user.len == 0 or not fileExists("/etc/systemd/system/" & mountUnit):
+  if resticUser.user.len == 0 or
+     not fileExists("/etc/systemd/system/" & backupMountPoint.mountUnitName):
     echo "Missing restic, please run restic-server first"
     quit 1
   let username = args.nonEmptyParam("backup-user")
   stderr.write fmt"Restic user {username} password: "
   let pass = stdin.readLine
-  runCmd "systemctl", "start", mountUnit
-  try:
-    createDir resticHome
-    setPermissions resticHome, resticUser, 700
-    let passFile = resticHome / ".htpasswd"
-    htpassword passFile, username, pass
-    setPermissions passFile, resticUser, 600
-  finally:
-    runCmd "systemctl", "stop", mountUnit
+  const passFile = "/etc/ssl/restic/rpasswd"
+  htpassword passFile, username, pass
+  setPermissions passFile, resticUser, 600
 
