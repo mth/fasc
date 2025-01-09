@@ -7,7 +7,7 @@ proc fetchTLSCerts*(url: string): seq[string] =
   let host = if url.startsWith "https://": url[8..^1].split('/')[0]
              else: url
   var in_cert = false
-  for line in outputOfCommand("", true, "openssl", @["s_client", "-showcerts", "-connect", host]):
+  for line in outputOfCommand("", true, "openssl", ["s_client", "-showcerts", "-connect", host]):
     if line == "-----BEGIN CERTIFICATE-----":
       result.add(line & '\n')
       in_cert = true
