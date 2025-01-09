@@ -281,4 +281,8 @@ proc resticUser*(args: StrMap) =
   setPermissions resticPassFile, resticUser, 600
 
 proc resticClient*(args: StrMap) =
-  echo "TODO"
+  var server = args.nonEmptyParam "rest-server"
+  if ':' notin server:
+    server &= ":444"
+  let tlsCert = server.fetchTLSCerts[0]
+  echo tlsCert

@@ -205,11 +205,11 @@ proc runCmd*(user: UserInfo, exitOnError: bool, command: string, args: varargs[s
       @["-qPGp", "User=" & $user.uid, "--working-directory=" & user.home,
         "--wait", "--service-type=exec", command] & @args)
 
-proc outputOfCommand*(inputString, command: string;
-                      args: varargs[string]): seq[string] =
+proc outputOfCommand*(inputString: string; hasInput: bool;
+                      command: string; args: openarray[string]): seq[string] =
   let process = startProcess(command, args = args,
                              options = {poStdErrToStdOut, poUsePath})
-  if inputString.len > 0:
+  if hasInput:
     let input = process.inputStream
     input.write inputString
     input.flush
@@ -224,6 +224,9 @@ proc outputOfCommand*(inputString, command: string;
     echo result.join("\n")
     quit 1
   process.close
+
+proc outputOfCommand*(inputString, command: string; args: varargs[string]): seq[string] =
+  outputOfCommand(inputString, inputString.len > 0, command, args)
 
 proc aptInstallNow*(packages: varargs[string]) =
   packagesToInstall.add packages
