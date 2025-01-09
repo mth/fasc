@@ -23,6 +23,7 @@ const rotateBackup = readResource("backup/rotate-backup.sh")
 const backupClient = readResource("backup/nbd-backup")
 const backupConf   = readResource("backup/nbd-backup.conf")
 const maxRuntime = "RuntimeMaxSec=12h"
+const resticPort = ":448"
 
 proc readRandom(buf: var openarray[byte]) =
   var rand = open("/dev/urandom")
@@ -266,7 +267,7 @@ proc installResticServer*(args: StrMap) =
              "UMask=027", maxRuntime, "RuntimeDirectory=/run/restic"],
     unitOptions=[&"RequiresMountsFor={backupMountPoint}",
                  &"BindsTo={mountUnit}", "StopWhenUnneeded=true"]
-  proxy "restic-proxy", ":444", "", "/run/restic/socket", "30s",
+  proxy "restic-proxy", resticPort, "", "/run/restic/socket", "30s",
         "restic-server.service", "Restic server proxy"
   enableAndStart "restic-proxy.socket"
 
@@ -285,13 +286,25 @@ proc resticUser*(args: StrMap) =
 
 proc resticClient*(args: StrMap) =
   var server = args.nonEmptyParam "rest-server"
+  let username = args.nonEmptyParam("backup-user")
   if ':' notin server:
-    server &= ":444"
+    server &= resticPort
   let server_pem = "/etc/ssl/restic-server.pem"
   if not server_pem.fileExists:
     writeFileSynced server_pem, server.fetchTLSCerts[0]
   addPackageUnless "restic", "/usr/bin/restic"
-  # TODO real backup command and configuration
+  stderr.write fmt"Restic user {username} password: "
+  let pass = stdin.readLine
+  # TODO write the restic wrapper script
+  # RESTIC_REPOSITORY=rest:https://{server}/
+  # RESTIC_REST_USERNAME=
+  # RESTIC_REST_PASSWORD=
+  # export RESTIC_REPOSITORY RESTIC_REST_USERNAME RESTIC_REST_PASSWORD
+  # --cacert /etc/ssl/restic-server.pem
+  # backup-and-forget is alias for
+  # backup
+  # forget --keep-within-weekly 1m --keep-monthly 3
+  # prune
   backupClientService "restic", "Start restic client",
-                      "/usr/bin/restic backup"
+                      "/usr/local/sbin/restic backup-and-forget"
 
