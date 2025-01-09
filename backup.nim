@@ -234,37 +234,39 @@ proc installBackupClient*(args: StrMap) =
       echo line
     echo fmt"vi {sshConfig}"
 
-proc resticTLSCert(param: StrMap, restic: UserInfo) =
-  let sslDir = "/etc/ssl/restic"
-  let private_key = sslDir & "/private.der"
-  let public_key = sslDir & "/public.der"
+proc resticTLSCert(param: StrMap, restic: UserInfo): string =
+  const sslDir = "/etc/ssl/restic"
+  const private_key = sslDir & "/private.der"
+  const public_key = sslDir & "/public.der"
   if private_key.fileExists and public_key.fileExists:
     echo "Not going to replace existing restic TLS key: ", private_key
-    return
-  var hostname = param.getOrDefault "hostname"
-  if hostname.len == 0:
-    hostname = readFile("/etc/hostname").strip
-  var ext = "subjectAltName ="
-  let ip = param.getOrDefault "serverip"
-  if ip.len != 0:
-    ext &= " IP:" & ip
-  ext &= " DNS:" & hostname
-  echo "Creating ", public_key, " certificate with ", ext
-  createDir sslDir
-  runCmd "openssl", "req", "-newkey", "rsa:2048", "-nodes", "-x509",
-         "-keyout", private_key, "-out", public_key, "-days", "1826",
-         "-addext", ext
-  setPermissions sslDir, 0, restic.gid, 750
-  setPermissions private_key, restic, 400
-  setPermissions public_key, 0, restic.gid, 440
+  else:
+    var hostname = param.getOrDefault "hostname"
+    if hostname.len == 0:
+      hostname = readFile("/etc/hostname").strip
+    var ext = "subjectAltName ="
+    let ip = param.getOrDefault "serverip"
+    if ip.len != 0:
+      ext &= " IP:" & ip
+    ext &= " DNS:" & hostname
+    echo "Creating ", public_key, " certificate with ", ext
+    createDir sslDir
+    runCmd "openssl", "req", "-newkey", "rsa:2048", "-nodes", "-x509",
+           "-keyout", private_key, "-out", public_key, "-days", "1826",
+           "-addext", ext
+    setPermissions sslDir, 0, restic.gid, 750
+    setPermissions private_key, restic, 400
+    setPermissions public_key, 0, restic.gid, 440
+  return fmt" --tls --tls-cert {public_key} --tls-key {private_key}"
 
 const resticHome = backupMountPoint / "restic"
+const resticPassFile = "/etc/ssl/restic/rpasswd"
 
 proc installResticServer*(args: StrMap) =
   let restic = createBackupUser("restic", resticHome, false)
   let dev = args.getOrDefault "backup-dev"
   downloadResticServer restic
-  args.resticTLSCert restic
+  let tlsOpt = args.resticTLSCert restic
   let mountUnit = backupMount dev
   runCmd "systemctl", "daemon-reload"
   runCmd "systemctl", "start", mountUnit
@@ -273,7 +275,17 @@ proc installResticServer*(args: StrMap) =
     setPermissions resticHome, restic, 700
   finally:
     runCmd "systemctl", "stop", mountUnit
+  addService "restic", "Restic server", ["restic.socket"],
+    "/opt/restic/rest-server --private-repos --path " & resticHome &
+    " --htpasswd-file " & resticPassFile & tlsOpt,
+    flags={s_sandbox, s_private_all, s_call_filter},
+    options=["ExecStartPre=/bin/rm -f '/media/backupstore/client/%i/active/nbd.socket'",
+             "User=restic", "Group=restic", &"ReadWritePaths={resticHome}",
+             "UMask=027", "RuntimeMaxSec=12h"],
+    unitOptions=[&"RequiresMountsFor={backupMountPoint}",
+                 &"BindsTo={mountUnit}", "StopWhenUnneeded=true"]
   # TODO create systemd services
+  # TODO create necessary configuration
 
 proc resticUser*(args: StrMap) =
   let resticUser = try: userInfo "restic"
@@ -285,7 +297,6 @@ proc resticUser*(args: StrMap) =
   let username = args.nonEmptyParam("backup-user")
   stderr.write fmt"Restic user {username} password: "
   let pass = stdin.readLine
-  const passFile = "/etc/ssl/restic/rpasswd"
-  htpassword passFile, username, pass
-  setPermissions passFile, resticUser, 600
+  htpassword resticPassFile, username, pass
+  setPermissions resticPassFile, resticUser, 600
 

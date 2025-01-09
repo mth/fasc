@@ -21,6 +21,7 @@ import utils
 type ServiceFlags* = enum
   s_no_new_priv,
   s_sandbox,
+  s_private_all,
   s_private_dev,
   s_allow_netlink,
   s_call_filter,
@@ -46,6 +47,7 @@ proc properties(flags: set[ServiceFlags]): seq[(string, string)] =
       ("MemoryDenyWriteExecute=", "true"),
       ("NoNewPrivileges=", "yes"),
       ("SecureBits=", "nonroot-locked"),
+      ("LockPersonality=", "true"),
     ]
   if s_sandbox in flags:
     result &= [
@@ -56,14 +58,27 @@ proc properties(flags: set[ServiceFlags]): seq[(string, string)] =
       ("ProtectKernelModules=", "yes"),
       ("ProtectKernelTunables=", "yes"),
       ("ProtectProc=", "invisible"),
+      ("ProtectClock=", "yes"),
+      ("ProtectHostname=", "yes"),
+      ("RemoveIPC=", "yes"),
       ("RestrictNamespaces=", "yes"),
+      ("RestrictRealtime=", "yes"),
+      ("RestrictSUIDSGID=", "yes"),
       ("RestrictRealtime=", "yes"),
       ("RestrictAddressFamilies=", "AF_INET AF_INET6 AF_UNIX"),
     ]
-    if s_allow_netlink in flags:
+    if s_private_all in flags:
+      result[0] = ("CapabilityBoundingSet=", "")
+      result[^1][1] = "none"
+    elif s_allow_netlink in flags:
       result[^1][1] &= " AF_NETLINK"
-    if s_private_dev in flags:
-      result &= ("PrivateDevices=", "true")
+  if s_private_all in flags:
+    result &= [
+      ("PrivateNetwork=", "yes"),
+      ("ProtectHome=", "yes"),
+    ]
+  if s_private_dev in flags or s_private_all in flags:
+    result &= ("PrivateDevices=", "true")
   if s_call_filter in flags:
     result &= [
       ("SystemCallArchitectures=", "native"),
