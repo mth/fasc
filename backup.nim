@@ -306,4 +306,5 @@ proc resticClient*(args: StrMap) =
     writeFile wrapperFile, [wrapper], permissions=0o755
   addPackageUnless "restic", "/usr/bin/restic"
   backupClientService "restic", "Start restic client", wrapperFile & " backup-and-forget"
-
+  commitQueue()
+  echo "If the restic repository didn't already exist, run restic init"
