@@ -234,7 +234,7 @@ proc installBackupClient*(args: StrMap) =
       echo line
     echo fmt"vi {sshConfig}"
 
-proc resticTLSCert(param: StrMap) =
+proc resticTLSCert(param: StrMap, restic: UserInfo) =
   let sslDir = "/etc/ssl/restic"
   let private_key = sslDir & "/private.der"
   let public_key = sslDir & "/public.der"
@@ -254,19 +254,19 @@ proc resticTLSCert(param: StrMap) =
   runCmd "openssl", "req", "-newkey", "rsa:2048", "-nodes", "-x509",
          "-keyout", private_key, "-out", public_key, "-days", "1826",
          "-addext", ext
+  setPermissions sslDir, 0, restic.gid, 750
+  setPermissions private_key, restic, 400
+  setPermissions public_key, 0, restic.gid, 440
 
 const resticHome = backupMountPoint / "restic"
 
 proc installResticServer*(args: StrMap) =
+  let restic = createBackupUser("restic", resticHome, false)
   let dev = args.getOrDefault "backup-dev"
-  downloadResticServer()
-  args.resticTLSCert
+  downloadResticServer restic
+  args.resticTLSCert restic
   let mountUnit = backupMount dev
   runCmd "systemctl", "daemon-reload"
-  let restic = createBackupUser("restic", resticHome, false)
-  setPermissions "/etc/ssl/restic", 0, restic.gid, 750
-  setPermissions "/etc/ssl/restic/private.der", restic, 400
-  setPermissions "/etc/ssl/restic/public.der", 0, restic.gid, 440
   runCmd "systemctl", "start", mountUnit
   try:
     createDir resticHome

@@ -63,7 +63,7 @@ proc githubExtract(repository, tmpFile, inTar, target: string, nameFunc: proc(ve
 func resticServerTarGz(version: string): string =
   fmt"rest-server_{version}_linux_{ARCH}.tar.gz"
 
-proc downloadResticServer*() =
+proc downloadResticServer*(user: UserInfo) =
   let filename = "rest-server"
   let destDir = "/opt/restic" 
   let destFile = destDir / filename
@@ -75,6 +75,6 @@ proc downloadResticServer*() =
                 tarDir / filename, destDir, resticServerTarGz
   moveFile destDir / tarDir / filename, destFile
   removeDir destDir / tarDir
-  setPermissions destDir / filename, 0, 0, 0o750
+  setPermissions destDir, 0, user.gid, 0o750
+  setPermissions destDir / filename, 0, user.gid, 0o650
 
-# downloadResticServer()
