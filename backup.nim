@@ -295,16 +295,19 @@ proc resticClient*(args: StrMap) =
   let username = args.getHostName "backup-user"
   if ':' notin server:
     server &= resticPort
-  let server_pem = "/etc/ssl/restic-server.pem"
+  let server_pem = "/etc/backup/restic-server.pem"
   if not server_pem.fileExists:
-    writeFileSynced server_pem, server.fetchTLSCerts[0]
+    writeFile server_pem, [server.fetchTLSCerts[0]]
   const wrapperFile = "/usr/local/sbin/restic"
   if not wrapperFile.fileExists:
-    let pass = args.resticPass username
+    # generates random password for server, that can be used to add user to the server
+    var pass: array[0..12, byte]
+    readRandom pass
     let wrapper = resticWrapper.multiReplace(("{REPOSITORY}", &"rest:https://{server}"),
-                                  ("{REST_USERNAME}", username), ("{REST_PASSWORD}", pass))
+                                  ("{REST_USERNAME}", username), ("{REST_PASSWORD}", pass.encode))
     writeFile wrapperFile, [wrapper], permissions=0o755
   addPackageUnless "restic", "/usr/bin/restic"
   backupClientService "restic", "Start restic client", wrapperFile & " backup-and-forget"
   commitQueue()
+  writeFile "/etc/backup/.restic-repo-password", [], permissions=0o700
   echo "If the restic repository didn't already exist, run restic init"
