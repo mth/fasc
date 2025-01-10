@@ -42,7 +42,7 @@ proc bcryptPassword(password: string): string =
   let saltB64 = salt.encode.replace('+', '.')
   # bcrypt hash using perl to access libcrypt without linking it
   return outputOfCommand("", "perl", "-e", "print(crypt($ARGV[0], $ARGV[1]))",
-                         password, fmt"$2a$10${saltB64}$")[0]
+                         password, fmt"$2a$06${saltB64}$")[0]
 
 proc htpassword(filename, user, password: string) =
   var updatedConf: seq[string]
