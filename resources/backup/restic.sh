@@ -17,7 +17,8 @@ case "$1" in
 		exec systemd-inhibit --what=idle:sleep:handle-lid-switch:handle-suspend-key:handle-hibernate-key \
 			--who=restic-backup "--why=Active backup" "$0" backup-and-forget;;
 	backup-and-forget)
-		"$0" -v backup --one-file-system $BACKUP_DIRS --exclude nobackup
+		"$0" -v backup --one-file-system $BACKUP_DIRS --exclude nobackup --exclude .cache \
+			--exclude '/home/**/target' --exclude _build --exclude '*.o'
 		"$0" forget --keep-within-weekly 1m --keep-monthly 3
 		exec "$0" prune;;
 esac
