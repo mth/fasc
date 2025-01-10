@@ -296,6 +296,7 @@ proc resticClient*(args: StrMap) =
   let server_pem = "/etc/backup/restic-server.pem"
   if not server_pem.fileExists:
     writeFile server_pem, [server.fetchTLSCerts[0]]
+    setPermissions "/etc/backup", 0o700
   const wrapperFile = "/usr/local/sbin/restic"
   if not wrapperFile.fileExists:
     # generates random password for server, that can be used to add user to the server
