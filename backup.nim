@@ -24,7 +24,7 @@ const backupClient  = readResource("backup/nbd-backup")
 const backupConf    = readResource("backup/nbd-backup.conf")
 const resticWrapper = readResource("backup/restic.sh")
 const maxRuntime = "RuntimeMaxSec=12h"
-const resticPort = ":448"
+const resticPort = "448"
 
 proc readRandom(buf: var openarray[byte]) =
   var rand = open("/dev/urandom")
@@ -241,7 +241,7 @@ proc resticTLSCert(param: StrMap, restic: UserInfo): string =
     createDir sslDir
     runCmd "openssl", "req", "-newkey", "rsa:2048", "-nodes", "-x509",
            "-keyout", private_key, "-out", public_key, "-days", "1826",
-           "-addext", ext
+           "-subj", &"/O=restic/OU=server/CN={hostname}", "-addext", ext
     setPermissions sslDir, 0, restic.gid, 0o750
     setPermissions private_key, restic, 0o400
     setPermissions public_key, 0, restic.gid, 0o440
@@ -292,6 +292,7 @@ proc resticClient*(args: StrMap) =
   var server = args.nonEmptyParam "rest-server"
   let username = args.getHostName "backup-user"
   if ':' notin server:
+    server &= ':'
     server &= resticPort
   let server_pem = "/etc/backup/restic-server.pem"
   if not server_pem.fileExists:
@@ -302,7 +303,7 @@ proc resticClient*(args: StrMap) =
     # generates random password for server, that can be used to add user to the server
     var pass: array[0..12, byte]
     readRandom pass
-    let wrapper = resticWrapper.multiReplace(("{REPOSITORY}", &"rest:https://{server}"),
+    let wrapper = resticWrapper.multiReplace(("{REPOSITORY}", &"rest:https://{server}/"),
                                   ("{REST_USERNAME}", username), ("{REST_PASSWORD}", pass.encode))
     writeFile wrapperFile, [wrapper], permissions=0o700
   addPackageUnless "restic", "/usr/bin/restic"
