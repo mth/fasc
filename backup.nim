@@ -232,11 +232,11 @@ proc resticTLSCert(param: StrMap, restic: UserInfo): string =
     echo "Not going to replace existing restic TLS key: ", private_key
   else:
     let hostname = param.getHostName "hostname"
-    var ext = "subjectAltName ="
+    var ext = "subjectAltName = "
     let ip = param.getOrDefault "serverip"
     if ip.len != 0:
-      ext &= " IP:" & ip
-    ext &= " DNS:" & hostname
+      ext &= "IP:" & ip & ','
+    ext &= "DNS:" & hostname
     echo "Creating ", public_key, " certificate with ", ext
     createDir sslDir
     runCmd "openssl", "req", "-newkey", "rsa:2048", "-nodes", "-x509",
