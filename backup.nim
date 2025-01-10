@@ -275,10 +275,6 @@ proc installResticServer*(args: StrMap) =
         "restic-server.service", "Restic server proxy"
   enableAndStart "restic-proxy.socket"
 
-proc resticPass(args: StrMap, username: string): string =
-  stderr.write fmt"Restic user {username} password: "
-  return stdin.readLine
-
 proc resticUser*(args: StrMap) =
   let resticUser = try: userInfo "restic"
                    except: ("", "", 0, 0)
@@ -287,7 +283,9 @@ proc resticUser*(args: StrMap) =
     echo "Missing restic, please run restic-server first"
     quit 1
   let username = args.nonEmptyParam("backup-user")
-  htpassword resticPassFile, username, resticPass(args, username)
+  stderr.write fmt"Restic user {username} password: "
+  let pass = stdin.readLine
+  htpassword resticPassFile, username, pass
   setPermissions resticPassFile, resticUser, 0o600
 
 proc resticClient*(args: StrMap) =
