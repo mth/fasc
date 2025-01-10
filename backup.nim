@@ -304,7 +304,7 @@ proc resticClient*(args: StrMap) =
     readRandom pass
     let wrapper = resticWrapper.multiReplace(("{REPOSITORY}", &"rest:https://{server}"),
                                   ("{REST_USERNAME}", username), ("{REST_PASSWORD}", pass.encode))
-    writeFile wrapperFile, [wrapper], permissions=0o755
+    writeFile wrapperFile, [wrapper], permissions=0o700
   addPackageUnless "restic", "/usr/bin/restic"
   backupClientService "restic", "Start restic client", wrapperFile & " backup-and-forget"
   commitQueue()
