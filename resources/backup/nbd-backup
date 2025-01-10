@@ -42,7 +42,7 @@ unset CRYPTSETUP_KEY BACKUP_HOST
 BACKUP_TARGET_DIR='/media/backup-storage'
 BACKUP_MOUNT_OPTIONS='nobarrier,noatime,journal_checksum'
 BACKUP_DIRS='/root /etc /var /usr/local /home /opt /srv'
-EXCLUDE_DIRS='/dev /media /mnt /proc /run /sys /tmp /var/tmp'
+EXCLUDE_DIRS='/dev /media /mnt /proc /run /sys /tmp /var/tmp /var/cache/apt nobackup .cache'
 CRYPT_DEVICE='backup'
 NBD_SOCKET='/run/nbd-backup/socket'
 NBD_DEVICE='/dev/nbd7'
@@ -169,7 +169,7 @@ do_rsync() {
   RS_XTRA_OPTS="$RSYNC_OPTIONS --exclude=$1/lost+found"
   for RS_EXCLUDE_DIR in $EXCLUDE_DIRS; do
     case "$RS_EXCLUDE_DIR" in
-    "$1"*) RS_XTRA_OPTS="$RS_XTRA_OPTS --exclude=$RS_EXCLUDE_DIR";;
+    "$1"*) RS_XTRA_OPTS="$RS_XTRA_OPTS '--exclude=$RS_EXCLUDE_DIR'";;
     esac
   done
   if /usr/bin/nice -n15 "$RSYNC_COMMAND" $RS_XTRA_OPTS "$1" "$BACKUP_TARGET_DIR/`dirname "$1"`/"

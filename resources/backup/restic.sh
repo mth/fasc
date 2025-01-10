@@ -18,6 +18,7 @@ case "$1" in
 			--who=restic-backup "--why=Active backup" "$0" backup-and-forget;;
 	backup-and-forget)
 		"$0" -v backup --one-file-system $BACKUP_DIRS --exclude nobackup --exclude .cache \
+			--exclude /var/cache/apt --exclude /var/tmp --exclude /var/lib/machines \
 			--exclude '/home/**/target' --exclude _build --exclude '*.o' --exclude '*.class'
 		"$0" forget --keep-within-weekly 1m --keep-monthly 3
 		exec "$0" prune;;
