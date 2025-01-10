@@ -6,7 +6,7 @@ RESTIC_REPOSITORY={REPOSITORY}
 RESTIC_REST_USERNAME={REST_USERNAME}
 RESTIC_REST_PASSWORD={REST_PASSWORD}
 RESTIC_PASSWORD_FILE="/etc/backup/.restic-repo-password"
-BACKUP_DIRS="/etc /root /var /home /usr/local"
+BACKUP_DIRS="/etc /root /var /home /usr/local /opt /srv"
 
 case "$1" in
 	backup-and-forget-no-sleep)
