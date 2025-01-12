@@ -150,7 +150,7 @@ proc rotateBackupTimer(mountUnit: string) =
     "/usr/local/sbin/rotate-backup", serviceType="oneshot",
     flags={s_sandbox, s_private_dev, s_call_filter},
     options=[&"ReadWritePaths={backupMountPoint}/client"],
-    unitOptions=[&"RequiresMountsFor={backupMountPoint}", &"BindsTo={mountUnit}"]
+    unitOptions=[&"RequiresMountsFor={backupMountPoint}", &"BindsTo={mountUnit}", &"After={mountUnit}"]
   addTimer "backup-rotate", "Timer to rotate backup image snapshots",
            "OnCalendar=*-*-01 10:10:10"
 
@@ -270,8 +270,8 @@ proc installResticServer*(args: StrMap) =
     flags={s_sandbox, s_private_dev, s_call_filter},
     options=["User=restic", "Group=restic", "ReadWritePaths=" & resticHome,
              "UMask=027", maxRuntime, "RuntimeDirectory=restic"],
-    unitOptions=[&"RequiresMountsFor={backupMountPoint}",
-                 &"BindsTo={mountUnit}", "StopWhenUnneeded=true"]
+    unitOptions=[&"RequiresMountsFor={backupMountPoint}", &"BindsTo={mountUnit}",
+                 &"After={mountUnit}", "StopWhenUnneeded=true"]
   let ip = args.getOrDefault "serverip"
   proxy "restic-proxy", ip & ':' & resticPort, "", "/run/restic/socket", "30s",
         "restic-server.service", "Restic server proxy"
