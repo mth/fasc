@@ -307,10 +307,12 @@ proc resticClient*(args: StrMap) =
   const wrapperFile = "/usr/local/sbin/restic"
   if not wrapperFile.fileExists:
     # generates random password for server, that can be used to add user to the server
-    var pass: array[0..12, byte]
+    var pass: array[0..11, byte]
     readRandom pass
+    let passB64 = pass.encode
+    echo &"Generated password {passB64} for {username}"
     let wrapper = resticWrapper.multiReplace(("{REPOSITORY}", &"rest:https://{server}/"),
-                                  ("{REST_USERNAME}", username), ("{REST_PASSWORD}", pass.encode))
+                                  ("{REST_USERNAME}", username), ("{REST_PASSWORD}", passB64))
     writeFile wrapperFile, [wrapper], permissions=0o700
   addPackageUnless "restic", "/usr/bin/restic"
   backupClientService "restic", "Start restic client", wrapperFile & " backup-and-forget"
