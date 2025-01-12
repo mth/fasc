@@ -268,8 +268,8 @@ proc installResticServer*(args: StrMap) =
     "/opt/restic/rest-server --private-repos --path " & resticHome &
     " --htpasswd-file " & resticPassFile & tlsOpt & " --listen unix:/run/restic/socket",
     flags={s_sandbox, s_private_dev, s_call_filter},
-    options=["ExecStartPre=/bin/sleep 0.5", "User=restic", "Group=restic", "UMask=077",
-             "ReadWritePaths=" & resticHome, maxRuntime, "RuntimeDirectory=restic"],
+    options=["User=restic", "Group=restic", "ReadWritePaths=" & resticHome,
+             "UMask=027", maxRuntime, "RuntimeDirectory=restic"],
     unitOptions=[&"RequiresMountsFor={backupMountPoint}", &"BindsTo={mountUnit}",
                  &"After={mountUnit}", "StopWhenUnneeded=true"]
   let ip = args.getOrDefault "serverip"
