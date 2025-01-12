@@ -268,7 +268,7 @@ proc installResticServer*(args: StrMap) =
     " --htpasswd-file " & resticPassFile & tlsOpt & " --listen unix:/run/restic/socket",
     flags={s_sandbox, s_private_dev, s_call_filter},
     options=["User=restic", "Group=restic", "ReadWritePaths=" & resticHome,
-             "UMask=027", maxRuntime, "RuntimeDirectory=/run/restic"],
+             "UMask=027", maxRuntime, "RuntimeDirectory=restic"],
     unitOptions=[&"RequiresMountsFor={backupMountPoint}",
                  &"BindsTo={mountUnit}", "StopWhenUnneeded=true"]
   proxy "restic-proxy", resticPort, "", "/run/restic/socket", "30s",
