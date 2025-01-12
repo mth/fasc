@@ -303,7 +303,7 @@ proc resticClient*(args: StrMap) =
     # generates random password for server, that can be used to add user to the server
     var pass: array[0..12, byte]
     readRandom pass
-    let wrapper = resticWrapper.multiReplace(("{REPOSITORY}", &"rest:https://{server}/"),
+    let wrapper = resticWrapper.multiReplace(("{REPOSITORY}", &"rest:https://{server}:{resticPort}/"),
                                   ("{REST_USERNAME}", username), ("{REST_PASSWORD}", pass.encode))
     writeFile wrapperFile, [wrapper], permissions=0o700
   addPackageUnless "restic", "/usr/bin/restic"
