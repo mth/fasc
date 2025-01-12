@@ -261,7 +261,7 @@ proc installResticServer*(args: StrMap) =
   runCmd "systemctl", "start", mountUnit
   try:
     createDir resticHome
-    setPermissions resticHome, restic, 0700
+    setPermissions resticHome, restic, 0o700
   finally:
     runCmd "systemctl", "stop", mountUnit
   addService "restic-server", "Restic server", [],
