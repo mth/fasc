@@ -311,7 +311,7 @@ proc resticClient*(args: StrMap) =
     readRandom pass
     let passB64 = pass.encode
     echo &"Generated password {passB64} for {username}"
-    let wrapper = resticWrapper.multiReplace(("{REPOSITORY}", &"rest:https://{server}/"),
+    let wrapper = resticWrapper.multiReplace(("{REPOSITORY}", &"rest:https://{server}/{username}/"),
                                   ("{REST_USERNAME}", username), ("{REST_PASSWORD}", passB64))
     writeFile wrapperFile, [wrapper], permissions=0o700
   addPackageUnless "restic", "/usr/bin/restic"
