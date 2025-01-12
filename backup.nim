@@ -309,11 +309,11 @@ proc resticClient*(args: StrMap) =
     # generates random password for server, that can be used to add user to the server
     var pass: array[0..12, byte]
     readRandom pass
-    let wrapper = resticWrapper.multiReplace(("{REPOSITORY}", &"rest:https://{server}:{resticPort}/"),
+    let wrapper = resticWrapper.multiReplace(("{REPOSITORY}", &"rest:https://{server}/"),
                                   ("{REST_USERNAME}", username), ("{REST_PASSWORD}", pass.encode))
     writeFile wrapperFile, [wrapper], permissions=0o700
   addPackageUnless "restic", "/usr/bin/restic"
   backupClientService "restic", "Start restic client", wrapperFile & " backup-and-forget"
   commitQueue()
   writeFile "/etc/backup/.restic-repo-password", [], permissions=0o600
-  echo "If the restic repository didn't already exist, run restic init"
+  echo "If the restic repository didn't already exist, fill /etc/backup/.restic-repo-password and run restic init"

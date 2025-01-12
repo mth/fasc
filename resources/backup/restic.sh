@@ -24,5 +24,5 @@ case "$1" in
 		exec "$0" prune;;
 esac
 
-export RESTIC_REPOSITORY RESTIC_REST_USERNAME RESTIC_REST_PASSWORD
-exec /usr/bin/restic --cacert /etc/ssl/restic-server.pem "$@"
+export RESTIC_REPOSITORY RESTIC_REST_USERNAME RESTIC_REST_PASSWORD RESTIC_PASSWORD_FILE
+exec /usr/bin/restic --cacert /etc/backup/restic-server.pem "$@"
