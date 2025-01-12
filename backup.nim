@@ -140,8 +140,8 @@ proc backupNbdServer(mountUnit, name, group: string) =
     flags={s_sandbox, s_private_dev, s_call_filter},
     options=["ExecStartPre=/bin/rm -f '/media/backupstore/client/%i/active/nbd.socket'", maxRuntime,
              "User=%i", &"Group={group}", &"ReadWritePaths={backupMountPoint}/client/%i/active"],
-    unitOptions=[&"RequiresMountsFor={backupMountPoint}",
-                 &"BindsTo={mountUnit}", "StopWhenUnneeded=true"]
+    unitOptions=[&"RequiresMountsFor={backupMountPoint}", &"BindsTo={mountUnit}",
+                 &"After={mountUnit}", "StopWhenUnneeded=true"]
   writeFile fmt"/etc/nbd-server/{name}.conf", [nbdConfig(name)]
 
 proc rotateBackupTimer(mountUnit: string) =
