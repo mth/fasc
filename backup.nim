@@ -219,21 +219,21 @@ proc installBackupClient*(args: StrMap) =
       echo line
     echo fmt"vi {sshConfig}"
 
-proc getHostName(param: StrMap, key: string): string =
-  result = param.getOrDefault key
+proc getHostName(args: StrMap, key: string): string =
+  result = args.getOrDefault key
   if result.len == 0:
     return readFile("/etc/hostname").strip
 
-proc resticTLSCert(param: StrMap, restic: UserInfo): string =
+proc resticTLSCert(args: StrMap, restic: UserInfo): string =
   const sslDir = "/etc/ssl/restic"
   const private_key = sslDir & "/private.der"
   const public_key = sslDir & "/public.der"
   if private_key.fileExists and public_key.fileExists:
     echo "Not going to replace existing restic TLS key: ", private_key
   else:
-    let hostname = param.getHostName "hostname"
+    let hostname = args.getHostName "hostname"
     var ext = "subjectAltName = "
-    let ip = param.getOrDefault "serverip"
+    let ip = args.getOrDefault "serverip"
     if ip.len != 0:
       ext &= "IP:" & ip & ','
     ext &= "DNS:" & hostname
@@ -272,7 +272,8 @@ proc installResticServer*(args: StrMap) =
              "UMask=027", maxRuntime, "RuntimeDirectory=restic"],
     unitOptions=[&"RequiresMountsFor={backupMountPoint}",
                  &"BindsTo={mountUnit}", "StopWhenUnneeded=true"]
-  proxy "restic-proxy", resticPort, "", "/run/restic/socket", "30s",
+  let ip = args.getOrDefault "serverip"
+  proxy "restic-proxy", ip & ':' & resticPort, "", "/run/restic/socket", "30s",
         "restic-server.service", "Restic server proxy"
   enableAndStart "restic-proxy.socket"
 
