@@ -255,6 +255,7 @@ proc installResticServer*(args: StrMap) =
   let dev = args.getOrDefault "backup-dev"
   downloadResticServer restic
   let tlsOpt = args.resticTLSCert restic
+  writeFileIfNotExists resticPassFile, ""
   let mountUnit = backupMount dev
   runCmd "systemctl", "daemon-reload"
   runCmd "systemctl", "start", mountUnit

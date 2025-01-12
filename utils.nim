@@ -145,7 +145,7 @@ proc safeFileUpdate*(filename, content: string, permissions: Mode = 0o644) =
   setPermissions(tmpFile, permissions)
   moveFile(tmpFile, filename)
 
-proc writeFileIfNotExists(filename, content: string; force = false): bool {.discardable.} =
+proc writeFileIfNotExists*(filename, content: string; force = false): bool {.discardable.} =
   if not force and filename.fileExists:
     echo fmt"Retaining existing {filename}"
   else:
