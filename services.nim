@@ -161,7 +161,7 @@ proc socketUnit*(socketName, description, listen: string, socketOptions: varargs
     enableAndStart socketName
 
 proc proxy*(proxy, listen, bindTo, connectTo, exitIdleTime, targetService: string,
-            description = "", socketOptions: openarray[string] = []) =
+            description = "", socketOptions: openarray[string] = [], waitFor = false) =
   let socketParam = proxy.split ':'
   let socketName = socketParam[0] & ".socket"
   let descriptionStr = descriptionOfName(socketParam[0], description)
@@ -179,6 +179,9 @@ proc proxy*(proxy, listen, bindTo, connectTo, exitIdleTime, targetService: strin
     options.add "PrivateNetwork=yes"
   let requires = if targetService != "": @[targetService, socketName]
                  else: @[socketName]
+  if waitFor:
+    options &= "ExecStartPre=/usr/bin/perl -e 'select((),(),(),0.06) while $i++<100&&!-S \"" &
+      connectTo & "\"'"
   addService(socketParam[0], descriptionStr, requires,
     "/usr/lib/systemd/systemd-socket-proxyd --exit-idle-time=" &
     exitIdleTime & ' ' & connectTo, "",

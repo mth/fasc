@@ -274,7 +274,7 @@ proc installResticServer*(args: StrMap) =
                  &"After={mountUnit}", "StopWhenUnneeded=true"]
   let ip = args.getOrDefault "serverip"
   proxy "restic-proxy", ip & ':' & resticPort, "", "/run/restic/socket", "30s",
-        "restic-server.service", "Restic server proxy"
+        "restic-server.service", "Restic server proxy", waitFor=true
   enableAndStart "restic-proxy.socket"
 
 proc resticUser*(args: StrMap) =
