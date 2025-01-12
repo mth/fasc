@@ -298,7 +298,11 @@ proc resticClient*(args: StrMap) =
     server &= resticPort
   let server_pem = "/etc/backup/restic-server.pem"
   if not server_pem.fileExists:
-    writeFile server_pem, [server.fetchTLSCerts[0]]
+    let certs = try: server.fetchTLSCerts
+                except:
+                  sleep 1
+                  server.fetchTLSCerts
+    writeFile server_pem, [certs[0]]
     setPermissions "/etc/backup", 0o700
   const wrapperFile = "/usr/local/sbin/restic"
   if not wrapperFile.fileExists:
