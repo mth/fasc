@@ -46,7 +46,7 @@ proc commonGuiSetup*(user: UserInfo) =
     else:
       packagesToInstall.add "mesa-va-drivers"
   if isDebian():
-    packagesToInstall.add ["desktop-base", "policykit-1"]
+    packagesToInstall.add ["desktop-base", "polkitd"]
   runCmd("usermod", "-G", groups, user.user)
 
 proc installX11(user: UserInfo) =

@@ -1,0 +1,14 @@
+#!/bin/sh
+
+echo 'Affected CPUs    MHz  Range MHz   Scaling governor driver'
+
+for i in /sys/devices/system/cpu/cpufreq/policy*; do
+  read driver   < "$i/scaling_driver"
+  read governor < "$i/scaling_governor"
+  read cur      < "$i/scaling_cur_freq"
+  read min      < "$i/cpuinfo_min_freq"
+  read max      < "$i/cpuinfo_max_freq"
+  read affected < "$i/affected_cpus"
+  printf "%-15s%5d  %-11s %s\n" "$affected" "$(($cur / 1000))" "$((min / 1000))..$((max / 1000))" "$governor $driver"
+done
+

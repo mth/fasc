@@ -400,15 +400,21 @@ proc modifyProperties*(filename: string, update: openarray[(string, string)],
   return modifyProperties(filename, updateMap, comment)
 
 proc sudoNoPasswd*(user: UserInfo, envKeep: string, paths: varargs[string]) =
-  var rules: seq[(string, string)]
+  var sudo: seq[(string, string)]
+  var doas: seq[(string, string)]
   for path in paths:
     path.groupExec user
     if envKeep.len != 0:
-      rules &= ("Defaults!" & path & ' ', "env_keep=\"" & envKeep & '"')
-    rules &= ("", user.user & " ALL=(root:root) NOPASSWD: " & path)
-  addPackageUnless "sudo", "/usr/bin/sudo"
-  aptInstallNow()
-  discard appendMissing("/etc/sudoers", rules)
+      sudo &= ("Defaults!" & path & ' ', "env_keep=\"" & envKeep & '"')
+    sudo &= ("", user.user & " ALL=(root:root) NOPASSWD: " & path)
+    doas &= ("", "permit nopass " & user.user & " as root cmd " & path)
+  if fileExists("/usr/bin/sudo") or envKeep.len != 0:
+    addPackageUnless "sudo", "/usr/bin/sudo", true
+    discard appendMissing("/etc/sudoers", sudo)
+  else:
+    addPackageUnless "doas", "/usr/bin/doas"
+    discard appendMissing("/etc/doas.conf", doas, create=true)
+    setPermissions "/etc/doas.conf", 0o600
 
 proc updateMime*() =
   if isFedora():

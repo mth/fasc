@@ -77,3 +77,8 @@ proc installMpd*(user: UserInfo) =
     fmt"/usr/bin/aplay -t raw -f dat {fifo}", "multi-user.target", {}, [
       fmt"ExecStop=/usr/bin/dd if=/dev/zero of=/var/lib/mpd/{fifo} bs=4 count=1",
       "User=mpd", fmt"Group={user.group}", "SupplementaryGroups=audio"], "simple"
+
+proc sysInstallMpd*(args: StrMap) =
+  packagesToInstall.add "mpc"
+  let user = args.userInfo
+  user.installMpd # commits queue

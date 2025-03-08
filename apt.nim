@@ -96,7 +96,7 @@ proc defaultPrune(extraProtect: openarray[string], additionalRemove: varargs[str
   remove.add additionalRemove
   when not (defined(arm) or defined(arm64)):
     packagesToInstall.add "ifupdown"
-  packagesToInstall.add ["elvis-tiny", "netcat-openbsd", "psmisc"]
+  packagesToInstall.add ["netcat-openbsd", "psmisc"]
   prunePackages(packagesToInstall, remove, extraProtect)
   packagesToInstall.reset
 

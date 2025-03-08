@@ -57,6 +57,23 @@ Capability=CAP_IPC_LOCK
 DropCapability=CAP_AUDIT_CONTROL CAP_AUDIT_READ CAP_AUDIT_WRITE CAP_BLOCK_SUSPEND CAP_BPF CAP_CHECKPOINT_RESTORE CAP_LINUX_IMMUTABLE CAP_MAC_ADMIN CAP_MAC_OVERRIDE CAP_NET_BROADCAST CAP_PERFMON CAP_SYS_BOOT CAP_SYS_MODULE CAP_SYS_NICE CAP_SYS_PACCT CAP_SYS_PTRACE CAP_SYS_RAWIO CAP_SYS_RESOURCE CAP_SYS_TIME CAP_SYSLOG CAP_WAKE_ALARM
 """
 
+# TODO create systemd service that ups bridge using simple ip link + ip addr
+# [Unit]
+# Wants=network.target
+# After=local-fs.target network-pre.target systemd-modules-load.service
+# Before=network.target shutdown.target network-online.target
+# Conflicts=shutdown.target
+# [Service]
+# Type=oneshot
+# RemainAfterExit=yes
+# ExecStart=ip link add br-vnet0 type bridge
+# ExecStart=ip addr add 172.20.0.1/24 dev br-vnet0
+# ExecStart=ip link set br-vnet0 up
+# ExecStop=ip link set br-vnet0 down
+# ExecStop=ip link del br-vnet0
+# [Install]
+# WantedBy=network-online.target
+
 proc createNSpawn(name, address: string, pulse = false) =
   let bridge = "br-vnet0"
   networkdBridge bridge, address
@@ -121,3 +138,7 @@ proc containerOVPN*(args: StrMap) =
                 "systemd-run --scope /usr/local/bin/ovpn"),
     runOnScript("/usr/local/bin/kill-vpn-" & machine, machine, "/usr/local/bin/kill-vpn"))
   machine.fascAt("ovpn", "nosudo")
+
+# https://wildwolf.name/a-simple-script-to-create-systemd-nspawn-alpine-container/
+# https://github.com/yoshuawuyts/systemd-nspawn-scripts/blob/master/build-alpine
+# https://gist.github.com/sfan5/52aa53f5dca06ac3af30455b203d3404

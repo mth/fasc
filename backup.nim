@@ -291,21 +291,25 @@ proc resticUser*(args: StrMap) =
   setPermissions resticPassFile, resticUser, 0o600
 
 proc resticClient*(args: StrMap) =
-  var server = args.nonEmptyParam "rest-server"
+  const server_pem = "/etc/backup/restic-server.pem"
+  const wrapperFile = "/usr/local/sbin/restic"
+  const has_server_pem = server_pem.fileExists
+  const has_wrapperFile = wrapperFile.fileExists
+  var server = ""
+  if not (has_server_pem and has_wrapperFile):
+    server = args.nonEmptyParam "rest-server"
+    if ':' notin server:
+      server &= ':'
+      server &= resticPort
   let username = args.getHostName "backup-user"
-  if ':' notin server:
-    server &= ':'
-    server &= resticPort
-  let server_pem = "/etc/backup/restic-server.pem"
-  if not server_pem.fileExists:
+  if not has_server_pem:
     let certs = try: server.fetchTLSCerts
                 except:
                   sleep 1
                   server.fetchTLSCerts
     writeFile server_pem, [certs[0]]
     setPermissions "/etc/backup", 0o700
-  const wrapperFile = "/usr/local/sbin/restic"
-  if not wrapperFile.fileExists:
+  if not has_wrapperFile:
     # generates random password for server, that can be used to add user to the server
     var pass: array[0..11, byte]
     readRandom pass
@@ -315,7 +319,7 @@ proc resticClient*(args: StrMap) =
                                   ("{REST_USERNAME}", username), ("{REST_PASSWORD}", passB64))
     writeFile wrapperFile, [wrapper], permissions=0o700
   addPackageUnless "restic", "/usr/bin/restic"
-  backupClientService "restic", "Start restic client", wrapperFile & " backup-and-forget"
+  backupClientService "restic", "Start restic client", wrapperFile & " backup-and-forget-no-sleep"
   commitQueue()
   writeFile "/etc/backup/.restic-repo-password", [], permissions=0o600
   echo "If the restic repository didn't already exist, fill /etc/backup/.restic-repo-password and run restic init"

@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with FASC. If not, see <https://www.gnu.org/licenses/>.
 
-import sway, sound, utils, std/[os, posix]
+import gui, sway, utils, sound, system, std/[strformat, strutils, os, posix]
 
 const weston_ini = readResource("tv/weston.ini")
 const util_files = [
@@ -30,6 +30,87 @@ const util_files = [
   ("/etc/rc_maps.cfg", readResource("tv/rc_maps.cfg"), 0o644),
   ("/etc/triggerhappy/triggers.d/mpd.conf", readResource("tv/mpd-triggers.conf"), 0o644),
 ]
+
+proc defaultLocale(): string =
+  let conf = if isDebian(): "/etc/default/locale"
+             else: "/etc/locale.conf"
+  for line in lines(conf):
+    let strippedLine = line.strip
+    if strippedLine.startsWith "LANG=":
+      result = strippedLine[5..^1].strip(chars = {'"'})
+      break
+  if result.len == 0:
+    result = "C"
+
+proc runWayland(userInfo: UserInfo, compositor: string, sandbox = false) =
+  let user = userInfo.user
+  let gid = userInfo.gid
+  const maxMemLimit = 0x100000000 # 4GB
+  const minMemLimit = 0x040000000 # 1GB
+  # Within limits, single process shouldn't exceed 3/4 of physical memory
+  var memLimit = memTotal().int64 * 0x300
+  if memLimit < minMemLimit or memLimit > maxMemLimit:
+    memLimit = maxMemLimit
+  var compositor = compositor
+  # weird hack for SELinux
+  if isFedora():
+    compositor = "/usr/bin/sh -c \"exec " & compositor & '"'
+  var service = @[
+    "[Unit]",
+    "Description=Runs wayland desktop",
+    "Wants=sysinit.target usb-gadget.target",
+    "After=systemd-user-sessions.service plymouth-quit-wait.service sysinit.target usb-gadget.target",
+    "",
+    "[Service]",
+    fmt"ExecStartPre=/usr/bin/install -m 700 -o {user} -g {gid} -d /tmp/.{user}-cache",
+    fmt"ExecStartPre=/usr/bin/install -m 700 -o {user} -g {gid} -d /tmp/downloads",
+    "ExecStart=" & compositor,
+    "KillMode=control-group",
+    "Restart=no",
+    "StandardInput=tty-fail",
+    "StandardOutput=tty",
+    "StandardError=journal",
+    "TTYPath=/dev/tty7",
+    "TTYReset=yes",
+    "TTYVHangup=yes",
+    "TTYVTDisallocate=yes",
+    fmt"LimitDATA={memLimit}",
+    "WorkingDirectory=" & userInfo.home,
+    "User=" & user,
+    fmt"Group={userInfo.group}",
+    "PAMName=login",
+    "UtmpIdentifier=tty7",
+    "UtmpMode=user",
+    "Environment=GDK_BACKEND=wayland" &
+    " QT_QPA_PLATFORM=wayland-egl" &
+    " XDG_SESSION_TYPE=wayland" &
+    " MOZ_WEBRENDER=1" &
+    " LANG=" & defaultLocale()
+  ]
+  if sandbox:
+    service &= [
+      "ProtectSystem=full",
+      "CapabilityBoundingSet=~CAP_SYS_ADMIN",
+      "NoNewPrivileges=yes",
+      "SecureBits=nonroot-locked",
+      "LockPersonality=true",
+      "ProtectControlGroups=yes",
+      "ProtectKernelModules=yes",
+      "ProtectKernelTunables=yes",
+      "ProtectClock=yes",
+      "ProtectHostname=yes"
+    ]
+  service &= [
+    "",
+    "[Install]",
+    "WantedBy=graphical.target",
+    ""
+  ]
+  writeFile "/etc/systemd/system/run-wayland.service", service
+  enableUnits.add "run-wayland.service"
+  packagesToInstall.add ["qtwayland5", "xwayland"]
+  systemdReload = true
+  userInfo.commonGuiSetup
 
 #[proc codename(): string =
   for line in lines("/etc/os-release"):
@@ -56,8 +137,6 @@ const util_files = [
 # wget -O - http://apt.xbian.org/xbian.gpg.key | gpg --dearmor > /usr/share/keyrings/xbian-archive-keyring.gpg
 
 when defined(arm64):
-  import std/[strformat, strutils]
-
   proc addRepo(name, arch, suites, keyUrl, repoUrl: string,
                preferences: varargs[(string, int)]) =
     let keyring = fmt"/usr/share/keyrings/{name}-archive-keyring.gpg"
@@ -102,7 +181,7 @@ proc westonTV*(args: StrMap) =
     createSymlink("/opt/WidevineCdm", user.home / widevine_link)
   user.runWayland "/usr/bin/weston", true
   addRaspbian()
-  packagesToInstall.add ["weston", "openssh-client", "celluloid", "mpv", "mpd", "mpc",
+  packagesToInstall.add ["weston", "openssh-client", "celluloid", "mpv", "mpc",
                          "sonata", "python3-pkg-resources", "geeqie", "fonts-terminus-otb",
                          "ir-keytable", "triggerhappy", "webext-ublock-origin-chromium"]
   #user.vivaldi

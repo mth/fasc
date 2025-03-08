@@ -118,7 +118,7 @@ proc addService*(name, description: string, depends: openarray[string],
 
 proc overrideService*(name: string, flags: set[ServiceFlags],
                       properties: varargs[(string, string)]) =
-  let dir = "/etc/systemd/system/" & name & ".service.d"
+  let dir = "/etc/systemd/system/" & name & ".d"
   let override = dir / "override.conf"
   var content = @[("", "[Service]")] & @properties
   content &= flags.properties
@@ -138,7 +138,7 @@ proc secureService*(args: StrMap) =
     flags.incl s_allow_netlink
   if "01" in args:
     props &= ("CPUAffinity=", "0 1")
-  overrideService service, flags, props
+  overrideService fmt"{service}.service", flags, props
 
 proc socketUnit*(socketName, description, listen: string, socketOptions: varargs[string]) =
   var socket = @[

@@ -40,13 +40,13 @@ var common_descr = "Alias for configuring bash, tunesys, ntp, firewall"
 if isDebian():
   common_descr &= " and ALSA"
 
-let tasks = {
+var tasks = {
   "wlan": ("Configure WLAN client with DHCP [supplicant]", wlan),
   "wifinet": ("Add WLAN network ssid=<ssid>", wifiNet),
   "ntp": ("Enable timesyncd, optional ntp=<server>", startNTP),
   "icewm": ("Install IceWM desktop", installIceWM),
   #"lxqt": ("Install LXQT desktop", installLXQT),
-  "sway": ("Configure sway desktop startup", swayUnit),
+  "sway": ("Configure sway desktop startup [nosleep]", swayUnit),
   "swaycfg": ("Configure sway compositor", swayConf),
   "apt": ("Configure APT defaults", configureAPT),
   "prune": ("Configure APT/DNF defaults and prune extraneous packages [retain=a,b]",
@@ -62,11 +62,9 @@ let tasks = {
   "ovpn": ("Setup openvpn client", ovpnClient),
   "desktop-packages": ("Install desktop packages", installDesktopPackages),
   "gui-packages": ("Install GUI desktop packages", installDesktopUIPackages),
-  "beginner-devel": ("Install development packages for beginner", beginnerDevel),
   "devel": ("Install development packages", installDevel),
   "showuser": ("Shows user", showUser),
   "nfs": ("Adds NFS mount", nfs),
-  "rpmfusion": ("Configures RPM fusion", configureRPMFusion),
   "upload-cam": ("upload-cam script rsync-to=host:/path [rsync-args=...]", uploadCam),
   "propset": ("set properties in config=/file/path", propset),
   "install-fasc": ("Install FASC into nspawn container machine=target", installFASC),
@@ -78,11 +76,7 @@ let tasks = {
             19.spaces & "connect=127.0.0.1:2345 [idle-timeout=10min] [service=foobar]",
             socketProxy),
   "secure": ("service=name syscall allow_dev allow_netlink 01", secureService),
-  "zoom": ("Install zoom", zoomSandbox),
-  "idcard": ("Configure ID card", idCard),
-  "update-zoom": ("Update zoom install", updateZoom),
   "safenet": ("Setup DNS blocklists", setupSafeNet),
-  "tv": ("Install weston gui for TV", westonTV),
   "merlin": ("Setup emacs with tuareg mode and merlin using opam", installMerlin),
   "backup-server": ("Setup backup server backup-dev=/dev/sdd2 backup-user=foo-backup backup-size=MB [recreate-image]", backupServer),
   "nbd-backup": ("Install nbd-backup client", installBackupClient),
@@ -91,8 +85,20 @@ let tasks = {
   "restic-client": ("Setup restic client rest-server=hostname [backup-user=name]", resticClient),
   #"disable-tracker": ("Disable GNOME tracker", disableTracker),
 }.toTable
+when defined(arm64):
+  tasks["tv"] = ("Install weston gui for TV", westonTV)
+  tasks["mpd"] = ("Install MPD", sysInstallMpd)
+when defined(amd64):
+  tasks["rpmfusion"] = ("Configures RPM fusion", configureRPMFusion)
+  tasks["beginner-devel"] = ("Install development packages for beginner", beginnerDevel)
+  tasks["idcard"] = ("Configure ID card", idCard)
+  tasks["zoom"] = ("Install zoom", zoomSandbox)
+  tasks["update-zoom"] = ("Update zoom install", updateZoom)
 if paramCount() == 0:
-  echo "FAst System Configurator."
+  let what = if isFedora(): "Fedora"
+             elif isDebian(): "Debian"
+             else: "Unknown"
+  echo "FAst System Configurator on ", what
   echo "fasc command key=value..."
   echo ""
   echo "Commands:"

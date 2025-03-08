@@ -206,9 +206,10 @@ proc ovpnClient*(args: StrMap) =
               else: "openvpn" 
   writeFile(ovpnPath, [ovpnScript.replace("USER", runAs)])
   writeFile(killVPNPath, kill_vpn)
-  writeFile("/etc/openvpn/update-systemd-resolved", [ovpnUpdateResolved], permissions=0o755)
   addPackageUnless "openvpn", "/usr/sbin/openvpn"
-  enableAndStart "systemd-resolved"
+  if "nosystemd" notin args:
+    writeFile("/etc/openvpn/update-systemd-resolved", [ovpnUpdateResolved], permissions=0o755)
+    enableAndStart "systemd-resolved"
   if user.uid == 0:
     setPermissions(ovpnPath, 0o750)
     setPermissions(killVPNPath, 0o750)
@@ -237,7 +238,7 @@ proc setupSafeNet*(args: StrMap) =
     configureResolved()
   let resolveUser = userInfo "systemd-resolve"
   setPermissions dnsBlockDir, resolveUser, 0o750
-  overrideService "systemd-resolved", {},
+  overrideService "systemd-resolved.service", {},
     ("BindReadOnlyPaths=", "/var/cache/dnsblock/hosts:/etc/hosts:norbind")
   safeFileUpdate "/etc/systemd/system/dnsblock.service", dns_block_service
   addTimer "dnsblock", "Update DNS filter weekly", "OnBootSec=1min", "OnUnitActiveSec=1w"

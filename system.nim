@@ -21,6 +21,7 @@ import services, utils
 const clean_old_tmp_service = readResource("tmpfs/clean-old-tmp.service")
 const clean_old_tmp_sh = readResource("tmpfs/clean-old-tmp.sh")
 const pci_autosuspend = readResource("power/pci-autosuspend")
+const cpufreqScript = readResource("power/cpufreq")
 const sys_psu = "/sys/class/power_supply"
 const batteryType = "Battery"
 
@@ -379,6 +380,7 @@ proc tuneSystem*(args: StrMap) =
            "systemd-userdbd.service", "systemd-homed.service"
     runCmd "systemctl", "mask", "systemd-homed.service", "systemd-homed-activate.service"
   addTimer "fstrim", "Discard unused filesystem blocks once a hour", "OnBootSec=5min", "OnUnitInactiveSec=1h"
+  safeFileUpdate "/usr/local/bin/cpufreq", cpufreqScript, 0o755
   systemdReload = true
 
 proc startNTP*(args: StrMap) =
