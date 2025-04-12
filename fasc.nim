@@ -70,6 +70,7 @@ var tasks = {
   "install-fasc": ("Install FASC into nspawn container machine=target", installFASC),
   "nspawn": ("Add nspawn configuration for machine=name [pulse-proxy] [bridge=172.20.0.1/24]", addNSpawn),
   "nspawn-ovpn": ("Create scripts to run ovpn in container by user=name", containerOVPN),
+  "alpinevm": ("Alpine VM with nspawn: machine=name address=172.20.0.2/24", alpineVM),
   "vnc-server": ("Install tigervnc server display=:2 proxy=addr:5902 bindTo=host0",
                  installVncServer),
   "proxy": ("proxy=name[:owner[:group[:mode]]] listen=1234 [bind=host0]\n" &

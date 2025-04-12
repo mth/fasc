@@ -57,6 +57,13 @@ Capability=CAP_IPC_LOCK
 DropCapability=CAP_AUDIT_CONTROL CAP_AUDIT_READ CAP_AUDIT_WRITE CAP_BLOCK_SUSPEND CAP_BPF CAP_CHECKPOINT_RESTORE CAP_LINUX_IMMUTABLE CAP_MAC_ADMIN CAP_MAC_OVERRIDE CAP_NET_BROADCAST CAP_PERFMON CAP_SYS_BOOT CAP_SYS_MODULE CAP_SYS_NICE CAP_SYS_PACCT CAP_SYS_PTRACE CAP_SYS_RAWIO CAP_SYS_RESOURCE CAP_SYS_TIME CAP_SYSLOG CAP_WAKE_ALARM
 """
 
+func networkInterfaces(address, gateway: string): string = fmt"""
+auto host0
+iface host0
+  address {address}
+  gateway {gateway}
+"""
+
 # TODO create systemd service that ups bridge using simple ip link + ip addr
 # [Unit]
 # Wants=network.target
@@ -74,17 +81,20 @@ DropCapability=CAP_AUDIT_CONTROL CAP_AUDIT_READ CAP_AUDIT_WRITE CAP_BLOCK_SUSPEN
 # [Install]
 # WantedBy=network-online.target
 
-proc createNSpawn(name, address: string, pulse = false) =
-  let bridge = "br-vnet0"
+proc createNSpawn(name, address: string, options: openarray[string] = [], pulse = false) =
+  let bridge = "br-vm"
+  # TODO alternative for networkdBridge if networkd not used
   networkdBridge bridge, address
-  var conf = nspawnConf(name, "Bridge=" & bridge)
+  var conf = @[nspawnConf(name, "Bridge=" & bridge)]
+  conf &= options
   if pulse:
-    conf &= "\n[Files]\nBind=/run/pulse.native\n"
+    conf &= "[Files]\nBind=/run/pulse.native"
     let def = if isFedora(): "pulse-proxy:pipewire:audio:0660"
               else: "pulse-proxy:pulse:pulse-access:0660"
     proxy def, "/run/pulse.native", bindTo="", "/run/user/1000/pulse/native",
           "1min", targetService="", "Pulseaudio socket proxy service"
-  writeFile fmt"/etc/systemd/nspawn/{name}.nspawn", [conf]
+  conf &= ""
+  writeFile fmt"/etc/systemd/nspawn/{name}.nspawn", conf
   addPackageUnless "systemd-container", "/usr/bin/systemd-nspawn"
   let resolvedConf = "/etc/systemd/resolved.conf"
   if not resolvedConf.fileExists:
@@ -100,7 +110,7 @@ proc addNSpawn*(args: StrMap) =
   if not init.fileExists:
     echo fmt"Missing {init}"
     quit 1
-  createNSpawn name, address, pulse
+  createNSpawn name, address, [], pulse
 
 func runOnScriptSource(command, machine, remoteCommand: string): string = fmt"""
 #!/bin/sh
@@ -139,6 +149,90 @@ proc containerOVPN*(args: StrMap) =
     runOnScript("/usr/local/bin/kill-vpn-" & machine, machine, "/usr/local/bin/kill-vpn"))
   machine.fascAt("ovpn", "nosudo")
 
+# https://quantum5.ca/2025/03/22/whirlwind-tour-of-systemd-nspawn-containers/
 # https://wildwolf.name/a-simple-script-to-create-systemd-nspawn-alpine-container/
 # https://github.com/yoshuawuyts/systemd-nspawn-scripts/blob/master/build-alpine
 # https://gist.github.com/sfan5/52aa53f5dca06ac3af30455b203d3404
+
+when defined(arm64):
+  const arch = "aarch64"
+when defined(amd64):
+  const arch = "x86_64"
+when defined(i386):
+  const arch = "x86"
+when defined(arm):
+  const arch = "armv7"
+
+proc downloadAlpine(): string =
+  let url = fmt"https://dl-cdn.alpinelinux.org/alpine/latest-stable/releases/{arch}/"
+  let html = outputOfCommand("", "/usr/bin/wget", "-qO", "-", url).join
+  let name_prefix = "alpine-minirootfs-"
+  let a_prefix = "<a href=\"" & name_prefix
+  var i = html.find a_prefix
+  var filename = ""
+  var version = -1
+  while i > 0:
+    let begin = i + (a_prefix.len - name_prefix.len)
+    i = html.find("\">", i + a_prefix.len)
+    if i > 0:
+      let name = html[begin..i-1]
+      i = html.find(a_prefix, i + 2)
+      if name.endsWith ".gz":
+        try:
+          let ver_end = name.find('-', name_prefix.len)
+          var ver = 0
+          for part in name[name_prefix.len..ver_end-1].split('.'):
+            ver += part.parseInt
+            ver *= 10000
+          if ver > version:
+            filename = name
+        except:
+          discard
+  if filename == "":
+    echo "Do not find minirootfs url"
+    quit 1
+  let path = "/tmp/" & filename
+  runCmd "/usr/bin/wget", "-O", path, url & filename
+  return path
+
+# http://dl-cdn.alpinelinux.org/alpine/latest-stable/releases/aarch64/
+#   find <a href="alpine-minirootfs-3.21.0-aarch64.tar.gz">alpine-minirootfs-3.21.0-aarch64.tar.gz</a>
+#   with biggest -x.y.z- number
+# tar xf ../alpine-minirootfs-3.21.3-aarch64.tar.gz
+# systemd-nspawn -D test apk add alpine-base
+# for i in $(seq 0 10); do echo "pts/$i" >> "test/etc/securetty"; done
+# sed -i '/tty[0-9]:/ s/^/#/' "test/etc/inittab"
+# echo 'console::respawn:/sbin/getty 38400 console' >> "test/etc/inittab"
+# for svc in bootmisc hostname syslog; do ln -s "/etc/init.d/$svc" "test/etc/runlevels/boot/$svc"; done
+# for svc in killprocs savecache; do ln -s "/etc/init.d/$svc" "test/etc/runlevels/shutdown/$svc"; done
+# test/etc/shadow root:*::0:::::
+# systemd-nspawn --kill-signal=SIGUSR2
+
+proc alpineVM*(args: StrMap) =
+  let machine = args.nonEmptyParam "machine"
+  let address = args.nonEmptyParam "address"
+  let addressParts = address.split '.'
+  let gateway = addressParts[0..2].join(".") & ".1"
+  let tar = downloadAlpine()
+  addPackageUnless "systemd-container", "/usr/bin/systemd-nspawn", true
+  let root = "/var/lib/machines/" & machine
+  createDir root
+  runCmd "/usr/bin/tar", "-C", root, "-xzf", tar
+  var spawnArg = @["-D", root, "apk", "add", "alpine-base"]
+  spawnArg &= "dropbear"
+  runCmd "/usr/bin/systemd-nspawn", spawnArg
+  var inittab: seq[string]
+  let inittabPath = root & "/etc/inittab"
+  for line in inittabPath.lines:
+    if line.startsWith "tty":
+      inittab.add('#' & line)
+    else:
+      inittab.add line
+  inittab.add "console::respawn:/sbin/getty 38400 console\n"
+  writeFileSynced inittabPath, inittab.join("\n")
+  writeFileSynced root & "/etc/network/interfaces", networkInterfaces(address, gateway)
+  for service in ["bootmisc", "hostname", "syslog", "networking"]:
+    createSymlink fmt"/etc/init.d/{service}", fmt"{root}/etc/runlevels/boot/{service}"
+  for service in ["killprocs", "savecache"]:
+    createSymlink fmt"/etc/init.d/{service}", fmt"{root}/etc/runlevels/shutdown/{service}"
+  createNSpawn machine, gateway, ["KillSignal=SIGUSR2", ""]
