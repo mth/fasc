@@ -16,8 +16,11 @@
 # along with FASC. If not, see <https://www.gnu.org/licenses/>.
 
 import std/[algorithm, os, sequtils, strutils, tables]
-import utils, network, gui, sway, apt, system, sound, shell, nspawn, services, apps, vnc
-import tv, backup
+import utils, network, gui, sway, apt, system, sound, shell, nspawn, services
+import apps, vnc, backup
+
+when defined(arm64):
+  import tv
 
 func argsToMap(args: seq[string]): StrMap =
   for arg in args:
@@ -58,6 +61,7 @@ var tasks = {
   "shared-pa": ("Configure PulseAudio server for shared socket [card=1] [user=name]",
                 sharedPulseAudio),
   "bash": ("Configure bash", configureBash),
+  "battery-limit": ("Limit battery charge to maxCharge=85 percent", limitBattery),
   "firewall": ("Setup default firewall", enableDefaultFirewall),
   "ovpn": ("Setup openvpn client", ovpnClient),
   "desktop-packages": ("Install desktop packages", installDesktopPackages),
@@ -69,7 +73,7 @@ var tasks = {
   "propset": ("set properties in config=/file/path", propset),
   "install-fasc": ("Install FASC into nspawn container machine=target", installFASC),
   "nspawn": ("Add nspawn configuration for machine=name [pulse-proxy] [bridge=172.20.0.1/24]", addNSpawn),
-  "nspawn-ovpn": ("Create scripts to run ovpn in container by user=name", containerOVPN),
+  #"nspawn-ovpn": ("Create scripts to run ovpn in container by user=name", containerOVPN),
   "alpinevm": ("Alpine VM with nspawn: machine=name address=172.20.0.2/24", alpineVM),
   "vnc-server": ("Install tigervnc server display=:2 proxy=addr:5902 bindTo=host0",
                  installVncServer),
@@ -78,7 +82,7 @@ var tasks = {
             socketProxy),
   "secure": ("service=name syscall allow_dev allow_netlink 01", secureService),
   "safenet": ("Setup DNS blocklists", setupSafeNet),
-  "merlin": ("Setup emacs with tuareg mode and merlin using opam", installMerlin),
+  "merlin": ("Setup emacs with tuareg mode and merlin using opam [emacs=emacs-pgtk]", installMerlin),
   "backup-server": ("Setup backup server backup-dev=/dev/sdd2 backup-user=foo-backup backup-size=MB [recreate-image]", backupServer),
   "nbd-backup": ("Install nbd-backup client", installBackupClient),
   "restic-server": ("Setup restic backup server backup-dev=/dev/sdd2 [hostname=host] [serverip=1.2.3.4]", installResticServer),

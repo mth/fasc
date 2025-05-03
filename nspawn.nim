@@ -137,17 +137,17 @@ proc installFASC*(args: StrMap) =
         quit 1
   runCmd("machinectl", "copy-to", machine, fascPath, "/usr/local/bin/fasc")
 
-proc fascAt(machine: string, arguments: varargs[string]) =
-  runCmd("systemd-run", systemdRunArgs(machine, "/usr/local/bin/fasc" & @arguments))
+#proc fascAt(machine: string, arguments: varargs[string]) =
+#  runCmd("systemd-run", systemdRunArgs(machine, "/usr/local/bin/fasc" & @arguments))
 
 # TODO - configure nftables, resolved
-proc containerOVPN*(args: StrMap) =
-  let machine = args.nonEmptyParam("machine")
-  args.userInfo.sudoNoPasswd("",
-    runOnScript("/usr/local/bin/ovpn-" & machine, machine,
-                "systemd-run --scope /usr/local/bin/ovpn"),
-    runOnScript("/usr/local/bin/kill-vpn-" & machine, machine, "/usr/local/bin/kill-vpn"))
-  machine.fascAt("ovpn", "nosudo")
+#proc containerOVPN*(args: StrMap) =
+#  let machine = args.nonEmptyParam("machine")
+#  args.userInfo.sudoNoPasswd("",
+#    runOnScript("/usr/local/bin/ovpn-" & machine, machine,
+#                "systemd-run --scope /usr/local/bin/ovpn"),
+#    runOnScript("/usr/local/bin/kill-vpn-" & machine, machine, "/usr/local/bin/kill-vpn"))
+#  machine.fascAt("ovpn", "nosudo")
 
 # https://quantum5.ca/2025/03/22/whirlwind-tour-of-systemd-nspawn-containers/
 # https://wildwolf.name/a-simple-script-to-create-systemd-nspawn-alpine-container/

@@ -11,17 +11,44 @@ if pidof openvpn > /dev/null; then
 	fi
 fi
 
-[ "`id -u`" = "0" ] || exec sudo /usr/local/bin/ovpn
+[ "`id -u`" = "0" ] || exec doas /usr/local/bin/ovpn
+
+if ! [ -e /run/netns/vip ]; then
+	ip netns add vip
+	ip link add evp0 type veth peer name enp1s0
+	ip link set enp1s0 netns vip
+	ip addr add 192.168.0.1/30 dev evp0
+	ip link set evp0 up
+
+	ip netns exec vip sh <<VIP_NS
+ip link set lo up
+nft -f - <<VIP_NFT
+flush ruleset
+table ip nat {
+	chain postrouting {
+		type nat hook postrouting priority 100;
+		masquerade
+	}
+}
+VIP_NFT
+ip addr add 192.168.0.2/24 dev enp1s0
+ip link set enp1s0 up
+ip route add default via 192.168.0.1 dev enp1s0
+VIP_NS
+	ip route add 192.168.0.0/16 via 192.168.0.2
+fi
+
+NETNS="ip netns exec vip"
 
 cd /root/.vpn
 mkdir -m 700 -p /run/ovpn/tmp
-/usr/sbin/openvpn --daemon --config /root/.vpn/client.ovpn --ping-exit 3600 \
-	--script-security 2 --up /etc/openvpn/update-systemd-resolved \
-	--up-restart --down /etc/openvpn/update-systemd-resolved \
-	--down-pre --dev tun0vpn --chroot /run/ovpn --user USER --group USER
+$NETNS /usr/sbin/openvpn --daemon --config /root/.vpn/client.ovpn --dev tun0vpn \
+	--persist-key --persist-tun --chroot /run/ovpn --user proxy --group proxy \
+	--pull-filter ignore dhcp-pre-release --pull-filter ignore dhcp-renew \
+	--pull-filter ignore dhcp-release --pull-filter ignore register-dns
 echo "Waiting for VPN starting up..."
 
-while ! ip route | /bin/grep -q ' via .* dev tun0vpn '; do
+while ! $NETNS ip route | /bin/grep -q ' via .* dev tun0vpn '; do
         if ! pidof openvpn > /dev/null; then
                 echo "OpenVPN startup failed."
                 exit 1
@@ -30,6 +57,3 @@ while ! ip route | /bin/grep -q ' via .* dev tun0vpn '; do
 done
 
 echo "VPN is up."
-ip route del 172.16.0.0/13 || ip route del 172.16.0.0/12
-/usr/bin/resolvectl flush-caches
-exit 0

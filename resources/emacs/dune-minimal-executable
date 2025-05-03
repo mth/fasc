@@ -20,5 +20,9 @@ cat > dune <<DUNE
 (executables
   (names $*)
   ; (libraries graphics unix)
+  ; (libraries sdl2)
+  ; (link_flags "-cclib" "-lSDL2")
   )
+
+(env (dev (flags (:standard -warn-error -a))))
 DUNE

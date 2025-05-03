@@ -408,7 +408,7 @@ proc sudoNoPasswd*(user: UserInfo, envKeep: string, paths: varargs[string]) =
       sudo &= ("Defaults!" & path & ' ', "env_keep=\"" & envKeep & '"')
     sudo &= ("", user.user & " ALL=(root:root) NOPASSWD: " & path)
     doas &= ("", "permit nopass " & user.user & " as root cmd " & path)
-  if fileExists("/usr/bin/sudo") or envKeep.len != 0:
+  if not fileExists("/usr/bin/doas") or envKeep.len != 0:
     addPackageUnless "sudo", "/usr/bin/sudo", true
     discard appendMissing("/etc/sudoers", sudo)
   else:

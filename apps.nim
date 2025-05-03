@@ -18,7 +18,7 @@
 import std/[os, posix, sequtils, strformat, strutils, tables]
 import utils, system
 
-const emacsConf = readResource("emacs/emacs.el")
+const emacsConf = readResource("emacs/init.el")
 const emacsModules = ["configure-cua.el", "configure-company.el",
                       "configure-merlin.el", "merlin-eldoc.el",
                       "configure-utop.el"].mapIt(
@@ -202,19 +202,21 @@ proc updateZoom*(args: StrMap) =
 proc isWayland(user: UserInfo): bool =
   fileExists(fmt"/run/user/{user.uid}/wayland-1") or fileExists("/usr/bin/Xwayland")
 
-proc installEmacs(user: UserInfo) =
-  if user.isWayland and isDebian():
+proc installEmacs(user: UserInfo, emacsPkg: string) =
+  if emacsPkg != "":
+    packagesToInstall &= emacsPkg
+  elif user.isWayland and isDebian():
     packagesToInstall &= "emacs-pgtk"
   else:
     packagesToInstall &= "emacs"
   packagesToInstall &= "elpa-company"
   for (name, content) in emacsModules:
-    writeAsUser user, ".local/emacs-lisp" / name, content
-  writeAsUser user, ".emacs", emacsConf
+    writeAsUser user, ".emacs.d/lisp" / name, content
+  writeAsUser user, ".emacs.d/init.el", emacsConf
 
 proc installMerlin*(args: StrMap) =
   let user = args.userInfo
-  user.installEmacs
+  user.installEmacs args.getOrDefault("emacs")
   writeAsUser user, "bin/dune-minimal-executable", duneMinimalExec, 0o755
   packagesToInstall &= ["elpa-tuareg", "opam", "libx11-dev", "pkgconf"]
   commitQueue()
@@ -222,6 +224,10 @@ proc installMerlin*(args: StrMap) =
     runCmd "apt-get", "purge", "ocaml"
   if fileExists("/usr/bin/utop") and isDebian():
     runCmd "apt-get", "purge", "utop"
+  try:
+    discard appendMissing(user.home / ".bashrc", [("", "OPAMWITHDOC=true")], false)
+  except IOError as err:
+    echo err.msg
   if not fileExists(user.home / ".opam/opam-init/init.sh"):
     user.runCmd true, "opam", "init", "--shell-setup"
-  user.runCmd true, "opam", "install", "graphics", "utop", "merlin"
+  user.runCmd true, "opam", "install", "--with-doc", "graphics", "utop", "merlin"

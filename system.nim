@@ -339,10 +339,10 @@ proc batteryMonitor(useUdev: bool) =
           onlyEmpty=false):
       runCmd "systemctl", "restart", "sleepd.service"
 
-proc limitBattery(args: StrMap) =
+proc limitBattery*(args: StrMap) =
   let limit = args.getOrDefault("maxCharge", "85")
   addService "battery-limit", "Limit battery max charge", [],
-    "/bin/sh -c 'for bat in /sys/class/power_supply/BAT*/charge_{stop_threshold,control_end_threshold}; do echo " &
+    "/bin/bash -c 'for bat in /sys/class/power_supply/BAT*/charge_{stop_threshold,control_end_threshold}; do echo " &
     limit & " > $bat; done'",
     "multi-user.target", serviceType="oneshot"
 

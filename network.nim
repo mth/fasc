@@ -29,7 +29,7 @@ flush ruleset
 
 const default_firewall = readResource("nftables.conf")
 const ovpnScript = readResource("vpn/ovpn")
-const ovpnUpdateResolved = readResource("vpn/update-systemd-resolved")
+# const ovpnUpdateResolved = readResource("vpn/update-systemd-resolved")
 const resolvedServicePath = "/lib/systemd/system/systemd-resolved.service"
 
 # TODO parameter to set DNSStubListenerExtra= 
@@ -207,9 +207,9 @@ proc ovpnClient*(args: StrMap) =
   writeFile(ovpnPath, [ovpnScript.replace("USER", runAs)])
   writeFile(killVPNPath, kill_vpn)
   addPackageUnless "openvpn", "/usr/sbin/openvpn"
-  if "nosystemd" notin args:
-    writeFile("/etc/openvpn/update-systemd-resolved", [ovpnUpdateResolved], permissions=0o755)
-    enableAndStart "systemd-resolved"
+  #if "nosystemd" notin args:
+  #  writeFile("/etc/openvpn/update-systemd-resolved", [ovpnUpdateResolved], permissions=0o755)
+  #  enableAndStart "systemd-resolved"
   if user.uid == 0:
     setPermissions(ovpnPath, 0o750)
     setPermissions(killVPNPath, 0o750)
@@ -222,7 +222,7 @@ proc ovpnClient*(args: StrMap) =
     createDir("/root/.vpn")
     setPermissions("/root/.vpn", 0o700)
     echo "Please copy client.ovpn into /root/.vpn"
-  useResolvedStub()
+  #useResolvedStub()
 
 const dns_block_service = readResource("dnsblock.service")
 

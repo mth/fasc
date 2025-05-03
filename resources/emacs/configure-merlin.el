@@ -3,6 +3,17 @@
 (setq dune-run-program-path nil)
 (setq dune-run-program-terminal nil)
 
+(defun rerun-program-in-dune-terminal ()
+  "Rerun program using dune"
+  (interactive)
+  (if dune-run-program-path
+    (let ((buffer (current-buffer))
+	  (program-name (format "%s output" (car dune-run-program-path))))
+      (if (and (string-equal (buffer-name buffer) (format "*%s*" program-name))
+	       (not (term-check-proc buffer)))
+	(term-exec buffer program-name dune-command nil
+		   (list "exec" (cdr dune-run-program-path)))))))
+
 (defun run-program-after-dune-compile (buffer desc)
   (if (and dune-run-program-path (string-equal (buffer-name buffer) "*compilation*"))
       (let ((program-name (car dune-run-program-path))
@@ -20,6 +31,8 @@
 			  (assoc-delete-all program-name dune-run-program-terminal)))
 	      (set-buffer program-terminal)
 	      (term-char-mode)
+	      (setq-local dune-run-program-path (cons program-name program-path))
+	      (dune-run-program-mode)
 	      (pop-to-buffer-same-window program-terminal))))))
 
 (defun dune-run-program ()
@@ -28,8 +41,8 @@
   (require 'dune)
 
   (let* ((buffer-name (file-name-base (buffer-file-name)))
-         (description (read (shell-command-to-string
-			     (format "%s describe" dune-command))))
+	 (dune-describe (shell-command-to-string (format "%s describe" dune-command)))
+	 (description (if (string-prefix-p "(" dune-describe) (read dune-describe)))
 	 (target (cadr (assoc 'build_context description)))
 	 (executables (cadr (assoc 'executables description)))
          (names (cadr (assoc 'names executables)))
@@ -42,7 +55,27 @@
 	(progn
 	  (setq dune-run-program-path (cons name (format "%S/%S.exe" target name)))
           (compile (format "%s build" dune-command)))
-      (message "Couldn't determine from dune configuration"))))
+      (if (file-exists-p "dune")
+	  (message "Couldn't determine from dune configuration")
+	(if (= (map-y-or-n-p "Dune %s file missing, create it? " 'ignore '(build)) 1)
+	    (let ((dune-buffer (find-file-noselect "dune")))
+	      (if (= (buffer-size dune-buffer) 0)
+		  (with-current-buffer dune-buffer
+		    (insert (format "(executables\n  %S\n" `(names ,buffer-name)))
+		    (insert "  ; (libraries graphics unix)\n  ; (libraries sdl2)\n")
+		    (insert "  ; (link_flags \"-cclib\" \"-lSDL2\")\n  )\n")
+		    (prin1 '(env (dev (flags (:standard -warn-error -a)))) dune-buffer)
+		    (save-buffer)))
+	      (if (not (file-exists-p "dune-project"))
+	        (with-temp-buffer
+		  (insert "(lang dune 3.0)")
+		  (write-file "dune-project")))
+	      (dune-run-program)))))))
+
+(define-minor-mode dune-run-program-mode
+		   "Minor mode for dune-run-program key bindings"
+		   :init-value nil
+		   :keymap `((,(kbd "<f5>") . rerun-program-in-dune-terminal)))
 
 (defun bind-ocaml-keys ()
   (local-set-key (kbd "<f5>") #'dune-run-program))
@@ -71,6 +104,6 @@
 
 (setq tuareg-indent-align-with-first-arg t)
 (setq tuareg-match-patterns-aligned t)
-(setq tuareg-in-indent t)
+(setq tuareg-in-indent 0)
 
 (provide 'configure-merlin)
