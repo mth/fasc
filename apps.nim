@@ -218,6 +218,9 @@ proc installMerlin*(args: StrMap) =
   let user = args.userInfo
   user.installEmacs args.getOrDefault("emacs")
   writeAsUser user, "bin/dune-minimal-executable", duneMinimalExec, 0o755
+  if isFedora():
+    packagesToInstall &= ["emacs-tuareg", "dune", "ocaml-dune-emacs", "ocaml-graphics", "utop"]
+    return
   packagesToInstall &= ["elpa-tuareg", "opam", "libx11-dev", "pkgconf"]
   commitQueue()
   if fileExists("/usr/bin/ocamlopt") and isDebian():

@@ -47,6 +47,8 @@ let fedoraPackageMap = [
   ("xmahjongg", "gnome-mahjongg"),
   ("build-essential", "gcc"),
   ("nbd-client", "nbd"),
+  ("elpa-company", "emacs-company-mode"),
+  ("elpa-tuareg", "emacs-tuareg"),
 ].toTable
 
 proc detectDistro() =
