@@ -66,6 +66,7 @@ var tasks = {
   "ovpn": ("Setup openvpn client", ovpnClient),
   "desktop-packages": ("Install desktop packages", installDesktopPackages),
   "gui-packages": ("Install GUI desktop packages", installDesktopUIPackages),
+  "flatpak": ("Install flatpak [add=firefox|ungoogled-chromium]", installFlatpak),
   "devel": ("Install development packages", installDevel),
   "showuser": ("Shows user", showUser),
   "nfs": ("Adds NFS mount", nfs),

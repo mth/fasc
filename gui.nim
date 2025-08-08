@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with FASC. If not, see <https://www.gnu.org/licenses/>.
 
-import strutils, utils, apps, apt, system, std/os
+import strutils, utils, apps, apt, system, services, std/[os, tables]
 
 const font_auto_hinting = readResource("fonts-autohinting.xml")
 const xkb_uml = readResource("uml.xkb")
@@ -25,6 +25,32 @@ const xdefaults = readResource("icewm/Xdefaults")
 const xcompose* = readResource("user/XCompose")
 const gammastep_ini* = readResource("user/gammastep.ini")
 const tearfree = readResource("icewm/20-intel.conf")
+
+proc installFlatpak*(args: StrMap) =
+  let add = args.getOrDefault "add"
+  if add == "" or not fileExists("/usr/bin/flatpak"):
+    let user = args.userInfo
+    packagesToInstall.add ["flatpak", "xdg-user-dirs"]
+    if isDebian():
+      packagesToInstall.add "flatpak-xdg-utils"
+    commitQueue()
+    runCmd "flatpak", "remote-add", "--if-not-exists", "flathub",
+      "https://dl.flathub.org/repo/flathub.flatpakrepo"
+    calendarTimer "flatpak-upgrade", "Upgrade flatpaks", "*-*-* 06:06:06",
+                  "/usr/bin/flatpak update -y --noninteractive"
+    runCmd user, true, "xdg-user-dirs-update"
+    runCmd user, true, "xdg-user-dirs-update", "--set", "DOWNLOADS", user.home / "Downloads"
+  if add == "ungoogled-chromium":
+    runCmd "flatpak", "install", "flathub", "io.github.ungoogled_software.ungoogled_chromium"
+  elif add == "firefox":
+    runCmd "flatpak", "install", "flathub", "org.mozilla.firefox"
+  elif add != "":
+    echo "Unknown flathub package ", add
+    quit 1
+
+proc installDesktopUIPackages*(args: StrMap) =
+  args.installDesktopPackages
+  packagesToInstall.add ["geeqie", "xdg-utils", "xmahjongg"]
 
 proc disableTracker*(args: StrMap) =
   runCmd("systemctl", "--user", "unmask", "tracker-extract-3.service",

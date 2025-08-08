@@ -134,6 +134,8 @@ proc sysctls(args: StrMap, battery: bool) =
   if battery:
     conf.add "kernel.nmi_watchdog=0"
     conf.add "vm.dirty_writeback_centisecs=1500"
+  if isDebian():
+    conf.add "net.ipv4.ping_group_range = 1000 1000"
   writeFile("/etc/sysctl.d/00-local.conf", conf, force=true)
   runCmd("sysctl", "-p", "/etc/sysctl.d/00-local.conf")
 

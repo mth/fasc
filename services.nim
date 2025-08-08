@@ -159,6 +159,13 @@ proc socketUnit*(socketName, description, listen: string, socketOptions: varargs
   if '@' notin socketName:
     enableAndStart socketName
 
+proc calendarTimer*(name, description, calendar, command: string) =
+  addService name, description, [], command,
+             options=["User=root", "PAMName=crond"],
+             unitOptions=["ConditionACPower=true"]
+  addTimer name, description & " periodically",
+           ["OnCalendar=" & calendar, "WakeSystem=true"]
+
 proc proxy*(proxy, listen, bindTo, connectTo, exitIdleTime, targetService: string,
             description = "", socketOptions: openarray[string] = [], waitFor = false) =
   let socketParam = proxy.split ':'

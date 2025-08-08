@@ -196,11 +196,7 @@ proc backupServer*(args: StrMap) =
   rotateBackupTimer mountUnit
 
 proc backupClientService(name, description, command: string) =
-  addService name, description, [], command,
-             options=["User=root", "PAMName=crond"],
-             unitOptions=["ConditionACPower=true"]
-  addTimer name, description & " periodically",
-           ["OnCalendar=*-*-02/4 05:05:05", "WakeSystem=true"]
+  calendarTimer name, description, "*-*-02/4 05:05:05", command
 
 proc installBackupClient*(args: StrMap) =
   createDir "/media/backup-storage"
@@ -293,8 +289,8 @@ proc resticUser*(args: StrMap) =
 proc resticClient*(args: StrMap) =
   const server_pem = "/etc/backup/restic-server.pem"
   const wrapperFile = "/usr/local/sbin/restic"
-  const has_server_pem = server_pem.fileExists
-  const has_wrapperFile = wrapperFile.fileExists
+  let has_server_pem = server_pem.fileExists
+  let has_wrapperFile = wrapperFile.fileExists
   var server = ""
   if not (has_server_pem and has_wrapperFile):
     server = args.nonEmptyParam "rest-server"

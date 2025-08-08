@@ -177,12 +177,6 @@ proc installDesktopPackages*(args: StrMap) =
   if isFedora():
     packagesToInstall.add "fuse-sshfs"
 
-proc installDesktopUIPackages*(args: StrMap) =
-  args.installDesktopPackages
-  if isFedora():
-    packagesToInstall.add "flatpak"
-  packagesToInstall.add ["geeqie", "xdg-utils", "xmahjongg"]
-
 proc installDevel*(args: StrMap) =
   installDesktopPackages(args)
   packagesToInstall.add ["build-essential", "git", "nim"]
