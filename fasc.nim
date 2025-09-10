@@ -84,11 +84,11 @@ var tasks = {
   "secure": ("service=name syscall allow_dev allow_netlink 01", secureService),
   "safenet": ("Setup DNS blocklists", setupSafeNet),
   "merlin": ("Setup emacs with tuareg mode and merlin using opam [emacs=emacs-pgtk]", installMerlin),
-  "backup-server": ("Setup backup server backup-dev=/dev/sdd2 backup-user=foo-backup backup-size=MB [recreate-image]", backupServer),
-  "nbd-backup": ("Install nbd-backup client", installBackupClient),
-  "restic-server": ("Setup restic backup server backup-dev=/dev/sdd2 [hostname=host] [serverip=1.2.3.4]", installResticServer),
+  #"backup-server": ("Setup backup server backup-dev=/dev/sdd2 backup-user=foo-backup backup-size=MB [recreate-image]", backupServer),
+  #"nbd-backup": ("Install nbd-backup client", installBackupClient),
+  "restic-server": ("Setup restic backup server backup-dev=/dev/sdd2 [recert] [hostname=host] [serverip=1.2.3.4]", installResticServer),
   "restic-user": ("Add backup-user=name to the restic server", resticUser),
-  "restic-client": ("Setup restic client rest-server=hostname [backup-user=name]", resticClient),
+  "restic-client": ("Setup restic client rest-server=hostname [backup-user=name] | repo=sftp://host:path", resticClient),
   #"disable-tracker": ("Disable GNOME tracker", disableTracker),
 }.toTable
 when defined(arm64):

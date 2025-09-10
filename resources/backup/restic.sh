@@ -28,7 +28,8 @@ case "$1" in
 		exec systemd-inhibit $INHIBIT_WHAT --who=restic-backup "--why=Active backup" "$0" backup-and-forget;;
 	backup-and-forget)
 		"$0" -v backup --one-file-system $BACKUP_DIRS --exclude nobackup --exclude .cache \
-			--exclude /var/cache --exclude /var/tmp --exclude /var/lib/machines --exclude .cargo/registry \
+			--exclude /var/cache --exclude /var/tmp --exclude /var/lib/machines \
+			--exclude .cargo/registry --exclude .local/share/containers \
 			--exclude '/home/**/target' --exclude _build --exclude '*.o' --exclude '*.class'
 		"$0" forget --keep-within-weekly 1m --keep-monthly 3
 		"$0" prune
