@@ -221,16 +221,18 @@ proc installMerlin*(args: StrMap) =
   if isFedora():
     packagesToInstall &= ["emacs-tuareg", "dune", "ocaml-dune-emacs", "ocaml-graphics", "utop"]
     return
-  packagesToInstall &= ["elpa-tuareg", "opam", "libx11-dev", "pkgconf"]
-  commitQueue()
-  if fileExists("/usr/bin/ocamlopt") and isDebian():
-    runCmd "apt-get", "purge", "ocaml"
-  if fileExists("/usr/bin/utop") and isDebian():
-    runCmd "apt-get", "purge", "utop"
-  try:
-    discard appendMissing(user.home / ".bashrc", [("", "OPAMWITHDOC=true")], false)
-  except IOError as err:
-    echo err.msg
-  if not fileExists(user.home / ".opam/opam-init/init.sh"):
-    user.runCmd true, "opam", "init", "--shell-setup"
-  user.runCmd true, "opam", "install", "--with-doc", "graphics", "utop", "merlin"
+  packagesToInstall &= ["elpa-tuareg", "pkgconf", "ocaml-merlin", "emacs-ocaml-merlin",
+                        "ocaml", "utop", "libgraphics-ocaml-dev", "liblablgtk3-ocaml-dev"]
+  #packagesToInstall &= ["elpa-tuareg", "opam", "libx11-dev", "pkgconf"]
+  #commitQueue()
+  #if fileExists("/usr/bin/ocamlopt") and isDebian():
+  #  runCmd "apt-get", "purge", "ocaml"
+  #if fileExists("/usr/bin/utop") and isDebian():
+  #  runCmd "apt-get", "purge", "utop"
+  #try:
+  #  discard appendMissing(user.home / ".bashrc", [("", "OPAMWITHDOC=true")], false)
+  #except IOError as err:
+  #  echo err.msg
+  #if not fileExists(user.home / ".opam/opam-init/init.sh"):
+  #  user.runCmd true, "opam", "init", "--shell-setup"
+  #user.runCmd true, "opam", "install", "--with-doc", "graphics", "utop", "merlin"
