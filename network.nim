@@ -233,7 +233,8 @@ proc setupSafeNet*(args: StrMap) =
     "0.0.0.0 youtube.com", "0.0.0.0 www.youtube.com",
     "0.0.0.0 m.youtube.com", "0.0.0.0 i.ytimg.com",
     "0.0.0.0 www.reddit.com", "0.0.0.0 old.reddit.com",
-    "0.0.0.0 x.com", "0.0.0.0 www.x.com"])
+    "0.0.0.0 x.com", "0.0.0.0 www.x.com",
+    "0.0.0.0 chatgpt.com"])
   if not resolvedServicePath.fileExists:
     configureResolved()
   let resolveUser = userInfo "systemd-resolve"
